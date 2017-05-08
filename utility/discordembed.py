@@ -1,5 +1,7 @@
-import discord
 from time import strftime
+
+import discord
+
 
 def newembed(a, t=None, d=None, u=None, c=0xC154F5):
     author = a.name + '#' + a.discriminator
@@ -8,7 +10,7 @@ def newembed(a, t=None, d=None, u=None, c=0xC154F5):
     em.set_footer(
         text="Powered by NinjaKitty | " +
         strftime('%a %b %d, %Y at %I:%M %p'),
-        icon_url="https://my.mixtape.moe/jhbhte.png"
+        icon_url="https://my.mixtape.moe/yaoznj.png"
     )
 
     return em

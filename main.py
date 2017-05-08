@@ -11,6 +11,8 @@ from discord.ext import commands
 # Databases
 import redis
 
+debug = False
+
 redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
 essential_keys = {
     'DiscordToken',
@@ -22,21 +24,33 @@ nonessential_keys = {
     'DarkSkyAPI',
     'CleverbotAPI',
     'AnilistID',
-    'AnilistSecret'
+    'AnilistSecret',
+    'OsuAPI'
 }
 
 modules = {
     'modules.admin',
     'modules.anime',
-    'modules.log'
+    'modules.info',
+    'modules.log',
+    'modules.osu',
+    'modules.overwatch',
+    'modules.pad',
+    'modules.random',
+    'modules.search',
+    'modules.wordcount'
+
 }
+prefix = ''
+if debug:
+    prefix = '>>'
+else:
+    prefix = redis_db.get('Prefix').decode('utf-8')
+    if prefix is None:
+        prefix = '>'
 
-prefix = redis_db.get('Prefix').decode('utf-8')
-if prefix is None:
-    prefix = 'XD!'
-
-
-bot = commands.Bot(command_prefix=prefix, description='New, Sleek Bot', pm_help=True)
+description = "Huge rewrite for Rin Bot. No Bullshit. Just fun stuff."
+bot = commands.Bot(command_prefix=prefix, description=description, pm_help=True)
 
 def checkkeys():
     """ Returns 1 if all keys are satisfied
@@ -127,10 +141,10 @@ if __name__ == "__main__":
         changekeys()
     random.seed()
 
-    try:
-        for mod in modules:
+    for mod in modules:
+        try:
             bot.load_extension(mod)
-    except ImportError as e:
-        print(e)
-        print('[WARNING] : One or more modules did not import.')
+        except ImportError as e:
+            print(e)
+            print('[WARNING]: Module ' + mod + ' did not load')
     bot.run(redis_db.get('DiscordToken').decode('utf-8'))

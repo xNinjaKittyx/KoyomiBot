@@ -27,21 +27,25 @@ class Log:
     async def on_message(self, msg):
         if msg.content.startswith(self.bot.command_prefix):
             cmdused = msg.author.name + " attempted to use the command: " + msg.content
-            modlog = find(lambda c: c.name == "modlog", msg.server.channels)
             self.output(cmdused)
+            modlog = find(lambda c: c.name == "modlog", msg.server.channels)
+            if modlog == None:
+                return
             await self.bot.send_message(modlog, cmdused)
 
     async def on_member_join(self, member):
-        self.output(member.name + " has joined the server.")
+        self.output(member.name + " has joined the server at " + member.server.name)
 
     async def on_member_remove(self, member):
-        self.output(member.name + " has left the server.")
+        self.output(member.name + " has left the server at " + member.server.name)
 
     async def on_message_delete(self, msg):
         if msg.author == self.bot.user:
             return
         result = '{0} deleted the following message: \n{1}'.format(msg.author.name, msg.content)
         modlog = find(lambda c: c.name == "modlog", msg.server.channels)
+        if modlog == None:
+            return
         await self.bot.send_message(modlog, result)
 
     async def on_message_edit(self, before, after):
@@ -55,6 +59,8 @@ class Log:
             after.content
         )
         modlog = find(lambda c: c.name == "modlog", before.server.channels)
+        if modlog == None:
+            return
         await self.bot.send_message(modlog, msg)
 
 def setup(bot):

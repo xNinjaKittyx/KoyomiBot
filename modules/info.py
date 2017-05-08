@@ -11,6 +11,7 @@ class Info:
     def __init__(self, bot):
         self.bot = bot
         self.initialtime = time.time()
+        self.totalmembers = set({})
 
     def getuptime(self):
         seconds = int(time.time() - self.initialtime)
@@ -30,39 +31,53 @@ class Info:
 
         return "{d}d {h}h {m}m {s}s".format(d=days, h=hours, m=minutes, s=seconds)
 
-    def getcpuusage(self):
+    @staticmethod
+    def getcpuusage():
         return psutil.Process().cpu_percent() / psutil.cpu_count()
 
-    def getmemusage(self):
+    @staticmethod
+    def getmemusage():
         return psutil.Process().memory_info().rss / (1024 ** 2)
+
+    def gettotalusers(self):
+        for x in self.bot.servers:
+            for y in x.members:
+                self.totalmembers.add(y.id)
+        return len(self.totalmembers)
 
     @commands.command(pass_context=True, hidden=True)
     async def stats(self, ctx):
         author = ctx.message.author
-        title = 'Stats for Rin'
+        title = 'Stats for ' + self.bot.user.name
         desc = 'Don\'t..t..t... look at my stats... Baka!'
         url = "https://github.com/xNinjaKittyx/"
-        trello = "Add Later"
+        # trello = "Add Later"
         inviteurl = (
             "https://discordapp.com/api/oauth2/authorize?client_id=" +
             self.bot.user.id +
             "&scope=bot&permissions=0"
         )
 
+        supporturl = "https://discord.gg/Fzz344U"
+
         em = dmbd.newembed(author, title, desc, url)
-        em.add_field(name='Users', value=len(ctx.message.server.members))
+        em.add_field(name='Total Users', value=self.gettotalusers())
+        em.add_field(name='Total Servers', value=len(self.bot.servers))
+        em.add_field(name='Current Server Users', value=len(ctx.message.server.members))
         em.add_field(name='Uptime', value=self.getuptime())
         em.add_field(name='CPU', value="{0:.2f}%".format(self.getcpuusage()))
         em.add_field(name='Memory', value="{0:.2f} MB".format(self.getmemusage()))
         # em.add_field(name='Trello', value='[Trello Page]({})'.format(trello))
         em.add_field(name='Invite', value='[Click Me :)]({})'.format(inviteurl))
+        em.add_field(name='Support', value='[Discord Link]({})'.format(supporturl))
 
         await self.bot.say(embed=em)
-        self.bot.cogs['WordDB'].cmdcount('info')
+        self.bot.cogs['Wordcount'].cmdcount('stats')
 
     @commands.command()
     async def uptime(self):
         await self.bot.say("```" + self.getuptime() + "```")
+        self.bot.cogs['Wordcount'].cmdcount('uptime')
 
 def setup(bot):
     bot.add_cog(Info(bot))

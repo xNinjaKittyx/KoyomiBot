@@ -37,7 +37,6 @@ class Admin:
         await self.bot.say("*Bot is kill in 3 seconds.*")
         await asyncio.sleep(3)
         await self.bot.close()
-        #self.bot.cogs['WordDB'].cmdcount('kill')
 
     @commands.command(pass_context=True, hidden=True)
     async def status(self, ctx, *, s: str):
@@ -45,7 +44,6 @@ class Admin:
         if not self.checkdev(ctx.message.author.id):
             return
         await self.bot.change_presence(game=discord.Game(name=s))
-        #self.bot.cogs['WordDB'].cmdcount('status')
 
     @commands.command(pass_context=True, hidden=True)
     async def changeavatar(self, ctx, *, url: str):
@@ -56,7 +54,7 @@ class Admin:
         async with aiohttp.get(url) as r:
             if r.status == 200:
                 try:
-                    await self.bot.edit_profile(avatar=r.content)
+                    await self.bot.edit_profile(avatar=await r.read())
                 except discord.HTTPException:
                     await self.bot.say("Editing the profile failed.")
                 except discord.InvalidArgument:
@@ -67,7 +65,6 @@ class Admin:
         """ Changes the Username """
         if self.checkdev(ctx.message.author.id):
             await self.bot.edit_profile(username=s)
-            # bot.cogs['WordDB'].cmdcount('changeusername')
 
 def setup(bot):
     """Setup admin.py"""

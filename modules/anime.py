@@ -135,12 +135,12 @@ class Anime:
                             if x['type'] == "Movie":
                                 chosen = x
                                 break
-                if chosen == {}:
-                    chosen = animelist[0]
+                        if chosen == {}:
+                            chosen = animelist[0]
                 await self.bot.say(embed=self.getinfo(ctx.message.author, chosen))
             else:
                 self.bot.cogs['Log'].output("No 200 status from Anime")
-
+        self.bot.cogs['Wordcount'].cmdcount('anime')
 
     @commands.command(pass_context=True)
     async def manga(self, ctx, *, mang: str):
@@ -176,12 +176,12 @@ class Anime:
                             if x['type'] == "Manhua" or x['type'] == "Manhwa":
                                 chosen = x
                                 break
-                if chosen == {}:
-                    chosen = mangalist[0]
+                        if chosen == {}:
+                            chosen = mangalist[0]
                 await self.bot.say(embed=self.getinfo(ctx.message.author, chosen))
             else:
                 self.bot.cogs['Log'].output("No 200 status from Manga")
-
+        self.bot.cogs['Wordcount'].cmdcount('anime')
 
 
 def setup(bot):
