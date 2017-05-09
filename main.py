@@ -45,9 +45,11 @@ prefix = ''
 if debug:
     prefix = '>>'
 else:
-    prefix = redis_db.get('Prefix').decode('utf-8')
+    prefix = redis_db.get('Prefix')
     if prefix is None:
         prefix = '>'
+    else:
+        prefix = prefix.decode('utf-8')
 
 description = "Huge rewrite for Rin Bot. No Bullshit. Just fun stuff."
 bot = commands.Bot(command_prefix=prefix, description=description, pm_help=True)
