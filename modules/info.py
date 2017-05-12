@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 
 import asyncio
@@ -45,7 +46,22 @@ class Info:
                 self.totalmembers.add(y.id)
         return len(self.totalmembers)
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(pass_context=True)
+    async def ping(self, ctx):
+        pingpong = datetime.now() - ctx.message.timestamp
+        pingpong = pingpong.microseconds / 1000
+        second = await self.bot.say('*headtilt*')
+        heartbeat = second.timestamp - ctx.message.timestamp
+        heartbeat = heartbeat.microseconds / 1000
+        description = (
+            ':ping_pong: `' + str(pingpong) + ' ms`\n' +
+            ':blue_heart: `' + str(heartbeat) + ' ms`'
+        )
+        em = dmbd.newembed(ctx.message.author, d=description)
+        await self.bot.edit_message(second, new_content='',embed=em)
+
+
+    @commands.command(pass_context=True)
     async def stats(self, ctx):
         author = ctx.message.author
         title = 'Stats for ' + self.bot.user.name
@@ -78,6 +94,7 @@ class Info:
     async def uptime(self):
         await self.bot.say("```" + self.getuptime() + "```")
         self.bot.cogs['Wordcount'].cmdcount('uptime')
+
 
 def setup(bot):
     bot.add_cog(Info(bot))

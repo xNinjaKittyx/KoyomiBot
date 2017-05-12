@@ -25,21 +25,22 @@ class Wordcount:
     def cmdcount(self, name: str):
         self.redis_db.zincrby('CmdDB', name)
 
-    async def on_message(self, message):
-        if (len(message.content) <= 2 or message.author.bot or
-                message.content.startswith(self.bot.command_prefix)):
-            return
-
-        for x in re.compile('\w+').findall(message.content.replace('\n', ' ')):
+    async def wordcount(self, content):
+        for x in re.compile('\w+').findall(content.replace('\n', ' ')):
             if len(x) <= 2:
                 continue
-            if x.startswith('http://'):
+            if x.startswith('http'):
                 continue
             if x in self.blacklist:
                 continue
+            else:
+                self.redis_db.zincrby('WordDB', x)
 
-            self.redis_db.zincrby('WordDB', x)
-
+    async def on_message(self, message):
+        if (len(message.content) <= 2 or message.author.bot or
+                message.content.startswith(self.bot.command_prefix)):
+                return
+        await self.wordcount(message.content)
 
     @commands.command(pass_context=True)
     async def topwords(self, ctx):

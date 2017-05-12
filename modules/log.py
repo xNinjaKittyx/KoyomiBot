@@ -1,4 +1,5 @@
 
+# -*- coding: utf8 -*-
 from datetime import datetime
 import os
 
@@ -11,8 +12,10 @@ class Log:
     def __init__(self, bot):
         self.bot = bot
 
-    def output(self, a):
+    @staticmethod
+    def output(a):
         """ Output the string 'a' """
+        a = a.encode('utf-8', 'ignore').decode('utf-8', 'ignore')
         today = datetime.today()
         filename = "log-{0}-{1}-{2}.log".format(str(today.month), str(today.day), str(today.year))
         prefix = "[{0}:{1}:{2}]: ".format(str(today.hour), str(today.minute), str(today.second))
@@ -44,7 +47,7 @@ class Log:
             return
         result = '{0} deleted the following message: \n{1}'.format(msg.author.name, msg.content)
         modlog = find(lambda c: c.name == "modlog", msg.server.channels)
-        if modlog == None:
+        if modlog is None:
             return
         await self.bot.send_message(modlog, result)
 
@@ -59,7 +62,7 @@ class Log:
             after.content
         )
         modlog = find(lambda c: c.name == "modlog", before.server.channels)
-        if modlog == None:
+        if modlog is None:
             return
         await self.bot.send_message(modlog, msg)
 

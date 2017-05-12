@@ -31,6 +31,7 @@ nonessential_keys = {
 modules = {
     'modules.admin',
     'modules.anime',
+    'modules.comics',
     'modules.info',
     'modules.log',
     'modules.osu',
@@ -38,6 +39,7 @@ modules = {
     'modules.pad',
     'modules.random',
     'modules.search',
+    'modules.tags',
     'modules.wordcount'
 
 }

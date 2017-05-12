@@ -4,6 +4,7 @@ import random
 
 import discord
 from discord.ext import commands
+import redis
 import utility.discordembed as dmbd
 
 
@@ -32,7 +33,7 @@ class Profile:
 
         """
 
-    async on_message(self, msg):
+    async def on_message(self, msg):
         pass # give em sum xp fam :D
 
     @commands.command(pass_context=True)
