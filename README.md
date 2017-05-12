@@ -75,3 +75,5 @@ help | Shows the help message.
 * Add more comics like Calvin & Hobbes
 * Finish Animehangman (also come up with a better fricking name.)
 * Finish Music Player (Have to make it look nice :D)
+* Add Cleverbot and WolframAlpha back.
+* Finish Weather command.
