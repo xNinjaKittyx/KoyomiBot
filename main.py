@@ -1,11 +1,8 @@
 
 # Built-in Python Imports
-import asyncio
-import os
 import random
 
 # Required for disocrd.py
-import discord
 from discord.ext import commands
 
 # Databases

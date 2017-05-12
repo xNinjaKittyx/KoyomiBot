@@ -1,8 +1,5 @@
 
-import asyncio
-
 import aiohttp
-import discord
 from discord.ext import commands
 import redis
 import utility.discordembed as dmbd

@@ -1,11 +1,9 @@
 """ Module for generating a random cat picture"""
 
-import asyncio
 import random
 
 import aiohttp
 from bs4 import BeautifulSoup
-import discord
 from discord.ext import commands
 import utility.discordembed as dmbd
 

@@ -1,6 +1,4 @@
 
-import asyncio
-import discord
 from discord.ext import commands
 import redis
 from utility import discordembed as dmbd
@@ -58,8 +56,8 @@ class Tags:
                 results.append(x.decode('utf-8'))
         wew = ""
         for x, y in enumerate(results):
-            wew += str(x+1) + ") " + results[x] + "\n"
-        em = discord.Embed()
+            wew += str(x+1) + ") " + y + "\n"
+        em = dmbd.newembed(ctx.message.author)
         em.set_footer(text=wew)
         await self.bot.say(embed=em)
 

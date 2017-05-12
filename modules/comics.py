@@ -1,14 +1,11 @@
 
-import asyncio
 import json
 import random
 import re
 
 import aiohttp
 from bs4 import BeautifulSoup
-import discord
 from discord.ext import commands
-import json
 import redis
 from utility import discordembed as dmbd
 

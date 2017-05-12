@@ -1,7 +1,6 @@
 """ To Get an Anime or Manga from MyAnimeList"""
 
 # -*- coding: utf8 -*-
-import asyncio
 from datetime import datetime
 
 import aiohttp

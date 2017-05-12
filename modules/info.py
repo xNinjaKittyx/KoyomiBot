@@ -1,8 +1,7 @@
+
 from datetime import datetime
 import time
 
-import asyncio
-import discord
 from discord.ext import commands
 import psutil
 import utility.discordembed as dmbd

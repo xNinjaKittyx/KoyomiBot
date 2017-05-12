@@ -1,14 +1,10 @@
 """ Overwatch API usage"""
 
-import asyncio
-import json
 import random
 
 import aiohttp
-import discord
 from discord.ext import commands
 from utility import discordembed as dmbd
-import requests
 
 
 class Overwatch:
@@ -21,8 +17,8 @@ class Overwatch:
                        'Winston','Zarya', 'Lucio', 'Mercy',
                        'Symmetra', 'Zenyatta', 'Sombra', 'Orisa']
 
-
-    def display(self, author, player, qp, comp):
+    @staticmethod
+    def display(author, player, qp, comp):
         em = dmbd.newembed(author, player.replace('-', '#'), "Please let me know if you'd like to see more different stats.")
         em.set_thumbnail(url=qp['overall_stats']['avatar'])
         level = qp['overall_stats']['prestige'] * 100 + qp['overall_stats']['level']

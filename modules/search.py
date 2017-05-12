@@ -1,14 +1,12 @@
 
-
-import asyncio
 import random
 
 import aiohttp
-import discord
 from discord.ext import commands
-import utility.discordembed as dmbd
 import wikipedia
 import xmltodict
+
+import utility.discordembed as dmbd
 
 class Search:
 
@@ -58,40 +56,45 @@ class Search:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Safebooru failed')
             weeblist = xmltodict.parse(await r.text())
-            numOfResults = int(weeblist['posts']['@count'])
 
-            # Find how many pages there are
+        numOfResults = int(weeblist['posts']['@count'])
 
-            numOfPages = int(numOfResults / 100)
-            remaining = numOfResults % 100
+        # Find how many pages there are
 
-            author = ctx.message.author
-            title = 'Safebooru'
-            desc = 'Searched For ' + search
-            em = dmbd.newembed(author, title, desc)
+        numOfPages = int(numOfResults / 100)
+        remaining = numOfResults % 100
 
-            if numOfResults == 0:
-                em.description = "No Results Found For " + search
-            elif numOfResults == 1:
-                em.set_image(url='https:' + str(weeblist['posts']['post']['@file_url']))
+        author = ctx.message.author
+        title = 'Safebooru'
+        desc = 'Searched For ' + search
+        em = dmbd.newembed(author, title, desc)
+
+        if numOfResults == 0:
+            em.description = "No Results Found For " + search
+        elif numOfResults == 1:
+            em.set_image(url='https:' + str(weeblist['posts']['post']['@file_url']))
+        else:
+            if numOfPages == 0:
+                chosenone = random.randint(0, min(99, numOfResults-1))
+                em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
             else:
-                if numOfPages == 0:
-                    chosenone = random.randint(0, min(99, numOfResults-1))
+                page = random.randint(0, numOfPages)
+                # Avoiding oversearching, and cutting the page limit to 3.
+                # Sometimes really unrelated stuff gets put in.
+                async with aiohttp.get(link + '&pid=' + str(min(3, page))) as r:
+                    if r.status != 200:
+                        return
+                    weeblist = xmltodict.parse(await r.text())
+
+                if page == numOfPages:
+                    chosenone = random.randint(0, min(99, remaining))
                     em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
                 else:
-                    page = random.randint(0, numOfPages)
-                    # Avoiding oversearching, and cutting the page limit to 3.
-                    # Sometimes really unrelated stuff gets put in.
-                    weeblist = self.getlink(link + '&pid=' + str(min(3, page)))
-                    if page == numOfPages:
-                        chosenone = random.randint(0, min(99, remaining))
-                        em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
-                    else:
-                        chosenone = random.randint(0, 99)
-                        em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
+                    chosenone = random.randint(0, 99)
+                    em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
 
-                self.bot.cogs['Wordcount'].cmdcount('safebooru')
-            await self.bot.say(embed=em)
+            self.bot.cogs['Wordcount'].cmdcount('safebooru')
+        await self.bot.say(embed=em)
 
     @commands.command(pass_context=True)
     async def wiki(self, ctx, *, search: str):

@@ -3,12 +3,10 @@ import asyncio
 from datetime import datetime
 import json
 import random
-import os
 
-import discord
 from discord.ext import commands
 import requests
-import tools.discordembed as dmbd
+from utility import discordembed as dmbd
 
 
 class Animehangman:

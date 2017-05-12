@@ -1,3 +1,4 @@
+""" Discord Embed Default settings :D """
 from time import strftime
 import random
 

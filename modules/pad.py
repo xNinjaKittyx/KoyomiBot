@@ -1,10 +1,9 @@
 
 # -*- coding: utf8 -*-
-import aiohttp
-import asyncio
-import discord
-from discord.ext import commands
 import json
+
+import aiohttp
+from discord.ext import commands
 import redis
 import utility.discordembed as dmbd
 
