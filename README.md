@@ -2,13 +2,13 @@
 
 Requires the following:
 
-discord[voice]
-beautifulsoup4
-redis
-aiohttp
-psutil
-wikipedia
-requests
+* discord.py[voice]
+* beautifulsoup4
+* redis
+* aiohttp
+* psutil
+* wikipedia
+* requests
 
 Also requires redis database.
 
