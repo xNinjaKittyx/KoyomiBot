@@ -35,14 +35,16 @@ chrng | Gives a randomly generated Cyanide & Happiness Comic
 uptime | Returns the uptime
 ping | Returns a ping and a hearbeat...
 stats | Shows you stats, and other info    
-**Osu!** | 0=Standard, 1=Taiko, 2=CTB, 3=Mania
-osusig [player] (0/1/2/3) | Look up an Osu! player
-osu [player] (0/1/2/3) | Look up an Osu! player generated signature
-**Overwatch** | Regions Supported: eu, kr, na
+**Osu!** |
+osu [player] | Look up Standard Osu! Stats of Player
+taiko [player] | Look up Taiko Stats of Player
+ctb [player] | Look up Catch The Beat Stats of Player
+mania [player] | Look up Osu!Mania Stats of Player
+**Overwatch**<div>*Regions Supported: eu, kr, na*</div> |
 owrng | Gives a random overwatch hero
 owstats [region] [battletag] | Look up Overwatch stats
 owteam | Get a random OW Team
-**PAD**
+**PAD** |
 pad | Searches a PAD monster
 **Random** |
 8ball | Ask the 8Ball
@@ -56,11 +58,10 @@ gfy | Does a search on gyfcat
 wiki | Grabs Wikipedia Article
 owgif | Random Overwatch Gyfcat
 safebooru | Searches Safebooru
-Tags:
+**Tags**<div>*Note: Tags are only removable by 'Admin' class.*</div> |
 tag [tagname] | Display tag
 tag add [tagname] | It will ask for tag content after determining a name.
 tag search [query] | Returns list of tags that contain that query
-  *Note:* Tags are only removable by 'Admin' class.
 **Wordcount** |
 cmdused [cmd] | Shows how many times a cmd has been used.
 topwords | Top 10 words used in the server.
