@@ -34,20 +34,13 @@ class OsuPlayer:
         em.add_field(name='Accuracy', value="{0:.2f}%".format(float(self.accuracy)))
         lvl = int(float(self.level))
         percent = int((float(self.level) - lvl) * 100)
-        em.add_field(name='Level', value="{0} ({1}%)".format(lvl,percent))
+        em.add_field(name='Level', value="{0} ({1}%)".format(lvl, percent))
         em.add_field(name='Rank', value=self.pp)
         em.add_field(name='Country Rank', value=self.pp_country_rank)
         em.add_field(name='Playcount', value=self.playcount)
         em.add_field(name='Total Score', value=self.total)
         em.add_field(name='Ranked Score', value=self.ranked)
         return em
-        # ('`Username:` ' + self.username +
-        #         '\n`Performance:` ' + self.pp_raw + 'pp' +
-        #         '\n`Accuracy:` ' + self.accuracy +
-        #         '\n`Level:` ' + self.level +
-        #         '\n`Rank:` ' + self.pp +
-        #         '\nhttps://osu.ppy.sh/u/' + self.username
-        #         )
 
 
 class Osu:
@@ -56,72 +49,60 @@ class Osu:
         self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
         self.bot = bot
 
-    @commands.command(pass_context=True, no_pm=True)
-    async def osu(self, ctx, *, args: str):
-        """
-        Look up an osu player:
-        Usage: osu [UserID/Username] [Optional:Mode(default Osu!)]
-        Modes:
-            0 - Default Osu!
-            1 - Taiko
-            2 - ChitogeBot
-            3 - Osu!mania
-        """
-
-        memes = args.split(' ')
-        if len(memes) == 2:
-            peppy = memes[0]
-            kek = memes[1]
-        elif len(memes) == 1:
-            peppy = memes[0]
-            kek = "0"
-        else:
-            await self.bot.say('Wrong Syntax!')
-            return
-        # TODO: REMEMBER TO DELETE THIS
+    async def getlink(self, mode, playername):
         cookiezi = self.redis_db.get('OsuAPI').decode('utf-8')
-        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + peppy
-                + '&m=' + kek)
+        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + mode
+                + '&m=' + playername)
 
         async with aiohttp.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Peppy Failed')
                 return
-            osujson = await r.json()
+            return await r.json()
 
-            player = OsuPlayer(osujson[0])
-            await self.bot.say(embed=player.display(ctx.message.author))
-            self.bot.cogs['WordDB'].cmdcount('osu')
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def osusig(self, ctx, *, args:str):
-        """
-        Look up an osu player:
-        Usage: osusig [UserID/Username] [Optional:Mode(default Osu!)]
-        Modes:
-            0 - Default Osu!
-            1 - Taiko
-            2 - ChitogeBot
-            3 - Osu!mania
-        """
-
-        memes = args.split(' ')
-        if len(memes) == 2:
-            peppy = memes[0]
-            kek = memes[1]
-        elif len(memes) == 1:
-            peppy = memes[0]
-            kek = "0"
-        else:
-            await self.bot.say('Wrong Syntax!')
-            return
-        author = ctx.message.author
-        em = dmbd.newembed(author)
-        em.set_image(url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" + peppy + "&mode=" + kek)
+    @commands.command(pass_context=True)
+    async def osu(self, ctx, *, name: str):
+        player = OsuPlayer(await self.getlink(0, name)[0])
+        em = player.display(ctx.message.author)
+        em.set_image(
+            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
+            name + "&mode=0")
 
         await self.bot.say(embed=em)
-        self.bot.cogs['WordDB'].cmdcount('osusig')
+        self.bot.cogs['Wordcount'].cmdcount('osu')
 
+    @commands.command(pass_context=True)
+    async def taiko(self, ctx, *, name: str):
+        player = OsuPlayer(await self.getlink(1, name)[0])
+        em = player.display(ctx.message.author)
+        em.set_image(
+            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
+            name + "&mode=1")
+
+        await self.bot.say(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('taiko')
+
+    @commands.command(pass_context=True)
+    async def ctb(self, ctx, *, name: str):
+        player = OsuPlayer(await self.getlink(2, name)[0])
+        em = player.display(ctx.message.author)
+        em.set_image(
+            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
+            name + "&mode=2")
+
+        await self.bot.say(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('ctb')
+
+    @commands.command(pass_context=True)
+    async def mania(self, ctx, *, name: str):
+        player = OsuPlayer(await self.getlink(3, name)[0])
+        em = player.display(ctx.message.author)
+        em.set_image(
+            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
+            name + "&mode=3")
+
+        await self.bot.say(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('mania')
 
 
 def setup(bot):
