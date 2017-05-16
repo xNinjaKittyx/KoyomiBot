@@ -19,7 +19,7 @@ class Weather:
         """ Return the correlating Discord Emote"""
         icons = {
             'clear-day': ':sunny:',
-            'clear-night': ':crescent_moon',
+            'clear-night': ':crescent_moon:',
             'rain': ':cloud_rain:',
             'snow': ':cloud_snow:',
             'sleet': ':snowflake:',
@@ -27,7 +27,7 @@ class Weather:
             'fog': ':cloud:',
             'cloudy': ':cloud:',
             'partly-cloudy-day': ':partly_sunny:',
-            'partly-cloudy-night': ':partly_sunny'
+            'partly-cloudy-night': ':partly_sunny:'
         }
         if icon in icons:
             return icons[icon]
@@ -100,7 +100,7 @@ class Weather:
             self.bot.cogs['Wordcount'].cmdcount('weather')
             return
         else:
-            print("Status Error: " + location["status"])
+            self.bot.cogs['Log'].output("Status Error: " + location["status"])
             return
 
 def setup(bot):

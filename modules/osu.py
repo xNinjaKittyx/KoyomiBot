@@ -51,7 +51,7 @@ class Osu:
 
     async def getlink(self, mode, playername):
         cookiezi = self.redis_db.get('OsuAPI').decode('utf-8')
-        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + mode
+        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + str(mode)
                 + '&m=' + playername)
 
         async with aiohttp.get(link) as r:
@@ -62,7 +62,7 @@ class Osu:
 
     @commands.command(pass_context=True)
     async def osu(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(0, name)[0])
+        player = OsuPlayer(await self.getlink(0, name))
         em = player.display(ctx.message.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
@@ -73,7 +73,7 @@ class Osu:
 
     @commands.command(pass_context=True)
     async def taiko(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(1, name)[0])
+        player = OsuPlayer(await self.getlink(1, name))
         em = player.display(ctx.message.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
@@ -84,7 +84,7 @@ class Osu:
 
     @commands.command(pass_context=True)
     async def ctb(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(2, name)[0])
+        player = OsuPlayer(await self.getlink(2, name))
         em = player.display(ctx.message.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
@@ -95,7 +95,7 @@ class Osu:
 
     @commands.command(pass_context=True)
     async def mania(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(3, name)[0])
+        player = OsuPlayer(await self.getlink(3, name))
         em = player.display(ctx.message.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
