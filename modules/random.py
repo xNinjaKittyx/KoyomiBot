@@ -19,7 +19,7 @@ class Random:
     async def meow(self, ctx):
         """ When User Types ~meow, return a cat link """
 
-        async with aiohttp.get('http://random.cat/meow') as r:
+        async with self.bot.session.get('http://random.cat/meow') as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output("Could not get a meow")
                 return
@@ -38,7 +38,7 @@ class Random:
     async def woof(self, ctx):
         """When user types ~woof, return a woof link """
 
-        async with aiohttp.get('http://random.dog/') as r:
+        async with self.bot.session.get('http://random.dog/') as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output("Could not get a woof")
                 return

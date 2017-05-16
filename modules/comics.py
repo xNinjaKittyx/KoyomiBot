@@ -19,7 +19,7 @@ class Comics:
     async def refreshxkcd(self):
         if self.redis_db.get('xkcdmax') is not None:
             return True
-        async with aiohttp.get("http://xkcd.com/info.0.json") as r:
+        async with self.bot.session.get("http://xkcd.com/info.0.json") as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output("XKCD is down")
                 return False
@@ -32,7 +32,7 @@ class Comics:
         num = int(num)
         result = self.redis_db.hget('xkcd', num)
         if result is None:
-            async with aiohttp.get(url + "/info.0.json") as r:
+            async with self.bot.session.get(url + "/info.0.json") as r:
                 if not r.status == 200:
                     self.bot.cogs['Log'].output("Unable to get XKCD #" + str(num))
                     return
@@ -64,7 +64,7 @@ class Comics:
     async def refreshcyanide(self):
         if self.redis_db.get('cyanidemax') is not None:
             return True
-        async with aiohttp.get("http://explosm.net/comics/latest") as r:
+        async with self.bot.session.get("http://explosm.net/comics/latest") as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output("Cyanide&Happiness is down")
                 return False
@@ -77,7 +77,7 @@ class Comics:
         num = int(num)
         result = self.redis_db.hget('cyanide', num)
         if result is None:
-            async with aiohttp.get(url) as r:
+            async with self.bot.session.get(url) as r:
                 if not r.status == 200:
                     self.bot.cogs['Log'].output("Unable to get Cyanide #" + str(num))
                     return
@@ -116,7 +116,7 @@ class Comics:
     async def cyanidercg(self, ctx):
         """ Gives a randomly generated Cyanide & Happiness Comic"""
 
-        async with aiohttp.get('http://explosm.net/rcg') as r:
+        async with self.bot.session.get('http://explosm.net/rcg') as r:
             if not r.status == 200:
                 self.bot.cogs['Log'].output("Unable to get RCG for Cyanide")
                 return

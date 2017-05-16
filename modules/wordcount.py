@@ -36,7 +36,7 @@ class Wordcount:
     async def on_message(self, message):
         if (len(message.content) <= 2 or message.author.bot or
                 message.content.startswith(self.bot.command_prefix)):
-                return
+            return
         await self.wordcount(message.content)
 
     @commands.command(pass_context=True)

@@ -54,7 +54,7 @@ class Osu:
         link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + playername
                 + '&m=' + str(mode))
 
-        async with aiohttp.get(link) as r:
+        async with self.bot.session.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Peppy Failed')
                 return

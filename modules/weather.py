@@ -41,7 +41,7 @@ class Weather:
             search.replace(" ", "+") + "&key=" + key
         )
 
-        async with aiohttp.get(url) as r:
+        async with self.bot.session.get(url) as r:
             if r.status != 200:
                 await self.bot.say("GoogleGeoCode is down")
                 return
@@ -54,7 +54,7 @@ class Weather:
             "/" + str(lat) + "," + str(lng) + "?exclude=minutely,hourly,daily,alerts,flags"
         )
 
-        async with aiohttp.get(url) as r:
+        async with self.bot.session.get(url) as r:
             if r.status != 200:
                 await self.bot.say('DarkSky is down')
                 return

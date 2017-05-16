@@ -32,13 +32,13 @@ class PAD:
 
     async def refresh(self):
         if self.redis_db.get('PADMonsters') is None:
-            async with aiohttp.get('https://www.padherder.com/api/monsters/') as r:
+            async with self.bot.session.get('https://www.padherder.com/api/monsters/') as r:
                 if r.status != 200:
                     print('/api/monsters/ is down')
                     return False
                 self.redis_db.set('PADMonsters', await r.read(), ex=43200)
         if self.redis_db.get('PADAwakening') is None:
-            async with aiohttp.get('https://www.padherder.com/api/awakenings/') as r:
+            async with self.bot.session.get('https://www.padherder.com/api/awakenings/') as r:
                 if r.status != 200:
                     print('/api/awakenings/ is down')
                     return False

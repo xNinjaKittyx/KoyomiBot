@@ -16,7 +16,7 @@ class Search:
     async def gfylink(self, keyword, count, author):
         link = "https://api.gfycat.com/v1test/gfycats/search?search_text=" + str(keyword) + "&count=" + str(count)
 
-        async with aiohttp.get(link) as r:
+        async with self.bot.session.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Gyfcat returned ' + r.status)
             giflist = await r.json()
@@ -52,7 +52,7 @@ class Search:
         link = ("http://safebooru.org/index.php?page=dapi&s=post&q=index" +
                 "&tags=" + search.replace(' ', '_'))
 
-        async with aiohttp.get(link) as r:
+        async with self.bot.session.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Safebooru failed')
             weeblist = xmltodict.parse(await r.text())
@@ -81,7 +81,7 @@ class Search:
                 page = random.randint(0, numOfPages)
                 # Avoiding oversearching, and cutting the page limit to 3.
                 # Sometimes really unrelated stuff gets put in.
-                async with aiohttp.get(link + '&pid=' + str(min(3, page))) as r:
+                async with self.bot.session.get(link + '&pid=' + str(min(3, page))) as r:
                     if r.status != 200:
                         return
                     weeblist = xmltodict.parse(await r.text())

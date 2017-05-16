@@ -24,7 +24,7 @@ class Anime:
             return str("https://anilist.co/manga/" + str(series_id))
 
     async def getaccesstoken(self):
-        async with aiohttp.post(
+        async with self.bot.session.post(
             'https://anilist.co/api/auth/access_token', data={
                 'grant_type': 'client_credentials',
                 'client_id': self.anilistid,
@@ -108,7 +108,7 @@ class Anime:
             ani + "?access_token=" + self.access_token
         )
 
-        async with aiohttp.get(url) as r:
+        async with self.bot.session.get(url) as r:
             if r.status == 200:
                 animelist = await r.json()
                 try:
@@ -150,7 +150,7 @@ class Anime:
             'https://anilist.co/api/manga/search/' +
             mang + "?access_token=" + self.access_token
         )
-        async with aiohttp.get(url) as r:
+        async with self.bot.session.get(url) as r:
             if r.status == 200:
                 mangalist = await r.json()
                 try:

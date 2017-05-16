@@ -3,6 +3,7 @@
 import random
 
 # Required for disocrd.py
+import aiohttp
 from discord.ext import commands
 
 # Databases
@@ -109,6 +110,7 @@ async def on_message(msg):
 
 @bot.event
 async def on_ready():
+    bot.session = aiohttp.ClientSession(loop=bot.loop)
 
     bot.cogs['Log'].output('Logged in as')
     bot.cogs['Log'].output("Username " + bot.user.name)

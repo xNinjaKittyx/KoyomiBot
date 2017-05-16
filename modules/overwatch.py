@@ -61,7 +61,7 @@ class Overwatch:
             'From': 'firefwing42@gmail.com'
         }
 
-        async with aiohttp.get('https://owapi.net/api/v3/u/' + tag + '/stats', headers=headers) as r:
+        async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats', headers=headers) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('OWApi.net failed to connect.')
                 return

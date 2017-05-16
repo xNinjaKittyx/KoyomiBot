@@ -12,14 +12,15 @@ class Log:
         self.bot = bot
 
     @staticmethod
-    def output(a):
+    def output(a, sysout=True):
         """ Output the string 'a' """
         a = a.encode('utf-8', 'replace').decode('utf-8', 'ignore')
         p = a.encode('utf-8', 'replace').decode('ascii', 'ignore')
         today = datetime.today()
         filename = "log-{0}-{1}-{2}.log".format(str(today.month), str(today.day), str(today.year))
         prefix = "[{0}:{1}:{2}]: ".format(str(today.hour), str(today.minute), str(today.second))
-        print(prefix + p)
+        if sysout == True:
+            print(prefix + p)
         if not os.path.exists('./logs'):
             os.makedirs('./logs')
         with codecs.open('./logs/' + filename, 'a', encoding='utf8') as f:
@@ -41,7 +42,7 @@ class Log:
         self.output(member.name + " has joined the server at " + member.server.name)
 
     async def on_member_remove(self, member):
-        self.output(member.name + " has left the server at " + member.server.name)
+        self.output(member.name + " has left the server at " + member.server.name, False)
 
     async def on_message_delete(self, msg):
         if msg.author == self.bot.user:
