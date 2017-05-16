@@ -76,4 +76,4 @@ help | Shows the help message.
 * Finish Animehangman (also come up with a better fricking name.)
 * Finish Music Player (Have to make it look nice :D)
 * Add Cleverbot and WolframAlpha back.
-* Finish Weather command.
+* Check System for Users, Channels, and Servers. Ability to ignore them.

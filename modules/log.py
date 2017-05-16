@@ -23,7 +23,7 @@ class Log:
         if not os.path.exists('./logs'):
             os.makedirs('./logs')
         with codecs.open('./logs/' + filename, 'a', encoding='utf8') as f:
-            """ OH YEAH AND DON'T USE NOTEPAD... USE A BETTER ONE LIKE NOTEPAD++"""
+            # OH YEAH AND DON'T USE NOTEPAD... USE A BETTER ONE LIKE NOTEPAD++
             f.write(prefix + a + "\n")
             f.close()
 

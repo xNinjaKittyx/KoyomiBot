@@ -37,6 +37,7 @@ modules = {
     'modules.random',
     'modules.search',
     'modules.tags',
+    'modules.weather',
     'modules.wordcount'
 
 }

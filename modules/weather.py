@@ -1,111 +1,104 @@
 """ Weather Module"""
 
-import asyncio
 from datetime import datetime
-import json
-import os
 
-import discord
+import aiohttp
 from discord.ext import commands
+import redis
 
-import requests
-
-class Current:
-    """ Fetch the current weather from Dark Sky API based on Lat/Lng values """
-
-    def __init__(self, lat, lng):
-        # DELET THIS. Make it a dictionary instead. A lot better.
-        with open('./json/setup.json') as data_file:
-            settings = json.load(data_file)
-        self.dsapikey = settings["DarkSkyAPIKey"]
-        url = "https://api.darksky.net/forecast/" + self.dsapikey + \
-            "/" + str(lat) + "," + str(lng) + "?exclude=minutely,hourly,daily,alerts,flags"
-        req = requests.get(url)
-        if req.status_code != 200:
-            return
-        a = json.loads(req.text)
-        self.latitude = a["latitude"]
-        self.longitude = a["longitude"]
-        currently = a["currently"]
-        self.summary = currently["summary"].lower()
-        self.icon = currently["icon"]
-        self.rainprobability = currently["precipProbability"] * 100
-        if self.rainprobability != 0:
-            self.preciptype = currently["precipType"]
-        else:
-            self.preciptype = 'rain'
-        self.temp = currently["temperature"]
-        self.feelslike = currently["apparentTemperature"]
-        self.humidity = currently["humidity"] * 100
-        self.time = datetime.fromtimestamp(currently["time"])
-
-    def gettime(self):
-        return (str(self.time.month) + "/" + str(self.time.day) + "/" +
-                str(self.time.year) + " @ " + str(self.time.hour) + ":" +
-                str(self.time.minute))
-
-    def discordicon(self):
-        """ Return the correlating Discord Emote"""
-        if self.icon == "clear-day":
-            return ":sunny:"
-        elif self.icon == "clear-night":
-            return ":crescent_moon:"
-        elif self.icon == "rain":
-            return ":cloud_rain:"
-        elif self.icon == "snow":
-            return ":cloud_snow:"
-        elif self.icon == "sleet":
-            return ":snowflake:"
-        elif self.icon == "wind":
-            return ":dash:"
-        elif self.icon == "fog" or self.icon == "cloudy":
-            return ":cloud:"
-        elif self.icon == "partly-cloudy-day" or self.icon == "partly-cloudy-night":
-            return ":partly_sunny:"
-        else:
-            print("No Icon Found For: " + self.icon)
-
-    def msg(self, place):
-        """ Return the message"""
-        return ("Searched: [" + str(self.latitude) + ", " +
-                str(self.longitude) + "]\t" + self.gettime() + "\n" +
-                self.discordicon() + " It is " + self.summary +
-                " in " + place + ". It is currently " + str(self.temp) +
-                " F, but it feels like " + str(self.feelslike) +
-                " F. There is a " + str(self.rainprobability) +
-                "% chance of " + self.preciptype +
-                ". Humidity: " + str(self.humidity)[:4] + "%\n" +
-
-                "*Provided To You By Google's GeoCode and DarkSkyAPI*")
-
+from utility import discordembed as dmbd
 
 class Weather:
+    """ Get the Weather"""
     def __init__(self, bot):
         self.bot = bot
-        with open('./json/setup.json') as data_file:
-            settings = json.load(data_file)
-        self.geocodeapi = settings["GoogleAPIKey"]
+        self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
+
+    @staticmethod
+    def discordicon(icon):
+        """ Return the correlating Discord Emote"""
+        icons = {
+            'clear-day': ':sunny:',
+            'clear-night': ':crescent_moon',
+            'rain': ':cloud_rain:',
+            'snow': ':cloud_snow:',
+            'sleet': ':snowflake:',
+            'wind': ':dash:',
+            'fog': ':cloud:',
+            'cloudy': ':cloud:',
+            'partly-cloudy-day': ':partly_sunny:',
+            'partly-cloudy-night': ':partly_sunny'
+        }
+        if icon in icons:
+            return icons[icon]
+        else:
+            return ""
+
+    async def getgoogle(self, search):
+        key = self.redis_db.get('GoogleMapsAPI').decode('utf-8')
+        url = (
+            "https://maps.googleapis.com/maps/api/geocode/json?address=" +
+            search.replace(" ", "+") + "&key=" + key
+        )
+
+        async with aiohttp.get(url) as r:
+            if r.status != 200:
+                await self.bot.say("GoogleGeoCode is down")
+                return
+            return await r.json()
+
+    async def getdarksky(self, lat, lng):
+        key = self.redis_db.get('DarkSkyAPI').decode('utf-8')
+        url = (
+            "https://api.darksky.net/forecast/" + key +
+            "/" + str(lat) + "," + str(lng) + "?exclude=minutely,hourly,daily,alerts,flags"
+        )
+
+        async with aiohttp.get(url) as r:
+            if r.status != 200:
+                await self.bot.say('DarkSky is down')
+                return
+            return await r.json()
+
+    def display(self, author, place, darksky):
+        curr = darksky["currently"]
+        title = "Powered by GoogleGeoCode and DarkSky"
+        desc = (
+            self.discordicon(curr['icon']) + " It is " + curr['summary'] +
+            " in " + place
+        )
+        deg = u' \N{DEGREE SIGN}F'
+        em = dmbd.newembed(author, title, desc)
+        em.add_field(name='Temperature', value=str(curr['temperature']) + deg)
+        em.add_field(name='Feels Like', value=str(curr['apparentTemperature']) + deg)
+        em.add_field(
+            name='Precipitation', value=str(
+                curr['precipProbability'] * 100
+            ) + "% chance of " + (
+                curr['precipType'] if 'precipType' in curr else "rain"
+            )
+        )
+
+        em.add_field(name='Humidity', value=str(curr['humidity'] * 100)[:4] + "%")
+
+        return em
+
 
     @commands.command(pass_context=True)
     async def weather(self, ctx, *, search: str):
         """ Grab the weather using GoogleGeoCodeAPI and DarkSkyAPI"""
-        url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + \
-            search.replace(" ", "+") + "&key=" + self.geocodeapi
-        req = requests.get(url)
-        if req.status_code != 200:
-            await self.bot.say("Google GeoCode is currently down")
-            return
 
-        location = json.loads(req.text)
+        location = await self.getgoogle(search)
+
         if location["status"] == "OK":
             lat = location["results"][0]["geometry"]["location"]["lat"]
             lng = location["results"][0]["geometry"]["location"]["lng"]
             place = location["results"][0]["address_components"][0]["long_name"]
-            current = Current(lat, lng)
-            await self.bot.say(current.msg(place))
-            self.bot.cogs['WordDB'].cmdcount('weather')
-            return
+            darksky = await self.getdarksky(lat, lng)
 
+            await self.bot.say(embed=self.display(ctx.message.author, place, darksky))
+            self.bot.cogs['Wordcount'].cmdcount('weather')
+            return
         else:
             print("Status Error: " + location["status"])
             return
