@@ -19,7 +19,7 @@ class Log:
         today = datetime.today()
         filename = "log-{0}-{1}-{2}.log".format(str(today.month), str(today.day), str(today.year))
         prefix = "[{0}:{1}:{2}]: ".format(str(today.hour), str(today.minute), str(today.second))
-        if sysout == True:
+        if sysout:
             print(prefix + p)
         if not os.path.exists('./logs'):
             os.makedirs('./logs')
@@ -39,7 +39,7 @@ class Log:
             await self.bot.send_message(modlog, cmdused)
 
     async def on_member_join(self, member):
-        self.output(member.name + " has joined the server at " + member.server.name)
+        self.output(member.name + " has joined the server at " + member.server.name, False)
 
     async def on_member_remove(self, member):
         self.output(member.name + " has left the server at " + member.server.name, False)
