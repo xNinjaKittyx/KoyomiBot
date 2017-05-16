@@ -51,14 +51,15 @@ class Osu:
 
     async def getlink(self, mode, playername):
         cookiezi = self.redis_db.get('OsuAPI').decode('utf-8')
-        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + str(mode)
-                + '&m=' + playername)
+        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + playername
+                + '&m=' + str(mode))
 
         async with aiohttp.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Peppy Failed')
                 return
-            return await r.json()
+            j = await r.json()
+            return j[0]
 
     @commands.command(pass_context=True)
     async def osu(self, ctx, *, name: str):
