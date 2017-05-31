@@ -3,10 +3,8 @@
 # -*- coding: utf8 -*-
 from datetime import datetime
 
-import aiohttp
 from bs4 import BeautifulSoup
 from discord.ext import commands
-import redis
 import utility.discordembed as dmbd
 
 
@@ -40,10 +38,9 @@ class Anime:
                 return
 
     def __init__(self, bot):
-        self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
         self.bot = bot
-        self.anilistid = self.redis_db.get('AnilistID').decode('utf-8')
-        self.anilistsecret = self.redis_db.get('AnilistSecret').decode('utf-8')
+        self.anilistid = bot.redis_db.get('AnilistID').decode('utf-8')
+        self.anilistsecret = bot.redis_db.get('AnilistSecret').decode('utf-8')
         if not self.anilistid or not self.anilistsecret:
             print('ID or Secret is missing for AniList')
             raise ImportError

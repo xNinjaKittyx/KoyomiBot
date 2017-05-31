@@ -34,7 +34,7 @@ class Admin:
         """ Bot kills itself """
         if not self.checkdev(ctx.message.author.id):
             return
-        await self.bot.say("*Bot is kill in 3 secondw requires s.*")
+        await self.bot.say("*Bot is kill in 3 seconds...*")
         await asyncio.sleep(3)
         await self.bot.close()
 

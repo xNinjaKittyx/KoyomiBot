@@ -2,7 +2,6 @@
 import asyncio
 import discord
 from discord.ext import commands
-import tools.checks as checks
 
 
 class VoiceEntry:

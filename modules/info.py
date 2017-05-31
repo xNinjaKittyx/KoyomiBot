@@ -59,7 +59,6 @@ class Info:
         em = dmbd.newembed(ctx.message.author, d=description)
         await self.bot.edit_message(second, new_content='',embed=em)
 
-
     @commands.command(pass_context=True)
     async def stats(self, ctx):
         author = ctx.message.author

@@ -29,12 +29,14 @@ nonessential_keys = {
 modules = {
     'modules.admin',
     'modules.anime',
+    'modules.animehangman',
     'modules.comics',
     'modules.info',
     'modules.log',
     'modules.osu',
     'modules.overwatch',
     'modules.pad',
+    'modules.profile',
     'modules.random',
     'modules.search',
     'modules.tags',
@@ -54,7 +56,7 @@ else:
 
 description = "Huge rewrite for Rin Bot. No Bullshit. Just fun stuff."
 bot = commands.Bot(command_prefix=prefix, description=description, pm_help=True)
-
+bot.redis_db = redis_db
 def checkkeys():
     """ Returns 1 if all keys are satisfied
         Returns 2 if Essential Keys are not given

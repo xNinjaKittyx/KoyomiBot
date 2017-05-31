@@ -1,10 +1,6 @@
 """ Weather Module"""
 
-from datetime import datetime
-
-import aiohttp
 from discord.ext import commands
-import redis
 
 from utility import discordembed as dmbd
 
@@ -12,7 +8,6 @@ class Weather:
     """ Get the Weather"""
     def __init__(self, bot):
         self.bot = bot
-        self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
 
     @staticmethod
     def discordicon(icon):
@@ -35,7 +30,7 @@ class Weather:
             return ""
 
     async def getgoogle(self, search):
-        key = self.redis_db.get('GoogleMapsAPI').decode('utf-8')
+        key = self.bot.redis_db.get('GoogleMapsAPI').decode('utf-8')
         url = (
             "https://maps.googleapis.com/maps/api/geocode/json?address=" +
             search.replace(" ", "+") + "&key=" + key
@@ -48,7 +43,7 @@ class Weather:
             return await r.json()
 
     async def getdarksky(self, lat, lng):
-        key = self.redis_db.get('DarkSkyAPI').decode('utf-8')
+        key = self.bot.redis_db.get('DarkSkyAPI').decode('utf-8')
         url = (
             "https://api.darksky.net/forecast/" + key +
             "/" + str(lat) + "," + str(lng) + "?exclude=minutely,hourly,daily,alerts,flags"

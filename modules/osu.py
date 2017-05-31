@@ -1,7 +1,5 @@
 
-import aiohttp
 from discord.ext import commands
-import redis
 import utility.discordembed as dmbd
 
 class OsuPlayer:
@@ -46,11 +44,10 @@ class OsuPlayer:
 class Osu:
 
     def __init__(self, bot):
-        self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
         self.bot = bot
 
     async def getlink(self, mode, playername):
-        cookiezi = self.redis_db.get('OsuAPI').decode('utf-8')
+        cookiezi = self.bot.redis_db.get('OsuAPI').decode('utf-8')
         link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + playername
                 + '&m=' + str(mode))
 

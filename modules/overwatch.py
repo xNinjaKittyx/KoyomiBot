@@ -2,7 +2,6 @@
 
 import random
 
-import aiohttp
 from discord.ext import commands
 from utility import discordembed as dmbd
 

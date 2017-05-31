@@ -62,7 +62,6 @@ class Search:
         # Find how many pages there are
 
         numOfPages = int(numOfResults / 100)
-        remaining = numOfResults % 100
 
         author = ctx.message.author
         title = 'Safebooru'
@@ -78,20 +77,10 @@ class Search:
                 chosenone = random.randint(0, min(99, numOfResults-1))
                 em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
             else:
-                page = random.randint(0, numOfPages)
                 # Avoiding oversearching, and cutting the page limit to 3.
                 # Sometimes really unrelated stuff gets put in.
-                async with self.bot.session.get(link + '&pid=' + str(min(3, page))) as r:
-                    if r.status != 200:
-                        return
-                    weeblist = xmltodict.parse(await r.text())
-
-                if page == numOfPages:
-                    chosenone = random.randint(0, min(99, remaining))
-                    em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
-                else:
-                    chosenone = random.randint(0, 99)
-                    em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
+                chosenone = random.randint(0, 99)
+                em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
 
             self.bot.cogs['Wordcount'].cmdcount('safebooru')
         await self.bot.say(embed=em)
