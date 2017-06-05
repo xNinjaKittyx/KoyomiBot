@@ -63,7 +63,7 @@ class Tags:
     async def delete(self, ctx, *, query: str):
         if query is None:
             return
-        if not self.bot.cogs['Admin'].checkdev(ctx.message.author.id):
+        if not self.bot.checkdev(ctx.message.author.id):
             return
         for x in self.bot.redis_db.hkeys('tags'):
             print(x.decode('utf-8'))

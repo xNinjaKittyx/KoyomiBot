@@ -1,5 +1,4 @@
 # -*- coding: utf8 -*-
-from datetime import datetime
 import random
 
 from discord.ext import commands
@@ -16,40 +15,31 @@ class Animehangman:
             print('ID or Secret is missing for AniList')
             raise ImportError
         self.max = 90248
-        self.access_token = None
-        self.lastaccess = None
-        self.firsttime = True
-        self.currentboard = ""
         bot.redis_db.delete('achminst')
 
-    async def getaccesstoken(self):
-        async with self.bot.session.post(
-            'https://anilist.co/api/auth/access_token', data={
-                'grant_type': 'client_credentials',
-                'client_id': self.anilistid,
-                'client_secret': self.anilistsecret
-            }
-        ) as r:
-            if r.status != 200:
-                return
-            results = await r.json()
-            self.access_token = results['access_token']
-            self.lastaccess = datetime.today()
-
     async def refreshtoken(self):
-        if self.firsttime:
-            self.firsttime = False
-            await self.getaccesstoken()
-        delta = (datetime.today() - self.lastaccess)
-        if delta.seconds > 3600 or delta.days > 0:
-            await self.getaccesstoken()
+        if self.bot.redis_db.exists('AnilistToken'):
+            return
+        else:
+            async with self.bot.session.post(
+                'https://anilist.co/api/auth/access_token', data={
+                    'grant_type': 'client_credentials',
+                    'client_id': self.anilistid,
+                    'client_secret': self.anilistsecret
+                }
+            ) as r:
+                if r.status != 200:
+                    return
+                results = await r.json()
+                self.bot.redis_db.setex('AnilistToken', 3600, results['access_token'])
 
-    async def display(self, guess, misses, author, picture, win=0):
+
+    async def display(self, currentboard, guess, misses, author, picture, win=0):
         subtitle = "Where you test your weeb level!"
         em = dmbd.newembed(author, "Anime Hangman!", subtitle)
         em.set_image(url=picture)
 
-        em.add_field(name="Word", value="`" + self.currentboard.title() + "`", inline=False)
+        em.add_field(name="Word", value="`" + currentboard.title() + "`", inline=False)
         if misses != []:
             em.add_field(name="Guess", value=guess)
             em.add_field(name="Misses", value=' '.join(misses))
@@ -88,7 +78,7 @@ class Animehangman:
     async def displayanswer(self, author, char):
         try:
             anime = char['anime'][0]
-        except:
+        except IndexError:
             anime = char['anime']
         subtitle = anime['title_japanese']
         url = "https://anilist.co/anime/" + str(anime['id'])
@@ -102,6 +92,27 @@ class Animehangman:
 
         await self.bot.say(embed=em)
 
+    async def getchar(self):
+        char = None
+        while char is None:
+            async with self.bot.session.get(
+                "https://anilist.co/api/character/" +
+                str(random.randint(1, self.max)) +
+                "/page?access_token=" +
+                self.bot.redis_db.get('AnilistToken').decode('utf-8')
+            ) as r:
+                if r.status != 200:
+                    print("ANIME CHARACTER RETURNING 404")
+                    continue
+                tempchar = await r.json()
+
+            print(tempchar["id"])
+            default = "https://cdn.anilist.co/img/dir/character/reg/default.jpg"
+            if tempchar["anime"] == [] or tempchar['image_url_lge'] == default:
+                continue
+            char = tempchar
+        return char
+
 
     @commands.command(pass_context=True, no_pm=True)
     async def achm(self, ctx):
@@ -114,36 +125,20 @@ class Animehangman:
 
         await self.refreshtoken()
 
-        char = None
-        while char is None:
-            async with self.bot.session.get(
-                "https://anilist.co/api/character/" +
-                str(random.randint(1, self.max)) +
-                "/page?access_token=" +
-                self.access_token
-            ) as r:
-                if r.status != 200:
-                    print("ANIME CHARACTER RETURNING 404")
-                    continue
-                character = await r.json()
-
-            print(character["id"])
-            if character["anime"] == [] or character['image_url_lge'] == "https://cdn.anilist.co/img/dir/character/reg/default.jpg":
-                continue
-            char = character
+        char = await self.getchar()
 
         answer = char["name_first"].lower()
-        self.currentboard = "_"*len(char["name_first"])
+        currentboard = "_"*len(char["name_first"])
         if char["name_last"]:
             answer += " " + char["name_last"].lower()
-            self.currentboard += " " + "_"*len(char["name_last"])
+            currentboard += " " + "_"*len(char["name_last"])
         misses = []
         guess = "FirstDisplay"
         picture = char["image_url_lge"]
         author = ctx.message.author
-        prev_message = await self.display(guess, misses, author, picture)
+        prev_message = await self.display(currentboard, guess, misses, author, picture)
         self.bot.redis_db.rpush('achminst', ctx.message.channel.id)
-        while self.currentboard != answer or len(misses) < 6:
+        while True:
 
             def check(msg):
                 return msg.content.startswith(self.bot.command_prefix + 'guess')
@@ -157,22 +152,22 @@ class Animehangman:
             pref_length = len(self.bot.command_prefix) + 5
             guess = msg.content[pref_length:].strip().lower()
 
+            # checking the guess, and filling out the hangman as follows
+
             if len(guess) < 1:
                 await self.bot.say("You need to give me a letter!")
             elif guess == 'quit':
-                self.bot.redis_db.lrem('achminst', 1, ctx.message.channel.id)
                 await self.bot.say("You Ragequit? What a loser.")
-                for x in range(6 - len(misses)):
+                for _ in range(6 - len(misses)):
                     misses.append('.')
                 await self.display(guess, misses, author, picture, 0)
-                await self.displayanswer(author, char)
-                return
+                break
             elif len(guess) > 1:
                 if len(answer) < len(guess):
                     await self.bot.say("Your guess is too long. Try Again.")
                     guess = ";^)"
                 elif guess == answer:
-                    self.currentboard = answer
+                    currentboard = answer
                 else:
                     misses.append(guess)
             elif guess in misses:
@@ -180,24 +175,23 @@ class Animehangman:
             elif guess in answer:
                 for number, value in enumerate(answer):
                     if value == guess:
-                        self.currentboard = self.currentboard[:number] + value + self.currentboard[number+1:]
+                        currentboard = currentboard[:number] + value + currentboard[number+1:]
             else:
                 misses.append(guess)
 
 
-            if self.currentboard == answer:
+            # checking if the answer has been done, or if the game has finished.
+
+            if currentboard == answer:
                 await self.display(guess, misses, author, picture, 1)
-                await self.displayanswer(author, char)
-                self.bot.redis_db.lrem('achminst', 1, ctx.message.channel.id)
-                return
+                break
             elif len(misses) >= 6:
                 await self.display(guess, misses, author, picture, 0)
-                await self.displayanswer(author, char)
-                self.bot.redis_db.lrem('achminst', 1, ctx.message.channel.id)
-                return
+                break
             else:
                 prev_message = await self.display(guess, misses, author, picture, 0)
 
+        await self.displayanswer(author, char)
         self.bot.redis_db.lrem('achminst', 1, ctx.message.channel.id)
         return
 

@@ -1,9 +1,11 @@
 
 # Built-in Python Imports
 import random
+import os
 
 # Required for disocrd.py
 import aiohttp
+import discord
 from discord.ext import commands
 
 # Databases
@@ -11,7 +13,7 @@ import redis
 
 debug = False
 
-redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
+redis_db = redis.StrictRedis()
 essential_keys = {
     'DiscordToken',
 }
@@ -33,6 +35,7 @@ modules = {
     'modules.comics',
     'modules.info',
     'modules.log',
+    'modules.musicplayer',
     'modules.osu',
     'modules.overwatch',
     'modules.pad',
@@ -113,7 +116,7 @@ async def on_message(msg):
 @bot.event
 async def on_ready():
     bot.session = aiohttp.ClientSession(loop=bot.loop)
-
+    bot.checkdev = lambda x: x == "82221891191844864"
     bot.cogs['Log'].output('Logged in as')
     bot.cogs['Log'].output("Username " + bot.user.name)
     bot.cogs['Log'].output("ID: " + bot.user.id)
@@ -123,13 +126,15 @@ async def on_ready():
         "&scope=bot&permissions=0"
     )
     bot.cogs['Log'].output("Invite Link: " + url)
-    # if not discord.opus.is_loaded() and os.name == 'nt':
-    #     discord.opus.load_opus("opus.dll")
-    #
-    # if not discord.opus.is_loaded() and os.name == 'posix':
-    #     discord.opus.load_opus("/usr/local/lib/libopus.so")
-    # bot.cogs['log'].output("Loaded Opus Library")
+    try:
+        if not discord.opus.is_loaded() and os.name == 'nt':
+            discord.opus.load_opus("libopus0.x64.dll")
 
+        if not discord.opus.is_loaded() and os.name == 'posix':
+            discord.opus.load_opus("/usr/local/lib/libopus.so")
+        bot.cogs['Log'].output("Loaded Opus Library")
+    except:
+        bot.cogs['Log'].output("Opus library did not load. Voice may not work.")
 
 if __name__ == "__main__":
     print("LAUNCHING BOT...")

@@ -150,10 +150,9 @@ class Anime:
         async with self.bot.session.get(url) as r:
             if r.status == 200:
                 mangalist = await r.json()
-                try:
+                if 'error' in mangalist:
                     await self.bot.say(mangalist["error"]["message"][0])
-                except:
-                    pass
+                    return
                 chosen = {}
                 for x in mangalist:
                     if x['title_romaji'].lower() == mang.lower():

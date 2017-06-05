@@ -1,7 +1,7 @@
 
+# -*- coding: utf8 -*-
 import random
 
-import aiohttp
 from discord.ext import commands
 import wikipedia
 import xmltodict
@@ -54,36 +54,62 @@ class Search:
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('Safebooru failed')
+                self.bot.cogs['Log'].output('[WARNING]: Safebooru Search Failed')
             weeblist = xmltodict.parse(await r.text())
 
-        numOfResults = int(weeblist['posts']['@count'])
-
-        # Find how many pages there are
-
-        numOfPages = int(numOfResults / 100)
+        numOfResults = min(int(weeblist['posts']['@count']), 20)
 
         author = ctx.message.author
         title = 'Safebooru'
-        desc = 'Searched For ' + search
+        desc = '1 / ' + str(numOfResults)
         em = dmbd.newembed(author, title, desc)
-
         if numOfResults == 0:
             em.description = "No Results Found For " + search
+            await self.bot.say(embed=em)
+            return
         elif numOfResults == 1:
             em.set_image(url='https:' + str(weeblist['posts']['post']['@file_url']))
+            await self.bot.say(embed=em)
+            return
         else:
-            if numOfPages == 0:
-                chosenone = random.randint(0, min(99, numOfResults-1))
-                em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
-            else:
-                # Avoiding oversearching, and cutting the page limit to 3.
-                # Sometimes really unrelated stuff gets put in.
-                chosenone = random.randint(0, 99)
-                em.set_image(url='https:' + str(weeblist['posts']['post'][chosenone]['@file_url']))
+            em.set_image(url='https:' + str(weeblist['posts']['post'][0]['@file_url']))
+            msg = await self.bot.say(embed=em)
+            await self.bot.add_reaction(msg, '◀')
+            await self.bot.add_reaction(msg, '▶')
+            await self.bot.add_reaction(msg, '❌')
+            page = 0
+            def check(reaction, user):
+                if user.bot:
+                    return False
+                return True
 
-            self.bot.cogs['Wordcount'].cmdcount('safebooru')
-        await self.bot.say(embed=em)
+            while True:
+                res = await self.bot.wait_for_reaction(
+                    ['◀', '▶', '❌'],
+                    timeout=300,
+                    message=msg,
+                    check=check
+                )
+                if res is None:
+                    await self.bot.clear_reactions(msg)
+                    return
+                elif res.reaction.emoji == '❌':
+                    await self.bot.clear_reactions(msg)
+                    return
+                elif res.reaction.emoji == '◀':
+                    await self.bot.remove_reaction(msg, res.reaction.emoji, res.user)
+                    if page > 0:
+                        page -= 1
+                elif res.reaction.emoji == '▶':
+                    await self.bot.remove_reaction(msg, res.reaction.emoji, res.user)
+                    if page < numOfResults - 1:
+                        page += 1
+                imgurl = 'https:' + str(weeblist['posts']['post'][page]['@file_url'])
+                em.set_image(url=imgurl)
+                em.description = str(page+1) + ' / ' + str(numOfResults)
+                em.url = imgurl
+                await self.bot.edit_message(msg, embed=em)
+
 
     @commands.command(pass_context=True)
     async def wiki(self, ctx, *, search: str):
@@ -108,6 +134,10 @@ class Search:
             em.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
             self.bot.cogs['Wordcount'].cmdcount('wiki')
             await self.bot.say(embed=em)
+
+    @commands.command(pass_context=True)
+    async def sauce(self, ctx, *, search: str):
+        pass
 
 def setup(bot):
     bot.add_cog(Search(bot))

@@ -3,6 +3,7 @@ import random
 import time
 
 from discord.ext import commands
+import redis
 import utility.discordembed as dmbd
 
 
@@ -12,6 +13,7 @@ class Profile:
         self.bot = bot
         self.EXP_CURVE = 1 / 1.5
         self.EXP_BOOST = 1
+        self.profile_db = redis.StrictRedis(db=1)
         """ So in this section, there's going to be some way of having "points"
         and therefore leveling up after reaching x number of points.
 
@@ -35,24 +37,24 @@ class Profile:
     def newuser(self, author, xp, timestamp=0):
         if author.bot:
             return
-        self.bot.redis_db.lpush(author.id, author.name + "#" + author.discriminator)
-        self.bot.redis_db.lpush(author.id, xp)
-        self.bot.redis_db.lpush(author.id, timestamp)
+        self.profile_db.lpush(author.id, author.name + "#" + author.discriminator)
+        self.profile_db.lpush(author.id, xp)
+        self.profile_db.lpush(author.id, timestamp)
 
     def addpoints(self, author, xp, cooldown=0):
         xp = xp * self.EXP_BOOST
-        if self.bot.redis_db.exists(author.id):
-            timestamp = self.bot.redis_db.lindex(author.id, 0).decode('utf-8')
-            xp += int(self.bot.redis_db.lindex(author.id, 1).decode('utf-8'))
+        if self.profile_db.exists(author.id):
+            timestamp = self.profile_db.lindex(author.id, 0).decode('utf-8')
+            xp += int(self.profile_db.lindex(author.id, 1).decode('utf-8'))
             if int(time.time()) - int(timestamp) > cooldown:
 
-                self.bot.redis_db.lset(author.id, 0, timestamp)
-                self.bot.redis_db.lset(author.id, 1, xp)
+                self.profile_db.lset(author.id, 0, timestamp)
+                self.profile_db.lset(author.id, 1, xp)
         else:
             self.newuser(author, xp, int(time.time()))
 
     @staticmethod
-    def getuser(ctx, name):
+    def getuser(ctx, name=None):
         if name is None:
             return ctx.message.author
         if ctx.message.mentions:
@@ -70,8 +72,8 @@ class Profile:
         return user
 
     def getlevel(self, authorid):
-        if self.bot.redis_db.exists(authorid):
-            xp = int(self.bot.redis_db.lindex(authorid, 1).decode('utf-8'))
+        if self.profile_db.exists(authorid):
+            xp = int(self.profile_db.lindex(authorid, 1).decode('utf-8'))
             total = ((xp/100)**self.EXP_CURVE) + 1
             lvl = int(total)
             percent = total - lvl
@@ -89,7 +91,7 @@ class Profile:
         self.addpoints(msg.author, random.randint(5, 20), 180)
 
     @commands.command(pass_context=True)
-    async def avatar(self, ctx, *, name: str):
+    async def avatar(self, ctx, *, name: str=None):
         """ Grabbing an avatar of a person """
 
         user = self.getuser(ctx, name)
@@ -108,7 +110,7 @@ class Profile:
         self.bot.cogs['Wordcount'].cmdcount('avatar')
 
     @commands.command(pass_context=True)
-    async def profile(self, ctx, *,  name: str):
+    async def profile(self, ctx, *,  name: str=None):
         """ Display Profile :o """
 
         user = self.getuser(ctx, name)
