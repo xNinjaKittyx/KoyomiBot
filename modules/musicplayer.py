@@ -2,7 +2,7 @@
 import asyncio
 import discord
 from discord.ext import commands
-import tools.checks as checks
+from utility import discordembed as dmbd
 
 
 class VoiceEntry:
@@ -12,16 +12,28 @@ class VoiceEntry:
         self.player = player
 
     def __str__(self):
-        fmt = '*{0.title}* uploaded by {0.uploader} and requested by {1.display_name}'
+        fmt = '**{0.title}** uploaded by {0.uploader} and requested by {1.display_name}'
         duration = self.player.duration
         if duration:
             fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
         return fmt.format(self.player, self.requester)
 
+    def getembed(self, title):
+        desc = str(self) + "\nVolume: {}%".format(int(self.player.volume * 100))
+        if 'https://' in self.player.url:
+            info_dict = self.player.yt.extract_info(self.player.url, download=False)
+            video_id = info_dict.get("id", None)
+            em = dmbd.newembed(self.requester, title, desc, self.player.url)
+            em.set_image(url='https://img.youtube.com/vi/' + video_id + '/maxresdefault.jpg')
+        else:
+            em = dmbd.newembed(self.requester, title, desc)
+
+        return em
 
 class VoiceState:
     def __init__(self, bot):
         self.current = None
+        self.current_msg = None
         self.voice = None
         self.bot = bot
         self.play_next_song = asyncio.Event()
@@ -48,11 +60,12 @@ class VoiceState:
     def toggle_next(self):
         self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
 
+
     async def audio_player_task(self):
         while True:
             self.play_next_song.clear()
             self.current = await self.songs.get()
-            await self.bot.send_message(self.current.channel, 'Now playing ' + str(self.current))
+            self.current_msg = await self.bot.send_message(self.current.channel, embed=self.current.getembed('Now Playing '))
             self.current.player.start()
             await self.play_next_song.wait()
 
@@ -87,17 +100,30 @@ class Music:
             except:
                 pass
 
+    async def refreshplayer(self, server, msg='Currently Playing'):
+        state = self.get_voice_state(server)
+        if state.current is None:
+            return
+        temp = await self.bot.send_message(state.current_msg.channel, embed=state.current.getembed(msg))
+        await self.bot.delete_message(state.current_msg)
+        state.current_msg = temp
+
+    async def delayed_delete(self, msg, time=10):
+        await asyncio.sleep(time)
+        await self.bot.delete_message(msg)
+
+
     @commands.command(pass_context=True, no_pm=True)
     async def join(self, ctx, *, channel: discord.Channel):
         """Joins a voice channel."""
         try:
             await self.create_voice_client(channel)
-        except discord.ClientException:
-            await self.bot.say('Already in a voice channel...')
         except discord.InvalidArgument:
-            await self.bot.say('This is not a voice channel...')
+            x = await self.bot.say('```This is not a voice channel...```')
+        except discord.ClientException:
+            x = await self.bot.say('```Already in a voice channel...```')
         else:
-            await self.bot.say('Ready to play audio in ' + channel.name)
+            x = await self.bot.say('```Ready to play audio in ' + channel.name + '```')
         self.bot.cogs['Wordcount'].cmdcount('join')
 
     @commands.command(pass_context=True, no_pm=True)
@@ -105,7 +131,7 @@ class Music:
         """Summons the bot to join your voice channel."""
         summoned_channel = ctx.message.author.voice_channel
         if summoned_channel is None:
-            await self.bot.say('You are not in a voice channel.')
+            x = await self.bot.say('```You are not in a voice channel.```')
             return False
 
         state = self.get_voice_state(ctx.message.server)
@@ -128,9 +154,10 @@ class Music:
         """
         state = self.get_voice_state(ctx.message.server)
         opts = {
-            'default_search': 'auto',
+            'default-search': 'ytsearch',
             'quiet': True,
             'noplaylist': True,
+            'forceurl': True
         }
 
         if state.voice is None:
@@ -146,8 +173,11 @@ class Music:
         else:
             player.volume = 0.25
             entry = VoiceEntry(ctx.message, player)
-            await self.bot.say('Enqueued ' + str(entry))
+            await self.bot.say('Enqueued ' + str(entry) + '')
             await state.songs.put(entry)
+            await self.refreshplayer(ctx.message.server)
+            await self.bot.delete_message(ctx.message)
+
 
         self.bot.cogs['Wordcount'].cmdcount('play')
 
@@ -158,13 +188,12 @@ class Music:
         state = self.get_voice_state(ctx.message.server)
         if state.is_playing():
             if value > 200 or value < 1:
-                await self.bot.say('Value too high! 1 - 200 only!')
-                return
-            player = state.player
-
-            player.volume = value / 100
-            await self.bot.say('Set the volume to {:.0%}'.format(player.volume))
-
+                await self.refreshplayer(ctx.message.server, 'Value too high! 1 - 200 only!')
+            else:
+                player = state.player
+                player.volume = value / 100
+                await self.refreshplayer(ctx.message.server, 'Set the volume to {:.0%}'.format(player.volume))
+        await self.bot.delete_message(ctx.message)
         self.bot.cogs['Wordcount'].cmdcount('volume')
 
     @commands.command(pass_context=True, no_pm=True)
@@ -174,6 +203,8 @@ class Music:
         if state.is_playing():
             player = state.player
             player.pause()
+            await self.refreshplayer(ctx.message.server, 'Paused')
+        await self.bot.delete_message(ctx.message)
 
         self.bot.cogs['Wordcount'].cmdcount('pause')
 
@@ -184,19 +215,20 @@ class Music:
         if state.is_playing():
             player = state.player
             player.resume()
+            await self.refreshplayer(ctx.message.server, 'Resumed')
+        await self.bot.delete_message(ctx.message)
         self.bot.cogs['Wordcount'].cmdcount('resume')
 
     @commands.command(pass_context=True, no_pm=True)
     async def stop(self, ctx):
         """Stops playing audio and leaves the voice channel.
-        This also clears the queue.
+        This also clears the queue. Permissions System will come soon.
         """
-        if not checks.checkdev(ctx.message):
-            return
         server = ctx.message.server
         state = self.get_voice_state(server)
 
         if state.is_playing():
+            _ = await self.refreshplayer(ctx.message.server, 'Session ended')
             player = state.player
             player.stop()
 
@@ -212,28 +244,35 @@ class Music:
         """Vote to skip a song. The song requester can automatically skip.
         3 skip votes are needed for the song to be skipped.
         """
-
-        state = self.get_voice_state(ctx.message.server)
+        server = ctx.message.server
+        state = self.get_voice_state(server)
         if not state.is_playing():
-            await self.bot.say('Not playing any music right now...')
+            await self.bot.say('```Not playing any music right now...```')
             return
 
         voter = ctx.message.author
         if voter == state.current.requester:
-            await self.bot.say('Requester requested skipping song...')
+            await self.refreshplayer(
+                server,
+                'Requester {' + state.current.requester.name +
+                '#' + state.current.requester.discriminator +
+                ' requested skipping song...'
+            )
             state.skip()
         elif voter.id not in state.skip_votes:
             state.skip_votes.add(voter.id)
             total_votes = len(state.skip_votes)
             if total_votes >= 3:
-                await self.bot.say('Skip vote passed, skipping song...')
+                await self.refreshplayer(server, 'Skip vote passed, skipping song...')
                 state.skip()
             else:
-                await self.bot.say('Skip vote added, currently at [{}/3]'.format(total_votes))
+                await self.refreshplayer(server, 'Skip vote added, currently at [{}/3]'.format(total_votes))
         else:
-            await self.bot.say('You have already voted to skip this song.')
+            await self.bot.say('```You have already voted to skip this song.```')
 
-        self.bot.cogs['WordDB'].cmdcount('skip')
+        await self.bot.delete_message(ctx.message)
+
+        self.bot.cogs['Wordcount'].cmdcount('skip')
 
     @commands.command(pass_context=True, no_pm=True)
     async def playing(self, ctx):
@@ -241,12 +280,14 @@ class Music:
 
         state = self.get_voice_state(ctx.message.server)
         if state.current is None:
-            await self.bot.say('Not playing anything.')
+            await self.bot.say('No songs are playing!')
         else:
             skip_count = len(state.skip_votes)
-            await self.bot.say('Now playing {} [skips: {}/3]'.format(state.current, skip_count))
+            msg = 'Now playing [skips: {}/3]'.format(skip_count)
+            await self.refreshplayer(ctx.message.server, msg)
+            await self.bot.delete_message(ctx.message)
 
-        self.bot.cogs['WordDB'].cmdcount('playing')
+        self.bot.cogs['Wordcount'].cmdcount('playing')
 
 def setup(bot):
     bot.add_cog(Music(bot))

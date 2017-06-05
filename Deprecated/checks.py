@@ -1,5 +1,3 @@
-import discord
-
 
 def checkdev(message):
     """Checks if the developer used the command. AKA ME"""

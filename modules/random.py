@@ -54,7 +54,7 @@ class Random:
             self.bot.cogs['Wordcount'].cmdcount('woof')
 
     @commands.command(pass_context=True)
-    async def roll(self, ctx, *, dice: str ='1d6'):
+    async def roll(self, ctx, *, dice: str='1d6'):
         """Rolls a dice in NdN format."""
         try:
             rolls, limit = map(int, dice.split('d'))

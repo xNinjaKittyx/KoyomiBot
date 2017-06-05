@@ -1,5 +1,6 @@
 
 import random
+import time
 
 from discord.ext import commands
 import redis
@@ -7,9 +8,12 @@ import utility.discordembed as dmbd
 
 
 class Profile:
+
     def __init__(self, bot):
         self.bot = bot
-        self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
+        self.EXP_CURVE = 1 / 1.5
+        self.EXP_BOOST = 1
+        self.profile_db = redis.StrictRedis(db=1)
         """ So in this section, there's going to be some way of having "points"
         and therefore leveling up after reaching x number of points.
 
@@ -20,7 +24,7 @@ class Profile:
         base_xp * (level_to_get ^ factor) = exp required for level_to_get
 
 
-        sqrt(expreq / base_xp, factor) = level_to_get
+        expreq / base_xp ^ (1/factor) = level_to_get
 
         1) Avatar. If someone looks you up, you can get a small exp between 1 - 5
         2) Chatting? Maybe each message will give you 0.1 exp?
@@ -30,13 +34,29 @@ class Profile:
         Expected Value of highstake (33%) will be 0.495x exp..
 
         """
+    def newuser(self, author, xp, timestamp=0):
+        if author.bot:
+            return
+        self.profile_db.lpush(author.id, author.name + "#" + author.discriminator)
+        self.profile_db.lpush(author.id, xp)
+        self.profile_db.lpush(author.id, timestamp)
 
-    async def on_message(self, msg):
-        pass # give em sum xp fam :D
+    def addpoints(self, author, xp, cooldown=0):
+        xp = xp * self.EXP_BOOST
+        if self.profile_db.exists(author.id):
+            timestamp = self.profile_db.lindex(author.id, 0).decode('utf-8')
+            xp += int(self.profile_db.lindex(author.id, 1).decode('utf-8'))
+            if int(time.time()) - int(timestamp) > cooldown:
 
-    @commands.command(pass_context=True)
-    async def avatar(self, ctx, *, name: str):
-        """ Grabbing an avatar of a person """
+                self.profile_db.lset(author.id, 0, timestamp)
+                self.profile_db.lset(author.id, 1, xp)
+        else:
+            self.newuser(author, xp, int(time.time()))
+
+    @staticmethod
+    def getuser(ctx, name=None):
+        if name is None:
+            return ctx.message.author
         if ctx.message.mentions:
             user = ctx.message.mentions[0]
         else:
@@ -45,26 +65,65 @@ class Profile:
             name = name.lower()
             for x in ctx.message.server.members:
                 if x.name.lower() == name:
-                    user = x
+                    return user
                 elif x.nick:
                     if x.nick.lower() == name:
-                        user = x
+                        return user
+        return user
+
+    def getlevel(self, authorid):
+        if self.profile_db.exists(authorid):
+            xp = int(self.profile_db.lindex(authorid, 1).decode('utf-8'))
+            total = ((xp/100)**self.EXP_CURVE) + 1
+            lvl = int(total)
+            percent = total - lvl
+            return lvl, percent
+        else:
+            return 1, 0
+
+    async def on_message(self, msg):
+        if msg.author.bot:
+            return
+        if msg.server is None:
+            return
+        if msg.server.id == 264445053596991498 or msg.server.id == 110373943822540800:
+            return
+        self.addpoints(msg.author, random.randint(5, 20), 180)
+
+    @commands.command(pass_context=True)
+    async def avatar(self, ctx, *, name: str=None):
+        """ Grabbing an avatar of a person """
+
+        user = self.getuser(ctx, name)
 
         if not user:
             return
         author = ctx.message.author
         em = dmbd.newembed(author, u=user.avatar_url)
         em.set_image(url=user.avatar_url)
-        grade = random.randint(1,11)
         em.add_field(name=user.name + '#' + user.discriminator + '\'s Avatar', value="Sugoi :D")
 
         if author != user:
-            pass # GIVE EM SUM XP FAM
+            self.addpoints(user, random.randint(1, 5))
 
         await self.bot.say(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('avatar')
 
     @commands.command(pass_context=True)
-    async def profile(self, ctx, *,  name: str):
+    async def profile(self, ctx, *,  name: str=None):
         """ Display Profile :o """
-        pass
+
+        user = self.getuser(ctx, name)
+        if not user:
+            return
+        author = ctx.message.author
+        em = dmbd.newembed(author, user.name + '#' + user.discriminator, u=user.avatar_url)
+        em.set_image(url=user.avatar_url)
+        lvl, percent = self.getlevel(user.id)
+        em.add_field(name="Lv. " + str(lvl), value=str(int(percent * 100)) + "%")
+        await self.bot.say(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('profile')
+
+
+def setup(bot):
+    bot.add_cog(Profile(bot))

@@ -1,45 +1,45 @@
 # -*- coding: utf8 -*-
-import asyncio
-from datetime import datetime
-import json
 import random
 
 from discord.ext import commands
-import requests
 from utility import discordembed as dmbd
 
 
 class Animehangman:
-    def getaccesstoken(self):
-        req = requests.post(
-            'https://anilist.co/api/auth/access_token', data={
-                'grant_type': 'client_credentials',
-                'client_id': self.anilistid,
-                'client_secret': self.anilistsecret
-        })
-        if req.status_code != 200:
-            print("Cannot get Anilist Access Token")
-            return
-        results = json.loads(req.text)
-        return results['access_token'], datetime.today()
 
     def __init__(self, bot):
         self.bot = bot
-        with open('./json/setup.json') as data_file:
-            settings = json.load(data_file)
-        self.anilistid = settings["AnilistID"]
-        self.anilistsecret = settings["AnilistSecret"]
-        self.access_token, self.lastaccess = self.getaccesstoken()
+        self.anilistid = bot.redis_db.get('AnilistID').decode('utf-8')
+        self.anilistsecret = bot.redis_db.get('AnilistSecret').decode('utf-8')
+        if not self.anilistid or not self.anilistsecret:
+            print('ID or Secret is missing for AniList')
+            raise ImportError
         self.max = 90248
-        self.active = 0
-        self.currentboard = ""
+        bot.redis_db.delete('achminst')
 
-    async def display(self, guess, misses, author, picture, win=0):
+    async def refreshtoken(self):
+        if self.bot.redis_db.exists('AnilistToken'):
+            return
+        else:
+            async with self.bot.session.post(
+                'https://anilist.co/api/auth/access_token', data={
+                    'grant_type': 'client_credentials',
+                    'client_id': self.anilistid,
+                    'client_secret': self.anilistsecret
+                }
+            ) as r:
+                if r.status != 200:
+                    return
+                results = await r.json()
+                self.bot.redis_db.setex('AnilistToken', 3600, results['access_token'])
+
+
+    async def display(self, currentboard, guess, misses, author, picture, win=0):
         subtitle = "Where you test your weeb level!"
         em = dmbd.newembed(author, "Anime Hangman!", subtitle)
         em.set_image(url=picture)
 
-        em.add_field(name="Word", value="`" + self.currentboard.title() + "`", inline=False)
+        em.add_field(name="Word", value="`" + currentboard.title() + "`", inline=False)
         if misses != []:
             em.add_field(name="Guess", value=guess)
             em.add_field(name="Misses", value=' '.join(misses))
@@ -47,9 +47,10 @@ class Animehangman:
             em.add_field(
                 name="How to Play",
                 value=(
-                "Use " + self.bot.command_prefix +
-                "guess [x] to guess the next letter\n"
-                "Type $guess quit to exit\n"
+                    "Use " + self.bot.command_prefix +
+                    "guess [x] to guess the next letter\n"
+                    "Type " + self.bot.command_prefix +
+                    "guess quit to exit\n"
                 ),
                 inline=False
             )
@@ -69,7 +70,6 @@ class Animehangman:
         elif len(misses) == 6:
             em.set_thumbnail(url="https://goo.gl/8ymxqs")
             em.add_field(name="You Lose!", value="lul", inline=False)
-            self.active = 0
 
         if win == 1:
             em.add_field(name="You Win!", value="You weeb...", inline=False)
@@ -78,7 +78,7 @@ class Animehangman:
     async def displayanswer(self, author, char):
         try:
             anime = char['anime'][0]
-        except:
+        except IndexError:
             anime = char['anime']
         subtitle = anime['title_japanese']
         url = "https://anilist.co/anime/" + str(anime['id'])
@@ -92,45 +92,53 @@ class Animehangman:
 
         await self.bot.say(embed=em)
 
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def animecharhangman(self, ctx):
-        """ Play Hangman!"""
-        if self.active == 1:
-            await self.bot.say("There's already a game running!")
-            return
-        delta = (datetime.today() - self.lastaccess)
-        if delta.seconds > 3600 or delta.days > 0:
-            self.access_token, self.lastaccess = self.getaccesstoken()
+    async def getchar(self):
         char = None
         while char is None:
-            req = requests.get(
+            async with self.bot.session.get(
                 "https://anilist.co/api/character/" +
                 str(random.randint(1, self.max)) +
                 "/page?access_token=" +
-                self.access_token
-            )
-            if req.status_code != 200:
-                print("ANIME CHARACTER RETURNING 404")
+                self.bot.redis_db.get('AnilistToken').decode('utf-8')
+            ) as r:
+                if r.status != 200:
+                    print("ANIME CHARACTER RETURNING 404")
+                    continue
+                tempchar = await r.json()
+
+            print(tempchar["id"])
+            default = "https://cdn.anilist.co/img/dir/character/reg/default.jpg"
+            if tempchar["anime"] == [] or tempchar['image_url_lge'] == default:
                 continue
-            character = json.loads(req.text)
-            print(character["id"])
-            if character["anime"] == [] or character['image_url_lge'] == "https://cdn.anilist.co/img/dir/character/reg/default.jpg":
-                continue
-            char = character
+            char = tempchar
+        return char
+
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def achm(self, ctx):
+        """ Play Anime Character Hangman!"""
+        if self.bot.redis_db.exists('achminst'):
+            for instance in self.bot.redis_db.lrange('achminst', 0, -1):
+                if ctx.message.channel.id == instance.decode('utf-8'):
+                    await self.bot.say("There's already a game running!")
+                    return
+
+        await self.refreshtoken()
+
+        char = await self.getchar()
 
         answer = char["name_first"].lower()
-        self.currentboard = "_"*len(char["name_first"])
+        currentboard = "_"*len(char["name_first"])
         if char["name_last"]:
             answer += " " + char["name_last"].lower()
-            self.currentboard += " " + "_"*len(char["name_last"])
+            currentboard += " " + "_"*len(char["name_last"])
         misses = []
         guess = "FirstDisplay"
         picture = char["image_url_lge"]
         author = ctx.message.author
-        prev_message = await self.display(guess, misses, author, picture)
-        self.active = 1
-        while self.currentboard != answer or self.active == 1:
+        prev_message = await self.display(currentboard, guess, misses, author, picture)
+        self.bot.redis_db.rpush('achminst', ctx.message.channel.id)
+        while True:
 
             def check(msg):
                 return msg.content.startswith(self.bot.command_prefix + 'guess')
@@ -141,51 +149,51 @@ class Animehangman:
                 )
             await self.bot.delete_message(prev_message)
             author = msg.author
-            guess = msg.content[6:].strip().lower()
+            pref_length = len(self.bot.command_prefix) + 5
+            guess = msg.content[pref_length:].strip().lower()
 
-            if len(guess) > 1:
+            # checking the guess, and filling out the hangman as follows
+
+            if len(guess) < 1:
                 await self.bot.say("You need to give me a letter!")
             elif guess == 'quit':
-                self.active = 0
                 await self.bot.say("You Ragequit? What a loser.")
-                for x in range(6 - len(misses)):
+                for _ in range(6 - len(misses)):
                     misses.append('.')
                 await self.display(guess, misses, author, picture, 0)
-                await self.displayanswer(author, char)
-                return
+                break
             elif len(guess) > 1:
                 if len(answer) < len(guess):
-                    # TODO: keeps saying guess is too long when it's not.
                     await self.bot.say("Your guess is too long. Try Again.")
                     guess = ";^)"
                 elif guess == answer:
-                    self.currentboard = answer
+                    currentboard = answer
                 else:
                     misses.append(guess)
             elif guess in misses:
                 await self.bot.say("You've already used that letter!")
             elif guess in answer:
-                for x in range(len(answer)):
-                    if answer[x] == guess:
-                        self.currentboard = self.currentboard[:x] + answer[x] + self.currentboard[x+1:]
+                for number, value in enumerate(answer):
+                    if value == guess:
+                        currentboard = currentboard[:number] + value + currentboard[number+1:]
             else:
                 misses.append(guess)
 
 
-            if self.currentboard == answer:
+            # checking if the answer has been done, or if the game has finished.
+
+            if currentboard == answer:
                 await self.display(guess, misses, author, picture, 1)
-                await self.displayanswer(author, char)
-                self.active = 0
-                return
+                break
             elif len(misses) >= 6:
                 await self.display(guess, misses, author, picture, 0)
-                await self.displayanswer(author, char)
-                self.active = 0
-                return
+                break
             else:
                 prev_message = await self.display(guess, misses, author, picture, 0)
 
-        self.active = 0
+        await self.displayanswer(author, char)
+        self.bot.redis_db.lrem('achminst', 1, ctx.message.channel.id)
+        return
 
 def setup(bot):
     bot.add_cog(Animehangman(bot))

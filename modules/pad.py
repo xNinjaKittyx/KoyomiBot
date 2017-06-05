@@ -10,8 +10,6 @@ import utility.discordembed as dmbd
 class PAD:
     def __init__(self, bot):
         self.bot = bot
-        self.redis_db = redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
-
         # r = requests.get('https://www.padherder.com/api/active_skills/')
         # if r.status_code is not 200:
         #     print('/api/active_skills/ is down')
@@ -31,30 +29,31 @@ class PAD:
         #     self.monsterdb = json.loads(r.text)
 
     async def refresh(self):
-        if self.redis_db.get('PADMonsters') is None:
+        if self.bot.redis_db.get('PADMonsters') is None:
             async with self.bot.session.get('https://www.padherder.com/api/monsters/') as r:
                 if r.status != 200:
                     print('/api/monsters/ is down')
                     return False
-                self.redis_db.set('PADMonsters', await r.read(), ex=43200)
-        if self.redis_db.get('PADAwakening') is None:
+                self.bot.redis_db.set('PADMonsters', await r.read(), ex=43200)
+        if self.bot.redis_db.get('PADAwakening') is None:
             async with self.bot.session.get('https://www.padherder.com/api/awakenings/') as r:
                 if r.status != 200:
                     print('/api/awakenings/ is down')
                     return False
-                self.redis_db.set('PADAwakening', await r.read(), ex=43200)
+                self.bot.redis_db.set('PADAwakening', await r.read(), ex=43200)
         return True
 
     def getawaken(self, skills):
         result = ""
-        awakenings = json.loads(self.redis_db.get('PADAwakening').decode('utf-8'))
+        awakenings = json.loads(self.bot.redis_db.get('PADAwakening').decode('utf-8'))
         if skills == []:
             return 'None'
         for x in skills:
             result += awakenings[x+1]['name'] + "\n"
         return result
 
-    def gettype(self, type1, type2=None, type3=None):
+    @staticmethod
+    def gettype(type1, type2=None, type3=None):
         types = [
         "Evo Material", "Balanced", "Physical", "Healer", "Dragon", "God",
         "Attacker", "Devil", "Machine", "", "", "", "", "", "Enhance Material"
@@ -92,7 +91,7 @@ class PAD:
         sta = await self.refresh()
         if sta is False:
             return
-        monsters = json.loads(self.redis_db.get('PADMonsters').decode('utf-8'))
+        monsters = json.loads(self.bot.redis_db.get('PADMonsters').decode('utf-8'))
         author = ctx.message.author
         results = []
         try:

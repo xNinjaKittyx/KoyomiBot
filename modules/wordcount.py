@@ -2,7 +2,6 @@
 import re
 
 from discord.ext import commands
-import redis
 import utility.discordembed as dmbd
 
 
@@ -12,7 +11,6 @@ class Wordcount:
 
     def __init__(self, bot):
         self.bot = bot
-        self.redis_db = redis.StrictRedis(host="localhost", port="6379", db=0)
         self.blacklist = ['the', 'and', 'for', 'are', 'but', 'not', 'you',
                           'all', 'any', 'can', 'her', 'was', 'one', 'our',
                           'out', 'day', 'get', 'has', 'him', 'his', 'how',
@@ -20,7 +18,7 @@ class Wordcount:
                           'who', 'boy', 'did', 'its', 'let', 'put', 'say',
                           'she', 'too', 'use', 'dad', 'mom']
     def cmdcount(self, name: str):
-        self.redis_db.zincrby('CmdDB', name)
+        self.bot.redis_db.zincrby('CmdDB', name)
 
     async def wordcount(self, content):
         for x in re.compile('\w+').findall(content.replace('\n', ' ')):
@@ -31,7 +29,7 @@ class Wordcount:
             if x in self.blacklist:
                 continue
             else:
-                self.redis_db.zincrby('WordDB', x)
+                self.bot.redis_db.zincrby('WordDB', x)
 
     async def on_message(self, message):
         if (len(message.content) <= 2 or message.author.bot or
@@ -46,7 +44,7 @@ class Wordcount:
         title = "Top 10 Words Used"
         desc = "This is counted across all servers " + self.bot.user.name + " is on."
         em = dmbd.newembed(author, title, desc)
-        for x in self.redis_db.zrevrange('WordDB', 0, 9, withscores=True):
+        for x in self.bot.redis_db.zrevrange('WordDB', 0, 9, withscores=True):
             em.add_field(name=x[0].decode('utf-8'), value=int(x[1]))
 
         await self.bot.say(embed=em)
@@ -58,7 +56,7 @@ class Wordcount:
 
         author = ctx.message.author
         title = ""
-        num = int(self.redis_db.zscore('WordDB', word))
+        num = int(self.bot.redis_db.zscore('WordDB', word))
         if num == 0:
             title = "This word has never been used yet :o"
         elif num == 1:
@@ -87,7 +85,7 @@ class Wordcount:
         title = "Top 10 Commands Used"
         desc = "This is counted across all servers " + self.bot.user.name + " is on."
         em = dmbd.newembed(author, title, desc)
-        for x in self.redis_db.zrevrange('CmdDB', 0, 9, withscores=True):
+        for x in self.bot.redis_db.zrevrange('CmdDB', 0, 9, withscores=True):
             em.add_field(name=x[0].decode('utf-8'), value=int(x[1]))
 
         await self.bot.say(embed=em)
@@ -98,7 +96,7 @@ class Wordcount:
         """ Shows how many times a cmd has been used."""
         author = ctx.message.author
         title = ""
-        num = int(self.redis_db.zscore('CmdDB', word))
+        num = int(self.bot.redis_db.zscore('CmdDB', word))
         if num == 0:
             title = "This command has never been used yet :o"
         elif num == 1:
