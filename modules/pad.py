@@ -85,27 +85,27 @@ class PAD:
         self.bot.cogs['Wordcount'].cmdcount('pad')
         return em
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(no_pm=True)
     async def pad(self, ctx, *, arg: str):
         """ Searches a PAD monster"""
         sta = await self.refresh()
         if sta is False:
             return
         monsters = json.loads(self.bot.redis_db.get('PADMonsters').decode('utf-8'))
-        author = ctx.message.author
+        author = ctx.author
         results = []
         try:
             arg = int(arg)
             if arg in range(1, monsters[-1]['id']+1):
                 for (n, x) in enumerate(monsters):
                     if arg == x['id']:
-                        await self.bot.say(embed=self.getlink(x, author))
+                        await ctx.send(embed=self.getlink(x, author))
                         return
-            await self.bot.say("ID is not valid.")
+            await ctx.send("ID is not valid.")
             return
         except ValueError:
             if len(arg) < 4:
-                await self.bot.say('Please use more than 3 letters')
+                await ctx.send('Please use more than 3 letters')
                 return
             arg = arg.lower()
         # First check if str is too short...
@@ -117,30 +117,31 @@ class PAD:
             string = ''
             for (n, m) in enumerate(results):
                 if arg == m['name'].lower():
-                    await self.bot.say(embed=self.getlink(m, author))
+                    await ctx.send(embed=self.getlink(m, author))
                     return
                 string += str(n) + ") " + str(m['name']) + '\n'
-            confused = await self.bot.say('Which one did you mean? Respond with number.\n' + string)
+            confused = await ctx.send('Which one did you mean? Respond with number.\n' + string)
+
             def check(msg):
                 if msg.content.isdigit():
-                    if int(msg.content) >= 0 and int(msg.content) < len(results):
-                        return True
-            determine = await self.bot.wait_for_message(
-                timeout=10,
-                author=ctx.message.author,
-                channel=ctx.message.channel,
-                check=check
+                    return (msg.author == ctx.author and msg.channel == ctx.channel
+                            and 0 <= int(msg.content) < len(results))
+
+            determine = await self.bot.wait_for(
+                'message',
+                check=check,
+                timeout=10
             )
 
-            await self.bot.delete_message(confused)
+            await confused.delete()
             if determine is None:
-                await self.bot.say('Didn\'t respond in time...')
+                await ctx.send('Didn\'t respond in time...')
             else:
-                await self.bot.say(embed=self.getlink(results[int(determine.content)], author))
+                await ctx.send(embed=self.getlink(results[int(determine.content)], author))
         elif len(results) == 1:
-            await self.bot.say(embed=self.getlink(results[0], author))
+            await ctx.send(embed=self.getlink(results[0], author))
         else:
-            await self.bot.say('No Monster Found')
+            await ctx.send('No Monster Found')
 
 
 def setup(bot):

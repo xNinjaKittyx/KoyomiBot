@@ -9,8 +9,11 @@ def newembed(a=None, t=None, d=None, u=None, c=None):
         c = random.randint(0, 16777215)
     em = discord.Embed(title=t, description=d, url=u, colour=c)
     if a is not None:
-        author = a.name + '#' + a.discriminator
-        em.set_author(name=author, icon_url=a.avatar_url)
+        if isinstance(a, discord.User):
+            author = a.name + '#' + a.discriminator
+            em.set_author(name=author, icon_url=a.avatar_url)
+        else:
+            em.set_author(name=a)
     em.set_footer(
         text="Powered by NinjaKitty | " +
         strftime('%a %b %d, %Y at %I:%M %p'),

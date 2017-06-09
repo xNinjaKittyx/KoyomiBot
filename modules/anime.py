@@ -95,7 +95,7 @@ class Anime:
         if delta.seconds > 3600 or delta.days > 0:
             await self.getaccesstoken()
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def anime(self, ctx, *, ani: str):
         """ Returns the top anime of whatever the user asked for."""
         await self.refreshtoken()
@@ -109,7 +109,7 @@ class Anime:
             if r.status == 200:
                 animelist = await r.json()
                 try:
-                    await self.bot.say(animelist["error"]["message"][0])
+                    await ctx.send(animelist["error"]["message"][0])
                 except:
                     pass
 
@@ -133,12 +133,12 @@ class Anime:
                                 break
                         if chosen == {}:
                             chosen = animelist[0]
-                await self.bot.say(embed=self.getinfo(ctx.message.author, chosen))
+                await ctx.send(embed=self.getinfo(ctx.author, chosen))
             else:
                 self.bot.cogs['Log'].output("No 200 status from Anime")
         self.bot.cogs['Wordcount'].cmdcount('anime')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def manga(self, ctx, *, mang: str):
         """ Returns the top manga of whatever the user asked for."""
 
@@ -151,7 +151,7 @@ class Anime:
             if r.status == 200:
                 mangalist = await r.json()
                 if 'error' in mangalist:
-                    await self.bot.say(mangalist["error"]["message"][0])
+                    await ctx.send(mangalist["error"]["message"][0])
                     return
                 chosen = {}
                 for x in mangalist:
@@ -173,7 +173,7 @@ class Anime:
                                 break
                         if chosen == {}:
                             chosen = mangalist[0]
-                await self.bot.say(embed=self.getinfo(ctx.message.author, chosen))
+                await ctx.send(embed=self.getinfo(ctx.author, chosen))
             else:
                 self.bot.cogs['Log'].output("No 200 status from Manga")
         self.bot.cogs['Wordcount'].cmdcount('anime')

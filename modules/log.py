@@ -33,25 +33,25 @@ class Log:
         if msg.content.startswith(self.bot.command_prefix):
             cmdused = msg.author.name + " attempted to use the command: " + msg.content
             self.output(cmdused)
-            modlog = find(lambda c: c.name == "modlog", msg.server.channels)
+            modlog = find(lambda c: c.name == "modlog", msg.guild.channels)
             if modlog == None:
                 return
-            await self.bot.send_message(modlog, cmdused)
+            await modlog.send(cmdused)
 
     async def on_member_join(self, member):
-        self.output(member.name + " has joined the server at " + member.server.name, False)
+        self.output(member.name + " has joined the guild at " + member.guild.name, False)
 
     async def on_member_remove(self, member):
-        self.output(member.name + " has left the server at " + member.server.name, False)
+        self.output(member.name + " has left the guild at " + member.guild.name, False)
 
     async def on_message_delete(self, msg):
         if msg.author == self.bot.user:
             return
         result = '{0} deleted the following message: \n{1}'.format(msg.author.name, msg.content)
-        modlog = find(lambda c: c.name == "modlog", msg.server.channels)
+        modlog = find(lambda c: c.name == "modlog", msg.guild.channels)
         if modlog is None:
             return
-        await self.bot.send_message(modlog, result)
+        await modlog.send(result)
 
     async def on_message_edit(self, before, after):
         if before.author == self.bot.user:
@@ -63,10 +63,11 @@ class Log:
             before.content,
             after.content
         )
-        modlog = find(lambda c: c.name == "modlog", before.server.channels)
+        modlog = find(lambda c: c.name == "modlog", before.guild.channels)
         if modlog is None:
             return
-        await self.bot.send_message(modlog, msg)
+        await modlog.send(msg)
+
 
 def setup(bot):
     """Setup Log.py"""

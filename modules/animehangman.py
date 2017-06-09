@@ -34,9 +34,9 @@ class Animehangman:
                 self.bot.redis_db.setex('AnilistToken', 3600, results['access_token'])
 
 
-    async def display(self, currentboard, guess, misses, author, picture, win=0):
+    async def display(self, ctx, currentboard, guess, misses, picture, win=0):
         subtitle = "Where you test your weeb level!"
-        em = dmbd.newembed(author, "Anime Hangman!", subtitle)
+        em = dmbd.newembed(ctx.author, "Anime Hangman!", subtitle)
         em.set_image(url=picture)
 
         em.add_field(name="Word", value="`" + currentboard.title() + "`", inline=False)
@@ -73,16 +73,16 @@ class Animehangman:
 
         if win == 1:
             em.add_field(name="You Win!", value="You weeb...", inline=False)
-        return await self.bot.say(embed=em)
+        return await ctx.send(embed=em)
 
-    async def displayanswer(self, author, char):
+    async def displayanswer(self, ctx, char):
         try:
             anime = char['anime'][0]
         except IndexError:
             anime = char['anime']
         subtitle = anime['title_japanese']
         url = "https://anilist.co/anime/" + str(anime['id'])
-        em = dmbd.newembed(author, 'Here\'s the answer!', subtitle, url)
+        em = dmbd.newembed(ctx.author, 'Here\'s the answer!', subtitle, url)
         em.set_image(url=anime['image_url_lge'])
         em.add_field(name=anime['title_romaji'], value=anime['title_english'])
         em.add_field(name="Type", value=anime['type'])
@@ -90,7 +90,7 @@ class Animehangman:
         xstr = lambda s: s or ""
         em.add_field(name=char['name_japanese'], value=char['name_first'] + " " + xstr(char['name_last']))
 
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
 
     async def getchar(self):
         char = None
@@ -113,14 +113,13 @@ class Animehangman:
             char = tempchar
         return char
 
-
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(no_pm=True)
     async def achm(self, ctx):
         """ Play Anime Character Hangman!"""
         if self.bot.redis_db.exists('achminst'):
             for instance in self.bot.redis_db.lrange('achminst', 0, -1):
-                if ctx.message.channel.id == instance.decode('utf-8'):
-                    await self.bot.say("There's already a game running!")
+                if ctx.channel.id == int(instance.decode('utf-8')):
+                    await ctx.send("There's already a game running!")
                     return
 
         await self.refreshtoken()
@@ -135,19 +134,19 @@ class Animehangman:
         misses = []
         guess = "FirstDisplay"
         picture = char["image_url_lge"]
-        author = ctx.message.author
-        prev_message = await self.display(currentboard, guess, misses, author, picture)
-        self.bot.redis_db.rpush('achminst', ctx.message.channel.id)
+        author = ctx.author
+        prev_message = await self.display(ctx, currentboard, guess, misses, picture)
+        self.bot.redis_db.rpush('achminst', ctx.channel.id)
         while True:
 
             def check(msg):
-                return msg.content.startswith(self.bot.command_prefix + 'guess')
+                return msg.content.startswith(self.bot.command_prefix + 'guess') and msg.channel == ctx.channel
 
-            msg = await self.bot.wait_for_message(
-                channel=ctx.message.channel,
+            msg = await self.bot.wait_for(
+                'message',
                 check=check
                 )
-            await self.bot.delete_message(prev_message)
+            await prev_message.delete()
             author = msg.author
             pref_length = len(self.bot.command_prefix) + 5
             guess = msg.content[pref_length:].strip().lower()
@@ -155,23 +154,23 @@ class Animehangman:
             # checking the guess, and filling out the hangman as follows
 
             if len(guess) < 1:
-                await self.bot.say("You need to give me a letter!")
+                await ctx.send("You need to give me a letter!")
             elif guess == 'quit':
-                await self.bot.say("You Ragequit? What a loser.")
+                await ctx.send("You Ragequit? What a loser.")
                 for _ in range(6 - len(misses)):
                     misses.append('.')
-                await self.display(guess, misses, author, picture, 0)
+                await self.display(ctx, currentboard, guess, misses, picture, 0)
                 break
             elif len(guess) > 1:
                 if len(answer) < len(guess):
-                    await self.bot.say("Your guess is too long. Try Again.")
+                    await ctx.send("Your guess is too long. Try Again.")
                     guess = ";^)"
                 elif guess == answer:
                     currentboard = answer
                 else:
                     misses.append(guess)
             elif guess in misses:
-                await self.bot.say("You've already used that letter!")
+                await ctx.send("You've already used that letter!")
             elif guess in answer:
                 for number, value in enumerate(answer):
                     if value == guess:
@@ -183,16 +182,16 @@ class Animehangman:
             # checking if the answer has been done, or if the game has finished.
 
             if currentboard == answer:
-                await self.display(guess, misses, author, picture, 1)
+                await self.display(ctx, currentboard, guess, misses, picture, 1)
                 break
             elif len(misses) >= 6:
-                await self.display(guess, misses, author, picture, 0)
+                await self.display(ctx, currentboard, guess, misses, picture, 0)
                 break
             else:
-                prev_message = await self.display(guess, misses, author, picture, 0)
+                prev_message = await self.display(ctx, currentboard, guess, misses, picture, 0)
 
-        await self.displayanswer(author, char)
-        self.bot.redis_db.lrem('achminst', 1, ctx.message.channel.id)
+        await self.displayanswer(ctx, char)
+        self.bot.redis_db.lrem('achminst', 1, ctx.channel.id)
         return
 
 def setup(bot):

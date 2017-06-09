@@ -39,17 +39,17 @@ class Overwatch:
         return em
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def owstats(self, ctx, *, tag: str):
         """ Usage: owstats [region] [battletag]\nRegions: kr, eu, us"""
         splitstr = tag.split(sep=' ')
         print(splitstr)
         if len(splitstr) != 2:
-            await self.bot.say("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
+            await ctx.send("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
             return
         region = splitstr[0].lower()
         if len(region) != 2:
-            await self.bot.say("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
+            await ctx.send("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
             return
         tag = splitstr[1]
         if '#' in tag:
@@ -68,21 +68,21 @@ class Overwatch:
             profile = profile[region]['stats']
             quick = profile['quickplay']
             comp = profile['competitive']
-            await self.bot.say(embed=self.display(ctx.message.author, tag, quick, comp))
+            await ctx.send(embed=self.display(ctx.author, tag, quick, comp))
         self.bot.cogs['Wordcount'].cmdcount('owstats')
 
     @commands.command()
-    async def owrng(self):
+    async def owrng(self, ctx):
         """ RNG OVERWATCH """
-        await self.bot.say("Play {}!".format(random.choice(self.heroes)))
+        await ctx.send("Play {}!".format(random.choice(self.heroes)))
         self.bot.cogs['Wordcount'].cmdcount('owrng')
 
     @commands.command()
-    async def owteam(self, num: int = 6):
+    async def owteam(self, ctx, num: int = 6):
         """ Get a random OW Team \nUsage: owteam [Optional: Teamsize]"""
         random.shuffle(self.heroes)
         result = self.heroes[:num]
-        await self.bot.say("Here's your teamcomp! Good luck!\n" +
+        await ctx.send("Here's your teamcomp! Good luck!\n" +
                            "{}".format(", ".join(result)))
         self.bot.cogs['Wordcount'].cmdcount('owteam')
 

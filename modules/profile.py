@@ -7,13 +7,75 @@ import redis
 import utility.discordembed as dmbd
 
 
+class KoyomiUser:
+    def __init__(self, author):
+        self.redis_db = redis.StrictRedis(db=1)
+        self.author_id = author.id
+        if not self.redis_db.exists(author.id):
+            default_profile = {
+                'cooldown': 0,
+                'xp': 0,
+                'name': author.name + "#" + author.discriminator,
+                'coins': 0,
+                'level': 0
+            }
+            self.redis_db.hmset(author.id, default_profile)
+
+    def get_field(self, key):
+        return self.redis_db.hget(self.author_id, key).decode('utf-8')
+
+    def set_field(self, key, value):
+        return self.redis_db.hset(self.author_id, key, value)
+
+    def get_cooldown(self):
+        return int(self.get_field('cooldown'))
+
+    def set_cooldown(self):
+        self.redis_db.hset(self.author_id, 'cooldown', int(time.time()))
+
+    def get_xp(self):
+        return int(self.get_field('xp'))
+
+    def get_name(self):
+        return str(self.get_field('name'))
+
+    def get_coins(self):
+        return int(self.get_field('coins'))
+
+    def get_level(self):
+        return int(self.get_field('level'))
+
+    def get_required_xp(self):
+        level_to_get = self.get_level() + 1
+        return int(100 + level_to_get ** 1.5)
+
+    def check_cooldown(self, seconds):
+        if int(time.time()) - self.get_cooldown() > seconds:
+            return True
+        return False
+
+    def add_xp(self, xp):
+        self.redis_db.hincrby(self.author_id, 'xp', xp)
+        if self.get_xp() > self.get_required_xp():
+            # the player leveled up!
+            self.redis_db.hincrby(self.author_id, 'coins', 100)
+            self.redis_db.hincrby(self.author_id, 'level', 1)
+            return True
+
+    def add_coins(self, coins):
+        self.redis_db.hincrby(self.author_id, 'coins', coins)
+
+    def use_coins(self, coins):
+        current_coins = self.get_coins()
+        if current_coins > coins:
+            self.redis_db.hincrby(self.author_id, 'coins', -coins)
+
+
 class Profile:
 
     def __init__(self, bot):
         self.bot = bot
-        self.EXP_CURVE = 1 / 1.5
-        self.EXP_BOOST = 1
-        self.profile_db = redis.StrictRedis(db=1)
+        self.users = {} # userid: KoyomiUser
         """ So in this section, there's going to be some way of having "points"
         and therefore leveling up after reaching x number of points.
 
@@ -34,36 +96,18 @@ class Profile:
         Expected Value of highstake (33%) will be 0.495x exp..
 
         """
-    def newuser(self, author, xp, timestamp=0):
-        if author.bot:
-            return
-        self.profile_db.lpush(author.id, author.name + "#" + author.discriminator)
-        self.profile_db.lpush(author.id, xp)
-        self.profile_db.lpush(author.id, timestamp)
-
-    def addpoints(self, author, xp, cooldown=0):
-        xp = xp * self.EXP_BOOST
-        if self.profile_db.exists(author.id):
-            timestamp = self.profile_db.lindex(author.id, 0).decode('utf-8')
-            xp += int(self.profile_db.lindex(author.id, 1).decode('utf-8'))
-            if int(time.time()) - int(timestamp) > cooldown:
-
-                self.profile_db.lset(author.id, 0, timestamp)
-                self.profile_db.lset(author.id, 1, xp)
-        else:
-            self.newuser(author, xp, int(time.time()))
 
     @staticmethod
     def getuser(ctx, name=None):
         if name is None:
-            return ctx.message.author
+            return ctx.author
         if ctx.message.mentions:
             user = ctx.message.mentions[0]
         else:
-            user = ctx.message.server.get_member_named(name)
+            user = ctx.guild.get_member_named(name)
         if not user:
             name = name.lower()
-            for x in ctx.message.server.members:
+            for x in ctx.guild.members:
                 if x.name.lower() == name:
                     return user
                 elif x.nick:
@@ -71,26 +115,26 @@ class Profile:
                         return user
         return user
 
-    def getlevel(self, authorid):
-        if self.profile_db.exists(authorid):
-            xp = int(self.profile_db.lindex(authorid, 1).decode('utf-8'))
-            total = ((xp/100)**self.EXP_CURVE) + 1
-            lvl = int(total)
-            percent = total - lvl
-            return lvl, percent
+    def get_koyomi_user(self, userid):
+        if userid in self.users:
+            user = self.users[userid]
         else:
-            return 1, 0
+            user = KoyomiUser(userid)
+            self.users[userid] = user
+        return user
 
     async def on_message(self, msg):
         if msg.author.bot:
             return
-        if msg.server is None:
+        if msg.guild is None:
             return
-        if msg.server.id == 264445053596991498 or msg.server.id == 110373943822540800:
+        if msg.guild.id == 264445053596991498 or msg.guild.id == 110373943822540800:
             return
-        self.addpoints(msg.author, random.randint(5, 20), 180)
 
-    @commands.command(pass_context=True)
+        user = self.get_koyomi_user(msg.author.id)
+        user.add_xp(random.randint(5, 20))
+
+    @commands.command()
     async def avatar(self, ctx, *, name: str=None):
         """ Grabbing an avatar of a person """
 
@@ -98,7 +142,7 @@ class Profile:
 
         if not user:
             return
-        author = ctx.message.author
+        author = ctx.author
         em = dmbd.newembed(author, u=user.avatar_url)
         em.set_image(url=user.avatar_url)
         em.add_field(name=user.name + '#' + user.discriminator + '\'s Avatar', value="Sugoi :D")
@@ -106,22 +150,25 @@ class Profile:
         if author != user:
             self.addpoints(user, random.randint(1, 5))
 
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('avatar')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def profile(self, ctx, *,  name: str=None):
         """ Display Profile :o """
 
         user = self.getuser(ctx, name)
         if not user:
             return
-        author = ctx.message.author
-        em = dmbd.newembed(author, user.name + '#' + user.discriminator, u=user.avatar_url)
+        author = ctx.author
+        userfull = user.name + '#' + user.discriminator
+        em = dmbd.newembed(author, userfull , u=user.avatar_url)
         em.set_image(url=user.avatar_url)
         lvl, percent = self.getlevel(user.id)
+        em.add_field(name='Username', value=userfull)
+        em.add_field(name='UserID', value=user.id)
         em.add_field(name="Lv. " + str(lvl), value=str(int(percent * 100)) + "%")
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('profile')
 
 

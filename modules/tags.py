@@ -10,18 +10,18 @@ class Tags:
         if not bot.redis_db.hexists('tags', 'lol'):
             bot.redis_db.hmset('tags', {'lol': 'xD'})
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def tag(self, ctx):
         """ Tags cannot be less than 3 fyi..."""
         if ctx.invoked_subcommand is None:
             query = ctx.message.content.split(sep=' ', maxsplit=1)[1]
             result = self.bot.redis_db.hget('tags', query)
             if result is not None:
-                await self.bot.say(result.decode('utf-8'))
+                await ctx.send(result.decode('utf-8'))
             else:
                 return
 
-    @tag.command(pass_context=True)
+    @tag.command()
     async def add(self, ctx, *, tag: str):
 
         if tag is None:
@@ -29,22 +29,25 @@ class Tags:
         if len(tag) < 3 or len(tag) > 32:
             return
         if self.bot.redis_db.hexists('tags', tag):
-            await self.bot.say('Tag already exists. Sorry.')
+            await ctx.send('Tag already exists. Sorry.')
         else:
-            asdf = await self.bot.say("Waiting for content to go with the tag.")
+            asdf = await ctx.send("Waiting for content to go with the tag.")
+
+            def check(msg):
+                return msg.author == ctx.author and msg.channel == ctx.channel
             value = await self.bot.wait_for_message(
-                timeout=15,
-                author=ctx.message.author,
-                channel=ctx.message.channel
+                'message',
+                check=check,
+                timeout=15
             )
-            await self.bot.delete_message(asdf)
+            await asdf.delete()
             if value is None:
-                await self.bot.say("Timed out. Try again.")
+                await ctx.send("Timed out. Try again.")
                 return
             self.bot.redis_db.hmset('tags', {tag: value.content})
-            await self.bot.say("Tag Added")
+            await ctx.send("Tag Added")
 
-    @tag.command(pass_context=True)
+    @tag.command()
     async def search(self, ctx, *, query: str):
         if query is None:
             return
@@ -55,21 +58,21 @@ class Tags:
         wew = ""
         for x, y in enumerate(results):
             wew += str(x+1) + ") " + y + "\n"
-        em = dmbd.newembed(ctx.message.author)
+        em = dmbd.newembed(ctx.author)
         em.set_footer(text=wew)
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
 
-    @tag.command(pass_context=True)
+    @tag.command()
     async def delete(self, ctx, *, query: str):
         if query is None:
             return
-        if not self.bot.checkdev(ctx.message.author.id):
+        if not self.bot.checkdev(ctx.author.id):
             return
         for x in self.bot.redis_db.hkeys('tags'):
             print(x.decode('utf-8'))
             if query == x.decode('utf-8'):
                 if self.bot.redis_db.hdel('tags', query) == 1:
-                    await self.bot.say("Tag Deleted")
+                    await ctx.send("Tag Deleted")
 
 def setup(bot):
     """ Setup Tags.py"""

@@ -38,7 +38,7 @@ class Weather:
 
         async with self.bot.session.get(url) as r:
             if r.status != 200:
-                await self.bot.say("GoogleGeoCode is down")
+                await ctx.send("GoogleGeoCode is down")
                 return
             return await r.json()
 
@@ -51,7 +51,7 @@ class Weather:
 
         async with self.bot.session.get(url) as r:
             if r.status != 200:
-                await self.bot.say('DarkSky is down')
+                await ctx.send('DarkSky is down')
                 return
             return await r.json()
 
@@ -79,7 +79,7 @@ class Weather:
         return em
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def weather(self, ctx, *, search: str):
         """ Grab the weather using GoogleGeoCodeAPI and DarkSkyAPI"""
 
@@ -91,7 +91,7 @@ class Weather:
             place = location["results"][0]["address_components"][0]["long_name"]
             darksky = await self.getdarksky(lat, lng)
 
-            await self.bot.say(embed=self.display(ctx.message.author, place, darksky))
+            await ctx.send(embed=self.display(ctx.author, place, darksky))
             self.bot.cogs['Wordcount'].cmdcount('weather')
             return
         else:

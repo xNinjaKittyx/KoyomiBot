@@ -11,9 +11,7 @@ from discord.ext import commands
 # Databases
 import redis
 
-debug = False
 
-redis_db = redis.StrictRedis()
 essential_keys = {
     'DiscordToken',
 }
@@ -32,14 +30,15 @@ modules = {
     'modules.admin',
     'modules.anime',
     'modules.animehangman',
+    'modules.cleverbot',
     'modules.comics',
     'modules.info',
     'modules.log',
-    'modules.musicplayer',
+    # 'modules.musicplayer',
     'modules.osu',
     'modules.overwatch',
     'modules.pad',
-    'modules.profile',
+    # 'modules.profile',
     'modules.random',
     'modules.search',
     'modules.tags',
@@ -47,115 +46,96 @@ modules = {
     'modules.wordcount'
 
 }
-prefix = ''
-if debug:
-    prefix = '>>'
-else:
-    prefix = redis_db.get('Prefix')
-    if prefix is None:
-        prefix = '>'
-    else:
-        prefix = prefix.decode('utf-8')
-
-description = "Huge rewrite for Rin Bot. No Bullshit. Just fun stuff."
-bot = commands.Bot(command_prefix=prefix, description=description, pm_help=True)
-bot.redis_db = redis_db
-def checkkeys():
-    """ Returns 1 if all keys are satisfied
-        Returns 2 if Essential Keys are not given
-        Returns 0 if Essential Keys are given, but some keys are missing."""
-    # TODO: Host, port should be configurable.
-    print("Checking if Discord API Key Exists...")
-
-    for x in essential_keys:
-        if redis_db.get(x) is None:
-            return 2
-
-    for x in nonessential_keys:
-        if redis_db.get(x) is None:
-            return 0
-
-    return 1
-
-def changekeys():
-    print("Just press enter if you would like to keep that setting as is. ")
-
-    for x in essential_keys:
-        apikey = input(x + ": ")
-        if not apikey == "":
-            redis_db.set(x, str(apikey))
-
-    for x in nonessential_keys:
-        apikey = input(x + ": ")
-        if not apikey == "":
-            redis_db.set(x, str(apikey))
-
-@bot.event
-async def on_message(msg):
-    if msg.content.startswith(prefix + "guess"):
-        return
-    if msg.author.bot:
-        return
-    #if not checks.checkdev(message) and checks.checkignorelist(message, ignore):
-    #    return
-
-    # if message.content.startswith(bot.user.mention):
-    #     await bot.send_typing(message.channel)
-    #     try:
-    #         response = cw.say(message.content.split(' ', 1)[1])
-    #         await bot.send_message(message.channel,
-    #                                message.author.mention + ' ' + response)
-    #     except IndexError:
-    #         await bot.send_message(message.channel,
-    #                                message.author.mention + ' Don\'t give me '
-    #                                'the silent treatment.')
-    #     return
-    await bot.process_commands(msg)
 
 
-@bot.event
-async def on_ready():
-    bot.session = aiohttp.ClientSession(loop=bot.loop)
-    bot.checkdev = lambda x: x == "82221891191844864"
-    bot.cogs['Log'].output('Logged in as')
-    bot.cogs['Log'].output("Username " + bot.user.name)
-    bot.cogs['Log'].output("ID: " + bot.user.id)
-    url = (
-        "https://discordapp.com/api/oauth2/authorize?client_id=" +
-        bot.user.id +
-        "&scope=bot&permissions=0"
-    )
-    bot.cogs['Log'].output("Invite Link: " + url)
-    try:
-        if not discord.opus.is_loaded() and os.name == 'nt':
-            discord.opus.load_opus("libopus0.x64.dll")
+class MyClient(commands.AutoShardedBot):
 
-        if not discord.opus.is_loaded() and os.name == 'posix':
-            discord.opus.load_opus("/usr/local/lib/libopus.so")
-        bot.cogs['Log'].output("Loaded Opus Library")
-    except:
-        bot.cogs['Log'].output("Opus library did not load. Voice may not work.")
+    def __init__(self, *args, **kwargs):
+        self.redis_db = redis.StrictRedis()
+        self.debug = bool(kwargs.pop('debug', False))
+        print('Initialized Redis Database')
+        prefix = self.redis_db.get('Prefix')
+        if prefix is None:
+            prefix = '.koyomi'
+        else:
+            prefix = prefix.decode('utf-8')
+        print('Prefix is set: ' + prefix)
+        super().__init__(*args, command_prefix=prefix, **kwargs)
+        self.session = aiohttp.ClientSession(loop=self.loop)
+
+        print('Checking For Keys')
+
+        setkeys = bool(kwargs.pop('setkeys', False))
+        if setkeys:
+            self.set_keys()
+        self.check_keys()
+        self.load_all_modules()
+        print('Starting Bot')
+        self.run(self.redis_db.get('DiscordToken').decode('utf-8'))
+
+    def load_all_modules(self):
+        print('Loading all Modules')
+        for mod in modules:
+            try:
+                self.load_extension(mod)
+                print('Load Successful: ' + mod)
+            except ImportError as e:
+                print(e)
+                print('[WARNING]: Module ' + mod + ' did not load')
+
+    def check_keys(self):
+        for x in essential_keys:
+            if self.redis_db.get(x) is None:
+                raise NameError(x + ' key is missing. Please set it')
+                quit()
+        for x in nonessential_keys:
+            if self.redis_db.get(x) is None:
+                print(x + ' key is missing. Some functions may not work properly.')
+
+    def set_keys(self):
+            print('SetKeys was activated. Going through key setup.')
+            print('Just press enter if you would like to keep the key the same as before.')
+            for x in essential_keys:
+                apikey = input(x + ": ")
+                if not apikey == "":
+                    self.redis_db.set(x, str(apikey))
+
+            for x in nonessential_keys:
+                apikey = input(x + ": ")
+                if not apikey == "":
+                    self.redis_db.set(x, str(apikey))
+
+    async def on_message(self, msg):
+        if msg.content.startswith(self.command_prefix + 'guess'):
+            return
+        if msg.author.bot:
+            return
+
+        await self.process_commands(msg)
+
+    async def on_ready(self):
+        random.seed()
+        self.cogs['Log'].output('Logged in as')
+        self.cogs['Log'].output("Username " + self.user.name)
+        self.cogs['Log'].output("ID: " + str(self.user.id))
+        url = (
+            "https://discordapp.com/api/oauth2/authorize?client_id=" +
+            str(self.user.id) +
+            "&scope=bot&permissions=0"
+        )
+        self.cogs['Log'].output("Invite Link: " + url)
+        try:
+            if not discord.opus.is_loaded() and os.name == 'nt':
+                discord.opus.load_opus("libopus0.x64.dll")
+
+            if not discord.opus.is_loaded() and os.name == 'posix':
+                discord.opus.load_opus("/usr/local/lib/libopus.so")
+            self.cogs['Log'].output("Loaded Opus Library")
+        except:
+            self.cogs['Log'].output("Opus library did not load. Voice may not work.")
+
 
 if __name__ == "__main__":
     print("LAUNCHING BOT...")
-    chkey = checkkeys()
-    # if chkey == 1:
-    #     choice = input("Would you like to reset any of your APIkeys? (y/n)")
-    #     if choice.lower() == 'y':
-    #         changekeys()
-    if chkey == 0:
-        choice = input("You are missing some API Keys. Set APIKeys? (y/n)")
-        if choice.lower() == 'y':
-            changekeys()
-    if chkey == 2:
-        print("You are missing essential API Keys. Entering APIKeys Screen.")
-        changekeys()
-    random.seed()
-
-    for mod in modules:
-        try:
-            bot.load_extension(mod)
-        except ImportError as e:
-            print(e)
-            print('[WARNING]: Module ' + mod + ' did not load')
-    bot.run(redis_db.get('DiscordToken').decode('utf-8'))
+    description = 'KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.'
+    bot = MyClient(description=description, pm_help=True, setkeys=False)

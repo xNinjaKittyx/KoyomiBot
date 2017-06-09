@@ -41,7 +41,7 @@ class Comics:
             j = json.loads(j)
             return j
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def xkcd(self, ctx):
         """Gives a random XKCD Comic"""
         chk = await self.refreshxkcd()
@@ -52,10 +52,10 @@ class Comics:
         url = "http://xkcd.com/" + str(number)
         j = await self.getxkcd(number, url)
 
-        em = dmbd.newembed(ctx.message.author, j['safe_title'], u=url)
+        em = dmbd.newembed(ctx.author, j['safe_title'], u=url)
         em.set_image(url=j['img'])
         em.add_field(name=j['alt'], value="{0}/{1}/{2}".format(j['month'], j['day'], j['year']))
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('xkcd')
 
     async def refreshcyanide(self):
@@ -80,7 +80,7 @@ class Comics:
                     return
                 soup = BeautifulSoup(await r.text(), 'html.parser')
                 if soup.prettify().startswith('Could not'):
-                    await self.bot.say('Report this number as a dead comic: ' + str(num))
+                    await self.bot.send('Report this number as a dead comic: ' + str(num))
                     return
                 img = 'http:' + str(soup.find(id="main-comic")['src'])
                 self.bot.redis_db.hmset('xkcd', {num: img})
@@ -90,7 +90,7 @@ class Comics:
             return img
 
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def cyanide(self, ctx):
         """ Gives a random Cyanide & Happiness Comic"""
         chk = await self.refreshcyanide()
@@ -104,12 +104,12 @@ class Comics:
         img = await self.getcyanide(number, link)
         if img is None:
             return
-        em = dmbd.newembed(ctx.message.author, 'Cyanide and Happiness', str(number), u=link)
+        em = dmbd.newembed(ctx.author, 'Cyanide and Happiness', str(number), u=link)
         em.set_image(url=img)
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('ch')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def cyanidercg(self, ctx):
         """ Gives a randomly generated Cyanide & Happiness Comic"""
 
@@ -120,9 +120,9 @@ class Comics:
             soup = BeautifulSoup(await r.text(), 'html.parser')
             img = 'http:' + str(soup.find(id='rcg-comic').img['src'])
         print(img)
-        em = dmbd.newembed(ctx.message.author, 'Cyanide and Happiness RCG', u=img)
+        em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img)
         em.set_image(url=img)
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('chrng')
 
 

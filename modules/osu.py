@@ -58,48 +58,48 @@ class Osu:
             j = await r.json()
             return j[0]
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def osu(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(0, name))
-        em = player.display(ctx.message.author)
+        em = player.display(ctx.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
             name + "&mode=0")
 
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('osu')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def taiko(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(1, name))
-        em = player.display(ctx.message.author)
+        em = player.display(ctx.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
             name + "&mode=1")
 
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('taiko')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def ctb(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(2, name))
-        em = player.display(ctx.message.author)
+        em = player.display(ctx.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
             name + "&mode=2")
 
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('ctb')
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def mania(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(3, name))
-        em = player.display(ctx.message.author)
+        em = player.display(ctx.author)
         em.set_image(
             url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
             name + "&mode=3")
 
-        await self.bot.say(embed=em)
+        await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('mania')
 
 
