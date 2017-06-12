@@ -208,6 +208,29 @@ class Search:
                 em.add_field(name='Tags', value=weeblist[page]['tags'])
                 await msg.edit(embed=em)
 
+    @commands.command()
+    async def urban(self, ctx, *, search: str):
+        async with self.bot.session.get('https://api.urbandictionary.com/v0/define?term=' + search) as r:
+            if r.status != 200:
+                self.bot.cogs['Log'].output('Urban Dictionary is Down')
+            results = await r.json()
+
+        if results['result_type'] != 'exact':
+            em = dmbd.newembed(ctx.author, 'Urban Dictionary', 'No Results Found For' + search)
+            await ctx.send(embed=em)
+            return
+        size = len(results['list'])
+        definition = results['list'][random.randint(0, size-1)]
+        title = definition['word']
+        url = definition['permalink']
+        define = definition['definition']
+        thumbs_up = definition['thumbs_up']
+        thumbs_down = definition['thumbs_down']
+        example = definition['example']
+        author = definition['author']
+        desc = 'Defined by: {0}\n{1}\n\nExample: {2}\n\n👍{3}\t👎{4}'.format(author, define, example, thumbs_up, thumbs_down)
+        em = dmbd.newembed(ctx.author, t=title, d=desc, u=url)
+        await ctx.send(embed=em)
 
     @commands.command()
     async def wiki(self, ctx, *, search: str):
@@ -234,6 +257,7 @@ class Search:
     @commands.command()
     async def sauce(self, ctx, *, search: str):
         pass
+
 
 def setup(bot):
     bot.add_cog(Search(bot))
