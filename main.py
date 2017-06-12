@@ -38,9 +38,10 @@ modules = {
     'modules.osu',
     'modules.overwatch',
     'modules.pad',
-    # 'modules.profile',
+    'modules.profile',
     'modules.random',
     'modules.search',
+    'modules.slots',
     'modules.tags',
     'modules.weather',
     'modules.wordcount'

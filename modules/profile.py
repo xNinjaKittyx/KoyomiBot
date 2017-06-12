@@ -1,11 +1,22 @@
 
+import io
 import random
 import time
 
+import discord
 from discord.ext import commands
+from PIL import Image, ImageFont, ImageDraw, ImageOps
 import redis
 import utility.discordembed as dmbd
 
+
+background_imgs = [
+    'hanekawa1.png',
+    'kaiki1.png',
+    'koyomi1.png',
+    'koyomi2.png',
+    'tsukihi1.png'
+]
 
 class KoyomiUser:
     def __init__(self, author):
@@ -13,13 +24,19 @@ class KoyomiUser:
         self.author_id = author.id
         if not self.redis_db.exists(author.id):
             default_profile = {
-                'cooldown': 0,
+                'msg_cd': 0,
+                'poke_cd': 0,
                 'xp': 0,
                 'name': author.name + "#" + author.discriminator,
-                'coins': 0,
-                'level': 0
+                'coins': 30,
+                'level': 1,
+                'pokes_given': 0,
+                'pokes_received': 0,
+
             }
             self.redis_db.hmset(author.id, default_profile)
+        else:
+            self.redis_db.hset(author.id, 'name', author.name + "#" + author.discriminator)
 
     def get_field(self, key):
         return self.redis_db.hget(self.author_id, key).decode('utf-8')
@@ -27,18 +44,17 @@ class KoyomiUser:
     def set_field(self, key, value):
         return self.redis_db.hset(self.author_id, key, value)
 
-    def get_cooldown(self):
-        return int(self.get_field('cooldown'))
+    def inc_field(self, key, amount):
+        return self.redis_db.hincrby(self.author_id, key, amount)
 
-    def set_cooldown(self):
-        self.redis_db.hset(self.author_id, 'cooldown', int(time.time()))
+    def get_cooldown(self, cooldown_type):
+        return int(self.get_field(cooldown_type))
 
     def get_xp(self):
         return int(self.get_field('xp'))
 
     def get_name(self):
         return str(self.get_field('name'))
-
     def get_coins(self):
         return int(self.get_field('coins'))
 
@@ -49,26 +65,97 @@ class KoyomiUser:
         level_to_get = self.get_level() + 1
         return int(100 + level_to_get ** 1.5)
 
-    def check_cooldown(self, seconds):
-        if int(time.time()) - self.get_cooldown() > seconds:
+    def get_percent(self):
+        return int((self.get_xp() / self.get_required_xp()) * 100)
+
+    def get_pokes_given(self):
+        return int(self.get_field('pokes_given'))
+
+    def get_pokes_received(self):
+        return int(self.get_field('pokes_received'))
+
+    def set_cooldown(self, cooldown_type):
+        self.redis_db.hset(self.author_id, cooldown_type, int(time.time()))
+
+    def check_cooldown(self, cooldown_type, seconds):
+        if int(time.time()) - self.get_cooldown(cooldown_type) > seconds:
             return True
         return False
 
-    def add_xp(self, xp):
+    def add_xp(self, xp: int):
+        self.inc_field('xp', xp)
         self.redis_db.hincrby(self.author_id, 'xp', xp)
         if self.get_xp() > self.get_required_xp():
             # the player leveled up!
-            self.redis_db.hincrby(self.author_id, 'coins', 100)
-            self.redis_db.hincrby(self.author_id, 'level', 1)
+            self.inc_field('coins', 100)
+            self.inc_field('level', 1)
+            self.set_field('xp', 0)
             return True
 
-    def add_coins(self, coins):
+    def check_coins(self, coins):
+        if self.get_coins() > coins:
+            return True
+        else:
+            return False
+
+    def add_coins(self, coins: int):
         self.redis_db.hincrby(self.author_id, 'coins', coins)
 
-    def use_coins(self, coins):
-        current_coins = self.get_coins()
-        if current_coins > coins:
+    def use_coins(self, coins: int):
+        if self.check_coins(coins):
             self.redis_db.hincrby(self.author_id, 'coins', -coins)
+        else:
+            raise NameError('NotEnoughCoins')
+
+    def give_coins(self, coins: int, koyomi_user):
+        if self.check_coins(coins) and koyomi_user:
+            self.use_coins(coins)
+            koyomi_user.add_coins(coins)
+
+    def poke(self, koyomi_user):
+        if koyomi_user and self.check_cooldown('poke_cd', 3600):
+            self.inc_field('pokes_given', 1)
+            self.add_xp(300)
+            koyomi_user.inc_field('pokes_received', 1)
+            koyomi_user.add_coins(300)
+
+    def text_at_angle(self, text, angle, font, color):
+
+        txt = Image.new('RGBA', (500, 50))
+        d = ImageDraw.Draw(txt)
+        d.text((0,0), text, font=font, fill=255)
+        txt=txt.rotate(angle, expand=1)
+        txt=ImageOps.colorize(txt, (0,0,0,0), color)
+        return txt
+
+    async def get_profile(self, avatar_file, user):
+        avatar_file = io.BytesIO(avatar_file)
+        user_avatar = Image.open(avatar_file)
+        user_avatar = user_avatar.resize((256, 256), Image.LANCZOS)
+
+        background = Image.open('images/' + random.choice(background_imgs))
+        background = background.resize((1024, 640), Image.LANCZOS)
+
+        ui = Image.open('images/Koyomi_Background_Template.png')
+
+        final = Image.new('RGBA', (1024, 640))
+        final.paste(background)
+        final.paste(user_avatar, (90, 101))
+        final.paste(ui, (0, 0), ui)
+
+        draw = ImageDraw.Draw(final)
+        font12 = ImageFont.truetype('font/SourceHanSans-Normal.ttc', 12)
+        font24 = ImageFont.truetype('font/SourceHanSans-Normal.ttc', 24)
+        font28 = ImageFont.truetype('font/SourceHanSans-Normal.ttc', 28)
+        draw.text((350,250), user.display_name + self.get_name()[-5:], font=font28, fill=(0,0,0))
+        draw.text((26,2), 'Lv. ' + str(self.get_level()), font=font28, fill=(0,0,0))
+        draw.text((350,290), 'ID: ' + str(user.id), font=font12, fill=(0,0,0))
+        final.save('lmfao.png')
+
+        f = io.BytesIO()
+        final.save(f, format='PNG')
+        del draw
+        return f.getvalue()
 
 
 class Profile:
@@ -115,13 +202,13 @@ class Profile:
                         return user
         return user
 
-    def get_koyomi_user(self, userid):
-        if userid in self.users:
-            user = self.users[userid]
+    def get_koyomi_user(self, user):
+        if user.id in self.users:
+            koyomi_user = self.users[user.id]
         else:
-            user = KoyomiUser(userid)
-            self.users[userid] = user
-        return user
+            koyomi_user = KoyomiUser(user)
+            self.users[user.id] = koyomi_user
+        return koyomi_user
 
     async def on_message(self, msg):
         if msg.author.bot:
@@ -131,8 +218,11 @@ class Profile:
         if msg.guild.id == 264445053596991498 or msg.guild.id == 110373943822540800:
             return
 
-        user = self.get_koyomi_user(msg.author.id)
-        user.add_xp(random.randint(5, 20))
+        user = self.get_koyomi_user(msg.author)
+
+        if user.check_cooldown('msg_cd', 150):
+            user.add_xp(random.randint(5, 20))
+            user.set_cooldown('msg_cd')
 
     @commands.command()
     async def avatar(self, ctx, *, name: str=None):
@@ -148,10 +238,29 @@ class Profile:
         em.add_field(name=user.name + '#' + user.discriminator + '\'s Avatar', value="Sugoi :D")
 
         if author != user:
-            self.addpoints(user, random.randint(1, 5))
+            koyomiuser = self.get_koyomi_user(user)
+            koyomiuser.add_xp(random.randint(1,5))
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('avatar')
+
+    @commands.command()
+    async def give(self, ctx, *, args):
+        args = args.split(' ', 1)
+        coins = args[0]
+        name = args[1]
+        if not coins.isnumeric():
+            await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
+            return
+
+        user = self.getuser(ctx, name)
+        if not user:
+            return
+
+        sender_koyomi_user = self.get_koyomi_user(ctx.author)
+        recipient_koyomi_user = self.get_koyomi_user(user)
+
+        sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
 
     @commands.command()
     async def profile(self, ctx, *,  name: str=None):
@@ -160,16 +269,36 @@ class Profile:
         user = self.getuser(ctx, name)
         if not user:
             return
+        koyomi_user = self.get_koyomi_user(user)
         author = ctx.author
         userfull = user.name + '#' + user.discriminator
-        em = dmbd.newembed(author, userfull , u=user.avatar_url)
+        em = dmbd.newembed(author, userfull, u=user.avatar_url)
         em.set_image(url=user.avatar_url)
-        lvl, percent = self.getlevel(user.id)
+        lvl = koyomi_user.get_level()
+        percent = koyomi_user.get_percent()
+
         em.add_field(name='Username', value=userfull)
         em.add_field(name='UserID', value=user.id)
-        em.add_field(name="Lv. " + str(lvl), value=str(int(percent * 100)) + "%")
+        em.add_field(name="Lv. " + str(lvl), value='{}%'.format(percent))
+        em.add_field(name="Bank", value='{} Aragis'.format(koyomi_user.get_coins()))
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('profile')
+
+    @commands.command()
+    async def testprofile(self, ctx, *, name: str=None):
+
+        user = self.getuser(ctx, name)
+        if not user:
+            return
+        koyomi_user = self.get_koyomi_user(user)
+        async with self.bot.session.get(user.avatar_url) as r:
+            if r.status != 200:
+                return
+            user_avatar = await r.read()
+            final = await koyomi_user.get_profile(user_avatar, user)
+
+        picture = discord.File(final, filename=user.name + '.png')
+        await ctx.send(file=picture)
 
 
 def setup(bot):
