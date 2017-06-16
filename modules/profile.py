@@ -1,11 +1,13 @@
 
+import json
 import io
 import random
 import time
 
 import discord
 from discord.ext import commands
-from PIL import Image, ImageFont, ImageDraw, ImageOps
+from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageColor
+
 import redis
 import utility.discordembed as dmbd
 
@@ -15,10 +17,29 @@ background_imgs = [
     'kaiki1.png',
     'koyomi1.png',
     'koyomi2.png',
-    'tsukihi1.png'
+    'tsukihi1.png',
+    'mayoi1.png',
+    'yotsugi1.png'
 ]
 
+badges = {
+    'discord': 0,
+    'anotherbadge': 932,
+    'etc': 102,
+}
+font12 = ImageFont.truetype('font/Aileron-Regular.otf', 12)
+font24 = ImageFont.truetype('font/Aileron-Regular.otf', 24)
+font28 = ImageFont.truetype('font/Aileron-Regular.otf', 28)
+font144 = ImageFont.truetype('font/Aileron-Regular.otf', 144)
+discord_color = ImageColor.getrgb('#7595FF')
+discord_shaded = ImageColor.getrgb('#98aae6')
+discord_complementary = ImageColor.getrgb('#ffb375')
+
+ui = Image.open('images/Koyomi_Background_Template.png')
+
+
 class KoyomiUser:
+
     def __init__(self, author):
         self.redis_db = redis.StrictRedis(db=1)
         self.author_id = author.id
@@ -32,7 +53,9 @@ class KoyomiUser:
                 'level': 1,
                 'pokes_given': 0,
                 'pokes_received': 0,
-
+                'owned_badges': {'discord': 1},
+                'selected_badge': 'discord',
+                'waifu': 'None',
             }
             self.redis_db.hmset(author.id, default_profile)
         else:
@@ -55,6 +78,7 @@ class KoyomiUser:
 
     def get_name(self):
         return str(self.get_field('name'))
+
     def get_coins(self):
         return int(self.get_field('coins'))
 
@@ -74,6 +98,15 @@ class KoyomiUser:
     def get_pokes_received(self):
         return int(self.get_field('pokes_received'))
 
+    def get_owned_badges(self):
+        return json.loads(self.get_field('owned_badges'))
+
+    def get_selected_badge(self):
+        return self.get_field('selected_badge')
+
+    def get_waifu(self):
+        return self.get_field('waifu')
+
     def set_cooldown(self, cooldown_type):
         self.redis_db.hset(self.author_id, cooldown_type, int(time.time()))
 
@@ -92,8 +125,8 @@ class KoyomiUser:
             self.set_field('xp', 0)
             return True
 
-    def check_coins(self, coins):
-        if self.get_coins() > coins:
+    def check_coins(self, coins: int):
+        if self.get_coins() >= coins:
             return True
         else:
             return False
@@ -108,6 +141,8 @@ class KoyomiUser:
             raise NameError('NotEnoughCoins')
 
     def give_coins(self, coins: int, koyomi_user):
+        if coins <= 0:
+            return
         if self.check_coins(coins) and koyomi_user:
             self.use_coins(coins)
             koyomi_user.add_coins(coins)
@@ -118,14 +153,36 @@ class KoyomiUser:
             self.add_xp(300)
             koyomi_user.inc_field('pokes_received', 1)
             koyomi_user.add_coins(300)
+            self.set_cooldown('poke_cd')
+            return True
+        return False
 
-    def text_at_angle(self, text, angle, font, color):
+    def set_waifu(self):
+        """ Set Waifu """
+        pass
 
-        txt = Image.new('RGBA', (500, 50))
+    def set_description(self):
+        """ Set description. """
+        pass
+
+    def view_shop(self):
+        """ To view the badge shop"""
+        pass
+
+    def view_inventory(self):
+        """ A way to see all the owned items. """
+        pass
+
+    def select_badge(self):
+        """ Select the badge. """
+        pass
+
+    def text_at_angle(self, text, angle, font):
+
+        txt = Image.new('L', (500, 50))
         d = ImageDraw.Draw(txt)
         d.text((0,0), text, font=font, fill=255)
-        txt=txt.rotate(angle, expand=1)
-        txt=ImageOps.colorize(txt, (0,0,0,0), color)
+        txt=txt.rotate(angle, Image.BICUBIC, expand=1)
         return txt
 
     async def get_profile(self, avatar_file, user):
@@ -136,20 +193,36 @@ class KoyomiUser:
         background = Image.open('images/' + random.choice(background_imgs))
         background = background.resize((1024, 640), Image.LANCZOS)
 
-        ui = Image.open('images/Koyomi_Background_Template.png')
+
+        badge = Image.open('images/examplebadge.png')
+
 
         final = Image.new('RGBA', (1024, 640))
+        pokes_r = self.text_at_angle('Pokes Received', 45, font24)
+        pokes_g = self.text_at_angle('Pokes Given', -45, font24)
+
         final.paste(background)
         final.paste(user_avatar, (90, 101))
         final.paste(ui, (0, 0), ui)
-
+        final.paste(ImageOps.colorize(pokes_r, (0, 0, 0), discord_color), (455, 255), pokes_r)
+        final.paste(ImageOps.colorize(pokes_g, (0, 0, 0), discord_color), (625, 500), pokes_g)
         draw = ImageDraw.Draw(final)
-        font12 = ImageFont.truetype('font/SourceHanSans-Normal.ttc', 12)
-        font24 = ImageFont.truetype('font/SourceHanSans-Normal.ttc', 24)
-        font28 = ImageFont.truetype('font/SourceHanSans-Normal.ttc', 28)
-        draw.text((350,250), user.display_name + self.get_name()[-5:], font=font28, fill=(0,0,0))
-        draw.text((26,2), 'Lv. ' + str(self.get_level()), font=font28, fill=(0,0,0))
-        draw.text((350,290), 'ID: ' + str(user.id), font=font12, fill=(0,0,0))
+        draw.text((350,250), user.display_name + self.get_name()[-5:], font=font28, fill=(69,69,69))
+        draw.text((80,2), 'Lv. ' + str(self.get_level()), font=font28, fill=discord_complementary)
+        draw.text((350,290), 'ID: ' + str(user.id), font=font12, fill=discord_color)
+        draw.text((960,22), '{:02d}%'.format(self.get_percent()), font=font24, fill=discord_complementary)
+        draw.text((520,600), '{}'.format(self.get_pokes_received()).rjust(6), font=font24, fill=(117, 218, 255))
+        draw.text((620,600), '{}'.format(self.get_pokes_given()).rjust(6), font=font24, fill=(117, 218, 255))
+        draw.text((85,420), 'Aragis : ' + '{}'.format(self.get_coins()).rjust(20), font=font28, fill=(154, 117, 255))
+        draw.text((85,480), 'Waifu : ' + '-insert waifu here-'.rjust(25), font=font28, fill=(154, 117, 255))
+
+        top_side = (int(self.get_percent() * 6.6) + 365,  0)
+        bottom_side = (top_side[0] - 15, 15)
+        draw.polygon([(350, 15), (365, 0), top_side, bottom_side], discord_shaded)
+        # for x in range(wa20):
+        #    draw.text((random.randint(1, 600), random.randint(1, 1000)), 'TRIGGERED', font=font144, fill=(255,0,0))
+
+        final.paste(badge, (5, 0), badge)
         final.save('lmfao.png')
 
         f = io.BytesIO()
@@ -239,28 +312,30 @@ class Profile:
 
         if author != user:
             koyomiuser = self.get_koyomi_user(user)
-            koyomiuser.add_xp(random.randint(1,5))
+            koyomiuser.add_xp(random.randint(1, 5))
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('avatar')
 
     @commands.command()
     async def give(self, ctx, *, args):
-        args = args.split(' ', 1)
-        coins = args[0]
-        name = args[1]
-        if not coins.isnumeric():
+        try:
+            args = args.split(' ', 1)
+            coins = int(args[0])
+            name = args[1]
+            user = self.getuser(ctx, name)
+            if not user or user == ctx.author:
+                return
+            sender_koyomi_user = self.get_koyomi_user(ctx.author)
+            recipient_koyomi_user = self.get_koyomi_user(user)
+
+            if coins <= 0 or not sender_koyomi_user.check_coins(coins):
+                await ctx.send('Not Enough Aragis')
+
+            sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
+            await ctx.send('{0} gave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
+        except:
             await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
-            return
-
-        user = self.getuser(ctx, name)
-        if not user:
-            return
-
-        sender_koyomi_user = self.get_koyomi_user(ctx.author)
-        recipient_koyomi_user = self.get_koyomi_user(user)
-
-        sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
 
     @commands.command()
     async def profile(self, ctx, *,  name: str=None):
@@ -281,10 +356,24 @@ class Profile:
         em.add_field(name='UserID', value=user.id)
         em.add_field(name="Lv. " + str(lvl), value='{}%'.format(percent))
         em.add_field(name="Bank", value='{} Aragis'.format(koyomi_user.get_coins()))
+        em.add_field(name="Pokes Given", value=koyomi_user.get_pokes_given())
+        em.add_field(name="Pokes Received", value=koyomi_user.get_pokes_received())
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('profile')
 
     @commands.command()
+    async def poke(self, ctx, *, name: str=None):
+        user = self.getuser(ctx, name)
+        if not user or user == ctx.author:
+            return
+        to_koyomi_user = self.get_koyomi_user(user)
+        koyomi_user = self.get_koyomi_user(ctx.author)
+        if koyomi_user.poke(to_koyomi_user):
+            await ctx.send('{} poked {}!'.format(ctx.author.mention, user.mention))
+        else:
+            await ctx.send('You already used your poke! (Pokes have 1 hour cooldown.)')
+
+    @commands.command(hidden=True)
     async def testprofile(self, ctx, *, name: str=None):
 
         user = self.getuser(ctx, name)
