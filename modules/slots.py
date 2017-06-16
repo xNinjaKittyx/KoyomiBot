@@ -17,13 +17,10 @@ class Slots:
             ':cherries:'
         ]
 
-    async def on_slot_error(self, ctx, error):
-        if type(error) == commands.CommandOnCooldown:
-            await ctx.send('Try again after {} seconds.'.format(int(error.retry_after)))
-
     @commands.cooldown(3, 60, commands.BucketType.user)
-    @commands.command(error=on_slot_error)
+    @commands.command()
     async def slots(self, ctx, bet: int):
+
         if len(self.emojis) != 6:
             for x in self.bot.emojis:
                 if x.name == 'FeelsBadMan':
@@ -35,7 +32,7 @@ class Slots:
                     self.emojis.append(x)
                     break
         user = self.bot.cogs['Profile'].get_koyomi_user(ctx.author)
-        if 0 < bet < user.get_coins():
+        if user.check_coins(bet) and bet > 0:
             slot1 = random.randint(0, 5)
             slot2 = random.randint(0, 5)
             slot3 = random.randint(0, 5)
@@ -46,7 +43,7 @@ class Slots:
                 self.emojis[slot3]
             )
             if len(result) == 3:
-                final += '\nBetter Luck Next Time.'
+                final += '\nBetter Luck Next Time. You lost {} Aragis'.format(bet)
                 user.use_coins(bet)
             elif len(result) == 2:
                 final += '\nSo close... You won {} Aragis'.format(bet)
@@ -58,8 +55,10 @@ class Slots:
             em = dmbd.newembed(ctx.author, 'SLOT MACHINE', final)
             await ctx.send(embed=em)
 
-        else:
-            raise
+    @slots.error
+    async def on_slot_error(self, ctx, error):
+        if type(error) == commands.CommandOnCooldown:
+            await ctx.send('Try again after {} seconds.'.format(int(error.retry_after)))
 
 
 def setup(bot):
