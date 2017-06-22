@@ -1,4 +1,8 @@
+![Monogatari](https://xninjakittyx.github.io/KoyomiBot/bg.png)
+
 # KoyomiBot
+
+## Requirements
 
 Requires the following:
 
@@ -14,13 +18,17 @@ Also requires redis database.
 
 Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
 
-# Commands
+Invite Link: [Invite](https://discordapp.com/api/oauth2/authorize?client_id=310366123759632385&scope=bot&permissions=0)
 
-Huge rewrite for Rin Bot. No Bullshit. Just fun stuff.
+## Commands
+
+Huge rewrite for ChitogeBot. No Bullshit. Just fun stuff.
 
 Prefix = !> for testbot and > for official version.
 
 For the following chart please note that [] means mandatory, and () means optional.
+
+Another crappy version of this [here](https://xninjakittyx.github.io/KoyomiBot/commands.html)
 
 Command | Usage
 ------------ | -------------
