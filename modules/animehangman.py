@@ -4,6 +4,7 @@ import random
 from discord.ext import commands
 from utility import discordembed as dmbd
 
+import ujson
 
 class Animehangman:
 
@@ -30,9 +31,8 @@ class Animehangman:
             ) as r:
                 if r.status != 200:
                     return
-                results = await r.json()
+                results = await r.json(loads=ujson.loads)
                 self.bot.redis_db.setex('AnilistToken', 3600, results['access_token'])
-
 
     async def display(self, ctx, currentboard, guess, misses, picture, win=0):
         subtitle = "Where you test your weeb level!"
@@ -102,11 +102,11 @@ class Animehangman:
                 self.bot.redis_db.get('AnilistToken').decode('utf-8')
             ) as r:
                 if r.status != 200:
-                    print("ANIME CHARACTER RETURNING 404")
+                    self.bot.logger.warning("ANIME CHARACTER RETURNING 404")
                     continue
-                tempchar = await r.json()
+                tempchar = await r.json(loads=ujson.loads)
 
-            print(tempchar["id"])
+                self.bot.logger.debug(tempchar["id"])
             default = "https://cdn.anilist.co/img/dir/character/reg/default.jpg"
             if tempchar["anime"] == [] or tempchar['image_url_lge'] == default:
                 continue
@@ -116,6 +116,7 @@ class Animehangman:
     @commands.command(no_pm=True)
     async def achm(self, ctx):
         """ Play Anime Character Hangman!"""
+        self.bot.cogs['Wordcount'].cmdused('achm')
         if self.bot.redis_db.exists('achminst'):
             for instance in self.bot.redis_db.lrange('achminst', 0, -1):
                 if ctx.channel.id == int(instance.decode('utf-8')):

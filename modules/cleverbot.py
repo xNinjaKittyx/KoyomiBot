@@ -9,7 +9,8 @@ class Cleverbot:
     async def on_message(self, msg):
         if msg.content.startswith(self.bot.user.mention):
             namae = len(self.bot.user.mention)
-            await msg.channel.send(self.cleverbot.say(msg.content[namae:]))
+            with msg.channel.typing():
+                await msg.channel.send(self.cleverbot.say(msg.content[namae:]))
 
 
 def setup(bot):

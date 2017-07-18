@@ -5,8 +5,6 @@ from discord.ext import commands
 import utility.discordembed as dmbd
 
 
-
-
 class Wordcount:
 
     def __init__(self, bot):
@@ -17,6 +15,7 @@ class Wordcount:
                           'man', 'new', 'now', 'old', 'see', 'two', 'way',
                           'who', 'boy', 'did', 'its', 'let', 'put', 'say',
                           'she', 'too', 'use', 'dad', 'mom']
+
     def cmdcount(self, name: str):
         self.bot.redis_db.zincrby('CmdDB', name)
 
@@ -66,7 +65,6 @@ class Wordcount:
 
         await ctx.send(embed=em)
         self.cmdcount('wordused')
-
 
     @commands.command()
     async def blackwords(self, ctx):

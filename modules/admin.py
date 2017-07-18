@@ -16,7 +16,8 @@ class Admin:
             await ctx.bot.is_owner(ctx.author)
             return True
         except discord.ext.commands.errors.CheckFailure:
-            print(ctx.author.name + ' tried to use an Admin command!')
+
+            self.bot.logger.warning(ctx.author.name + ' tried to use an Admin command!')
             return False
 
     @commands.command(hidden=True)
@@ -30,7 +31,7 @@ class Admin:
                 await ctx.send("```Code Executed```")
             except (TypeError, SyntaxError):
                 await ctx.send("```\n" + sys.exc_info() + "```")
-                print("Syntax Error")
+                self.bot.logger.warning("Syntax Error")
             total_time = time.time() - start_time
             await ctx.send("This took *" + str(total_time) + "* seconds")
 

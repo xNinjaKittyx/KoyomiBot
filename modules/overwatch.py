@@ -38,7 +38,6 @@ class Overwatch:
 
         return em
 
-
     @commands.command()
     async def owstats(self, ctx, *, tag: str):
         """ Usage: owstats [region] [battletag]\nRegions: kr, eu, us"""
@@ -64,7 +63,7 @@ class Overwatch:
             if r.status != 200:
                 self.bot.cogs['Log'].output('OWApi.net failed to connect.')
                 return
-            profile = await r.json()
+            profile = await r.json(loads=ujson.loads)
             profile = profile[region]['stats']
             quick = profile['quickplay']
             comp = profile['competitive']

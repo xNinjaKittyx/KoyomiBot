@@ -6,6 +6,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from discord.ext import commands
 import utility.discordembed as dmbd
+import ujson
 
 
 
@@ -30,11 +31,11 @@ class Anime:
             }
         ) as r:
             if r.status == 200:
-                results = await r.json()
+                results = await r.json(loads=ujson.loads)
                 self.access_token = results['access_token']
                 self.lastaccess = datetime.today()
             else:
-                print("Cannot get Anilist Access Token")
+                self.bot.logger.warning("Cannot get Anilist Access Token")
                 return
 
     def __init__(self, bot):
@@ -42,7 +43,7 @@ class Anime:
         self.anilistid = bot.redis_db.get('AnilistID').decode('utf-8')
         self.anilistsecret = bot.redis_db.get('AnilistSecret').decode('utf-8')
         if not self.anilistid or not self.anilistsecret:
-            print('ID or Secret is missing for AniList')
+            self.bot.logger.warning('ID or Secret is missing for AniList')
             raise ImportError
         self.access_token = None
         self.lastaccess = None
@@ -107,7 +108,7 @@ class Anime:
 
         async with self.bot.session.get(url) as r:
             if r.status == 200:
-                animelist = await r.json()
+                animelist = await r.json(loads=ujson.loads)
                 try:
                     await ctx.send(animelist["error"]["message"][0])
                 except:
@@ -135,7 +136,7 @@ class Anime:
                             chosen = animelist[0]
                 await ctx.send(embed=self.getinfo(ctx.author, chosen))
             else:
-                self.bot.cogs['Log'].output("No 200 status from Anime")
+                self.bot.logger.warning("No 200 status from Anime")
         self.bot.cogs['Wordcount'].cmdcount('anime')
 
     @commands.command()
@@ -149,7 +150,7 @@ class Anime:
         )
         async with self.bot.session.get(url) as r:
             if r.status == 200:
-                mangalist = await r.json()
+                mangalist = await r.json(loads=ujson.loads)
                 if 'error' in mangalist:
                     await ctx.send(mangalist["error"]["message"][0])
                     return
@@ -175,7 +176,7 @@ class Anime:
                             chosen = mangalist[0]
                 await ctx.send(embed=self.getinfo(ctx.author, chosen))
             else:
-                self.bot.cogs['Log'].output("No 200 status from Manga")
+                self.bot.logger.warning("No 200 status from Manga")
         self.bot.cogs['Wordcount'].cmdcount('anime')
 
 

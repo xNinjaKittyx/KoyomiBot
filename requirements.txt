@@ -6,3 +6,7 @@ psutil
 wikipedia
 requests
 Pillow
+ujson
+cleverwrap
+xmltodict
+youtube-dl

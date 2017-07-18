@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 import utility.discordembed as dmbd
 
+import ujson
+
 
 class Random:
     """ Commands that are RANDOM"""
@@ -21,9 +23,9 @@ class Random:
 
         async with self.bot.session.get('http://random.cat/meow') as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output("Could not get a meow")
+                self.bot.logger.warning("Could not get a meow")
                 return
-            catlink = await r.json()
+            catlink = await r.json(loads=ujson.loads)
             rngcat = catlink['file']
             title = 'Random.Cat'
             desc = 'Here, have a cat.'
@@ -39,7 +41,7 @@ class Random:
 
         async with self.bot.session.get('http://random.dog/') as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output("Could not get a woof")
+                self.bot.logger.warning("Could not get a woof")
                 return
             doglink = BeautifulSoup(await r.text(), 'html.parser')
             rngdog = 'http://random.dog/' + doglink.img['src']
@@ -56,12 +58,12 @@ class Random:
         if numid is None:
             async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/?limit=0') as r:
                 if r.status == 200:
-                    count = int((await r.json())['count'])
+                    count = int((await r.json(loads=ujson.loads))['count'])
             numid = random.randint(1, count)
 
         async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/' + str(numid)) as r:
             if r.status == 200:
-                pokeman = await r.json()
+                pokeman = await r.json(loads=ujson.loads)
                 em = dmbd.newembed(ctx.author, pokeman['name'].title())
                 shiny = (random.randint(1, 65536) < int(65535/(8200 - self.shinychance * 200)))
                 if not shiny:

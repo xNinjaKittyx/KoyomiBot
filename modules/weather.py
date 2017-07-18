@@ -1,6 +1,7 @@
 """ Weather Module"""
 
 from discord.ext import commands
+import ujson
 
 from utility import discordembed as dmbd
 
@@ -38,9 +39,8 @@ class Weather:
 
         async with self.bot.session.get(url) as r:
             if r.status != 200:
-                await ctx.send("GoogleGeoCode is down")
-                return
-            return await r.json()
+                return None
+            return await r.json(loads=ujson.loads)
 
     async def getdarksky(self, lat, lng):
         key = self.bot.redis_db.get('DarkSkyAPI').decode('utf-8')
@@ -51,9 +51,8 @@ class Weather:
 
         async with self.bot.session.get(url) as r:
             if r.status != 200:
-                await ctx.send('DarkSky is down')
-                return
-            return await r.json()
+                return None
+            return await r.json(loads=ujson.loads)
 
     def display(self, author, place, darksky):
         curr = darksky["currently"]
@@ -78,25 +77,34 @@ class Weather:
 
         return em
 
-
     @commands.command()
     async def weather(self, ctx, *, search: str):
         """ Grab the weather using GoogleGeoCodeAPI and DarkSkyAPI"""
 
         location = await self.getgoogle(search)
-
-        if location["status"] == "OK":
-            lat = location["results"][0]["geometry"]["location"]["lat"]
-            lng = location["results"][0]["geometry"]["location"]["lng"]
-            place = location["results"][0]["address_components"][0]["long_name"]
-            darksky = await self.getdarksky(lat, lng)
-
-            await ctx.send(embed=self.display(ctx.author, place, darksky))
-            self.bot.cogs['Wordcount'].cmdcount('weather')
+        if location is None:
+            self.bot.cogs['Log'].output("Google API is down")
             return
+        if 'status' in location:
+            if location["status"] == "OK":
+                lat = location["results"][0]["geometry"]["location"]["lat"]
+                lng = location["results"][0]["geometry"]["location"]["lng"]
+                place = location["results"][0]["address_components"][0]["long_name"]
+                darksky = await self.getdarksky(lat, lng)
+                if darksky is None:
+                    self.bot.cogs['Log'].output("DarkSky is Down")
+                    return
+
+                await ctx.send(embed=self.display(ctx.author, place, darksky))
+                self.bot.cogs['Wordcount'].cmdcount('weather')
+                return
+            else:
+                self.bot.cogs['Log'].output("Status Error: " + location["status"])
+                return
         else:
-            self.bot.cogs['Log'].output("Status Error: " + location["status"])
+            self.bot.cogs['Log'].output("Check weather command. Status was not found in location.")
             return
+
 
 def setup(bot):
     bot.add_cog(Weather(bot))

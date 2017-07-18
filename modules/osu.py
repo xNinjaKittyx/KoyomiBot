@@ -53,9 +53,9 @@ class Osu:
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('Peppy Failed')
+                self.bot.logger.warning('Peppy Failed')
                 return
-            j = await r.json()
+            j = await r.json(loads=ujson.loads)
             return j[0]
 
     @commands.command()

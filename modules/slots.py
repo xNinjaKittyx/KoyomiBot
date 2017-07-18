@@ -16,6 +16,8 @@ class Slots:
             ':watermelon:',
             ':cherries:'
         ]
+        if not self.bot.redis_db.get('jackpot'):
+            self.bot.redis_db.set('jackpot', 0)
 
     @commands.cooldown(3, 60, commands.BucketType.user)
     @commands.command()
@@ -32,7 +34,7 @@ class Slots:
                     self.emojis.append(x)
                     break
         user = self.bot.cogs['Profile'].get_koyomi_user(ctx.author)
-        if user.check_coins(bet) and bet > 0:
+        if user.coins >= bet >= 0:
             slot1 = random.randint(0, 5)
             slot2 = random.randint(0, 5)
             slot3 = random.randint(0, 5)
@@ -44,21 +46,29 @@ class Slots:
             )
             if len(result) == 3:
                 final += '\nBetter Luck Next Time. You lost {} Aragis'.format(bet)
+                self.bot.redis_db.incrby('jackpot', max(int(bet * .5), 1))
                 user.use_coins(bet)
             elif len(result) == 2:
                 final += '\nSo close... You won {} Aragis'.format(bet)
-                user.add_coins(bet)
+                user.coins += bet
             elif len(result) == 1:
-                final += '\nJACKPOT!! You won {} Aragis'.format(bet * 9)
-                user.add_coins(bet * 9)
+                jack = int(self.bot.redis_db.get('jackpot').decode('utf-8'))
+                final += '\nJACKPOT!! You won {} Aragis'.format(bet * 3 + jack)
+                user.coins += bet * 3 + jack
+                self.bot.redis_db.set('jackpot', 0)
 
             em = dmbd.newembed(ctx.author, 'SLOT MACHINE', final)
             await ctx.send(embed=em)
+
+    @commands.command()
+    async def slotpot(self, ctx):
+        await ctx.send('The Current Jackpot for Slots is ' + self.bot.redis_db.get('jackpot').decode('utf-8') + ' Aragis.')
 
     @slots.error
     async def on_slot_error(self, ctx, error):
         if type(error) == commands.CommandOnCooldown:
             await ctx.send('Try again after {} seconds.'.format(int(error.retry_after)))
+        print(error)
 
 
 def setup(bot):

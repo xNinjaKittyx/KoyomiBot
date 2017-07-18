@@ -4,6 +4,7 @@ import random
 import xmltodict
 
 from discord.ext import commands
+import ujson
 import wikipedia
 
 import utility.discordembed as dmbd
@@ -19,7 +20,7 @@ class Search:
         async with self.bot.session.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Gyfcat returned ' + r.status)
-            giflist = await r.json()
+            giflist = await r.json(loads=ujson.loads)
             num = random.randint(0, count-1)
             gif = giflist["gfycats"][num]
             title = gif["gfyName"]
@@ -49,6 +50,8 @@ class Search:
     @commands.command()
     async def safebooru(self, ctx, *, search: str):
         """Searches Safebooru"""
+
+        self.bot.cogs['Wordcount'].cmdcount('safebooru')
         link = ("https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=20&tags=" +
                 search.replace(' ', '_'))
 
@@ -75,7 +78,7 @@ class Search:
             em.url = file_url.format(weeblist)
             em.description = desc.format(1)
             em.add_field(name='Source', value=source.format(weeblist))
-            em.add_field(name='Tags', value=weeblist['tags'])
+            em.add_field(name='Tags', value=weeblist['@tags'])
             await ctx.send(embed=em)
             return
         else:
@@ -83,7 +86,7 @@ class Search:
             em.url = file_url.format(weeblist[0])
             em.description = desc.format(1)
             em.add_field(name='Source', value=source.format(weeblist[0]))
-            em.add_field(name='Tags', value=weeblist[0]['tags'])
+            em.add_field(name='Tags', value=weeblist[0]['@tags'])
             msg = await ctx.send(embed=em)
             await msg.add_reaction('◀')
             await msg.add_reaction('▶')
@@ -125,20 +128,21 @@ class Search:
                 em.description = desc.format(page+1)
                 em.clear_fields()
                 em.add_field(name='Source', value=source.format(weeblist[page]))
-                em.add_field(name='Tags', value=weeblist[page]['tags'])
+                em.add_field(name='Tags', value=weeblist[page]['@tags'])
                 await msg.edit(embed=em)
 
 
     @commands.command()
     async def konachan(self, ctx, *, search: str):
         """Searches Konachan (rating:safe)"""
+        self.bot.cogs['Wordcount'].cmdcount('konachan')
         link = ("https://konachan.com/post.json?limit=20&tags=rating:safe%20" +
                 search.replace('rating:questionable', '').replace('rating:explicit', ''))
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('[WARNING]: Konachan Search Failed')
-            weeblist = await r.json()
+            weeblist = await r.json(loads=ujson.loads)
 
         results = len(weeblist)
 
@@ -213,7 +217,7 @@ class Search:
         async with self.bot.session.get('https://api.urbandictionary.com/v0/define?term=' + search) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Urban Dictionary is Down')
-            results = await r.json()
+            results = await r.json(loads=ujson.loads)
 
         if results['result_type'] != 'exact':
             em = dmbd.newembed(ctx.author, 'Urban Dictionary', 'No Results Found For' + search)
@@ -231,6 +235,7 @@ class Search:
         desc = 'Defined by: {0}\n{1}\n\nExample: {2}\n\n👍{3}\t👎{4}'.format(author, define, example, thumbs_up, thumbs_down)
         em = dmbd.newembed(ctx.author, t=title, d=desc, u=url)
         await ctx.send(embed=em)
+
 
     @commands.command()
     async def wiki(self, ctx, *, search: str):

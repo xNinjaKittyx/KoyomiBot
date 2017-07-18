@@ -1,5 +1,7 @@
 
 # Built-in Python Imports
+import logging
+from logging.handlers import TimedRotatingFileHandler
 import random
 import os
 
@@ -35,6 +37,7 @@ modules = {
     'modules.info',
     'modules.log',
     # 'modules.musicplayer',
+    'modules.musicplayer_rewrite',
     'modules.osu',
     'modules.overwatch',
     'modules.pad',
@@ -43,6 +46,7 @@ modules = {
     'modules.search',
     'modules.slots',
     'modules.tags',
+    'modules.todo',
     'modules.weather',
     'modules.wordcount'
 
@@ -52,61 +56,78 @@ modules = {
 class MyClient(commands.AutoShardedBot):
 
     def __init__(self, *args, **kwargs):
+
+        self.logger = logging.getLogger('KoyomiBot')
+        self.logger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - [%(levelname)s]: %(message)s')
+        fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
+
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        self.logger.addHandler(sh)
         self.redis_db = redis.StrictRedis()
         self.debug = bool(kwargs.pop('debug', False))
-        print('Initialized Redis Database')
+
+        self.logger.info("LAUNCHING BOT...")
+        self.logger.info('Initialized Redis Database')
         prefix = self.redis_db.get('Prefix')
         if prefix is None:
             prefix = '.koyomi'
         else:
             prefix = prefix.decode('utf-8')
-        print('Prefix is set: ' + prefix)
+        self.logger.info('Prefix is set: ' + prefix)
         super().__init__(*args, command_prefix=prefix, **kwargs)
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        import ujson
+        self.session = aiohttp.ClientSession(loop=self.loop, json_serialize=ujson.dumps)
 
-        print('Checking For Keys')
+        self.logger.info('Checking For Keys')
 
         setkeys = bool(kwargs.pop('setkeys', False))
         if setkeys:
             self.set_keys()
         self.check_keys()
         self.load_all_modules()
-        print('Starting Bot')
+        self.add_check(discord.ext.commands.guild_only())
+        self.logger.info('Starting Bot')
         self.run(self.redis_db.get('DiscordToken').decode('utf-8'))
 
     def load_all_modules(self):
-        print('Loading all Modules')
+        self.logger.info('Loading all Modules')
         for mod in modules:
             try:
                 self.load_extension(mod)
-                print('Load Successful: ' + mod)
+                self.logger.info('Load Successful: ' + mod)
             except ImportError as e:
-                print(e)
-                print('[WARNING]: Module ' + mod + ' did not load')
+                self.logger.warning(e)
+                self.logger.warning('[WARNING]: Module ' + mod + ' did not load')
 
     def check_keys(self):
         for x in essential_keys:
             if self.redis_db.get(x) is None:
-                raise NameError(x + ' key is missing. Please set it')
+                self.logger.critical(x + ' key is missing. Please set it')
                 quit()
         for x in nonessential_keys:
             if self.redis_db.get(x) is None:
-                print(x + ' key is missing. Some functions may not work properly.')
+                self.logger.warning(x + ' key is missing. Some functions may not work properly.')
 
     def set_keys(self):
-            print('SetKeys was activated. Going through key setup.')
-            print('Just press enter if you would like to keep the key the same as before.')
-            for x in essential_keys:
-                apikey = input(x + ": ")
-                if not apikey == "":
-                    self.redis_db.set(x, str(apikey))
+        print('SetKeys was activated. Going through key setup.')
+        print('Just press enter if you would like to keep the key the same as before.')
+        for x in essential_keys:
+            apikey = input(x + ": ")
+            if not apikey == "":
+                self.redis_db.set(x, str(apikey))
 
-            for x in nonessential_keys:
-                apikey = input(x + ": ")
-                if not apikey == "":
-                    self.redis_db.set(x, str(apikey))
+        for x in nonessential_keys:
+            apikey = input(x + ": ")
+            if not apikey == "":
+                self.redis_db.set(x, str(apikey))
 
     async def on_message(self, msg):
+        if isinstance(msg.channel, discord.abc.PrivateChannel):
+            return
         if msg.content.startswith(self.command_prefix + 'guess'):
             return
         if msg.author.bot:
@@ -116,27 +137,26 @@ class MyClient(commands.AutoShardedBot):
 
     async def on_ready(self):
         random.seed()
-        self.cogs['Log'].output('Logged in as')
-        self.cogs['Log'].output("Username " + self.user.name)
-        self.cogs['Log'].output("ID: " + str(self.user.id))
+        self.logger.info('Logged in as')
+        self.logger.info("Username " + self.user.name)
+        self.logger.info("ID: " + str(self.user.id))
         url = (
             "https://discordapp.com/api/oauth2/authorize?client_id=" +
             str(self.user.id) +
             "&scope=bot&permissions=0"
         )
-        self.cogs['Log'].output("Invite Link: " + url)
+        self.logger.info("Invite Link: " + url)
         try:
             if not discord.opus.is_loaded() and os.name == 'nt':
                 discord.opus.load_opus("libopus0.x64.dll")
 
             if not discord.opus.is_loaded() and os.name == 'posix':
                 discord.opus.load_opus("/usr/local/lib/libopus.so")
-            self.cogs['Log'].output("Loaded Opus Library")
+            self.logger.info("Loaded Opus Library")
         except:
-            self.cogs['Log'].output("Opus library did not load. Voice may not work.")
+            self.logger.warning("Opus library did not load. Voice may not work.")
 
 
 if __name__ == "__main__":
-    print("LAUNCHING BOT...")
     description = 'KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.'
     bot = MyClient(description=description, pm_help=True, setkeys=False)

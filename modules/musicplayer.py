@@ -60,7 +60,6 @@ class VoiceState:
     def toggle_next(self):
         self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
 
-
     async def audio_player_task(self):
         while True:
             self.play_next_song.clear()
@@ -174,7 +173,6 @@ class Music:
             await self.refreshplayer(ctx.guild)
             await ctx.message.delete()
 
-
         self.bot.cogs['Wordcount'].cmdcount('play')
 
     @commands.command(no_pm=True)
@@ -284,6 +282,7 @@ class Music:
             await ctx.message.delete()
 
         self.bot.cogs['Wordcount'].cmdcount('playing')
+
 
 def setup(bot):
     bot.add_cog(Music(bot))

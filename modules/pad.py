@@ -1,11 +1,13 @@
 
 # -*- coding: utf8 -*-
-import json
+import ujson as json
 
 import aiohttp
 from discord.ext import commands
 import redis
 import utility.discordembed as dmbd
+
+import ujson as json
 
 class PAD:
     def __init__(self, bot):
@@ -32,13 +34,13 @@ class PAD:
         if self.bot.redis_db.get('PADMonsters') is None:
             async with self.bot.session.get('https://www.padherder.com/api/monsters/') as r:
                 if r.status != 200:
-                    print('/api/monsters/ is down')
+                    self.bot.logger.warning('/api/monsters/ is down')
                     return False
                 self.bot.redis_db.set('PADMonsters', await r.read(), ex=43200)
         if self.bot.redis_db.get('PADAwakening') is None:
             async with self.bot.session.get('https://www.padherder.com/api/awakenings/') as r:
                 if r.status != 200:
-                    print('/api/awakenings/ is down')
+                    self.bot.logger.warning('/api/awakenings/ is down')
                     return False
                 self.bot.redis_db.set('PADAwakening', await r.read(), ex=43200)
         return True

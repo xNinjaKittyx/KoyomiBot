@@ -6,21 +6,20 @@ import re
 from bs4 import BeautifulSoup
 from discord.ext import commands
 from utility import discordembed as dmbd
-
+import ujson
 
 class Comics:
     def __init__(self, bot):
         self.bot = bot
-
 
     async def refreshxkcd(self):
         if self.bot.redis_db.get('xkcdmax') is not None:
             return True
         async with self.bot.session.get("http://xkcd.com/info.0.json") as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output("XKCD is down")
+                self.bot.logger.warning("XKCD is down")
                 return False
-            j = await r.json()
+            j = await r.json(loads=ujson.loads)
             self.bot.redis_db.set('xkcdmax', j['num'], ex=86400)
             return True
 
@@ -31,14 +30,14 @@ class Comics:
         if result is None:
             async with self.bot.session.get(url + "/info.0.json") as r:
                 if not r.status == 200:
-                    self.bot.cogs['Log'].output("Unable to get XKCD #" + str(num))
+                    self.bot.logger.warning("Unable to get XKCD #" + str(num))
                     return
-                j = await r.json()
+                j = await r.json(loads=ujson.loads)
                 self.bot.redis_db.hmset('xkcd', {num: j})
                 return j
         else:
             j = result.decode('utf-8')
-            j = json.loads(j)
+            j = ujson.loads(j)
             return j
 
     @commands.command()
@@ -63,7 +62,7 @@ class Comics:
             return True
         async with self.bot.session.get("http://explosm.net/comics/latest") as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output("Cyanide&Happiness is down")
+                self.bot.logger.warning("Cyanide&Happiness is down")
                 return False
             soup = BeautifulSoup(await r.text(), 'html.parser')
             current = int(re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
@@ -76,7 +75,7 @@ class Comics:
         if result is None:
             async with self.bot.session.get(url) as r:
                 if not r.status == 200:
-                    self.bot.cogs['Log'].output("Unable to get Cyanide #" + str(num))
+                    self.bot.logger.warning("Unable to get Cyanide #" + str(num))
                     return
                 soup = BeautifulSoup(await r.text(), 'html.parser')
                 if soup.prettify().startswith('Could not'):
@@ -88,7 +87,6 @@ class Comics:
         else:
             img = result.decode('utf-8')
             return img
-
 
     @commands.command()
     async def cyanide(self, ctx):
@@ -107,7 +105,7 @@ class Comics:
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness', str(number), u=link)
         em.set_image(url=img)
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('ch')
+        self.bot.cogs['Wordcount'].cmdcount('cyanide')
 
     @commands.command()
     async def cyanidercg(self, ctx):
@@ -115,15 +113,15 @@ class Comics:
 
         async with self.bot.session.get('http://explosm.net/rcg') as r:
             if not r.status == 200:
-                self.bot.cogs['Log'].output("Unable to get RCG for Cyanide")
+                self.bot.logger.warning("Unable to get RCG for Cyanide")
                 return
             soup = BeautifulSoup(await r.text(), 'html.parser')
             img = 'http:' + str(soup.find(id='rcg-comic').img['src'])
-        print(img)
+        self.bot.logger.info(img)
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img)
         em.set_image(url=img)
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('chrng')
+        self.bot.cogs['Wordcount'].cmdcount('cyanidercg')
 
 
 def setup(bot):
