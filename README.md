@@ -16,6 +16,8 @@ Requires the following:
 
 Also requires redis database.
 
+Official Website: [gh-pages](https://KoyomiBot.xNinjaKittyx.github.io/)
+
 Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
 
 Invite Link: [Invite](https://discordapp.com/api/oauth2/authorize?client_id=310366123759632385&scope=bot&permissions=0)
