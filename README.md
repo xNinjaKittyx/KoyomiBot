@@ -83,8 +83,4 @@ help | Shows the help message.
 
 ## To-Do List
 
-* Add more comics like Calvin & Hobbes
-* Finish Animehangman (also come up with a better fricking name.)
-* Finish Music Player (Have to make it look nice :D)
-* Add Cleverbot and WolframAlpha back.
-* Check System for Users, Channels, and Servers. Ability to ignore them.
+Just look at Issues to see what's been requested / needs work on.
