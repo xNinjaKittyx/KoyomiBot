@@ -16,7 +16,7 @@ Requires the following:
 
 Also requires redis database.
 
-Official Website: [gh-pages](https://xNinjaKittyx.github.io/koyomibot)
+Official Website: [gh-pages](https://xNinjaKittyx.github.io/KoyomiBot)
 
 Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
 
