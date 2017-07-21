@@ -1,4 +1,8 @@
+![Monogatari](https://xninjakittyx.github.io/KoyomiBot/bg.png)
+
 # KoyomiBot
+
+## Requirements
 
 Requires the following:
 
@@ -12,15 +16,21 @@ Requires the following:
 
 Also requires redis database.
 
+Official Website: [gh-pages](https://xNinjaKittyx.github.io/KoyomiBot)
+
 Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
 
-# Commands
+Invite Link: [Invite](https://discordapp.com/api/oauth2/authorize?client_id=310366123759632385&scope=bot&permissions=0)
 
-Huge rewrite for Rin Bot. No Bullshit. Just fun stuff.
+## Commands
+
+Huge rewrite for ChitogeBot. No Bullshit. Just fun stuff.
 
 Prefix = !> for testbot and > for official version.
 
 For the following chart please note that [] means mandatory, and () means optional.
+
+Another crappy version of this [here](https://xninjakittyx.github.io/KoyomiBot/commands.html)
 
 Command | Usage
 ------------ | -------------
@@ -73,8 +83,4 @@ help | Shows the help message.
 
 ## To-Do List
 
-* Add more comics like Calvin & Hobbes
-* Finish Animehangman (also come up with a better fricking name.)
-* Finish Music Player (Have to make it look nice :D)
-* Add Cleverbot and WolframAlpha back.
-* Check System for Users, Channels, and Servers. Ability to ignore them.
+Just look at Issues to see what's been requested / needs work on.
