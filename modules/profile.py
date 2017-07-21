@@ -111,7 +111,7 @@ class Profile:
 
         koyomiuser = self.get_koyomi_user(ctx.author)
         if desc is None:
-            await ctx.send(koyomiuser.desciption)
+            await ctx.send(koyomiuser.description)
         else:
             if len(desc) > 25:
                 await ctx.send('Description is too long.')
@@ -121,7 +121,7 @@ class Profile:
                 self.bot.cogs['Wordcount'].cmdcount('description')
 
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def sudogive(self, ctx, *, args):
         try:
@@ -145,6 +145,7 @@ class Profile:
 
     @commands.command()
     async def give(self, ctx, *, args):
+        """ Give another user Aragis """
         try:
             args = args.split(' ', 1)
             coins = int(args[0])
@@ -197,6 +198,7 @@ class Profile:
 
     @commands.command()
     async def poke(self, ctx, *, name: str=None):
+        """ Poke your friend. You get XP, They get money! """
         user = self.getuser(ctx, name)
         if not user or user == ctx.author or user.bot:
             return

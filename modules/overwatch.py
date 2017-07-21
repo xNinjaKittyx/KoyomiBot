@@ -3,6 +3,7 @@
 import random
 
 from discord.ext import commands
+import ujson
 from utility import discordembed as dmbd
 
 

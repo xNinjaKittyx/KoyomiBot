@@ -55,6 +55,7 @@ class Random:
 
     @commands.command()
     async def pokemon(self, ctx, *, numid: int=None):
+        """ Get a random pokemon! """
         if numid is None:
             async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/?limit=0') as r:
                 if r.status == 200:

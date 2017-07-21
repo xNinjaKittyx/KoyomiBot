@@ -57,19 +57,16 @@ class VoiceState:
         if self.voice.is_playing():
             self.voice.stop()
 
-    def toggle_next(self):
+    def toggle_next(self, error):
+        print(error)
         self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
 
     async def audio_player_task(self):
         while True:
-            print('playing')
             self.play_next_song.clear()
-            print('playing')
             self.current = await self.songs.get()
-            print('playing')
             self.message = await self.current.channel.send(embed=self.current.get_embed('Now Playing '))
-            print('playing')
-            self.voice.play(self.current.sauce)
+            self.voice.play(self.current.sauce, after=self.toggle_next)
             await self.play_next_song.wait()
 
 
@@ -119,7 +116,7 @@ class Music:
         try:
             await self.create_voice_client(channel)
         except discord.ClientException:
-            await self.get_voice_state(ctx.guild).move_to(channel)
+            await self.get_voice_state(ctx.guild).voice.move_to(channel)
         else:
             await ctx.send('Yay! I\'m in your channel ' + channel.name + ' ready to play anything and everything!')
             return True
@@ -189,11 +186,58 @@ class Music:
     async def stop(self, ctx):
         state = self.get_voice_state(ctx.guild)
         if state.voice.is_playing:
+            _ = await self.refreshplayer(ctx.guild, 'Session ended')
             state.voice.stop()
-        await state.voice.disconnect()
 
-    # @commands.command()
-    # async def playing(self, ctx):
+        try:
+            state.audio_player.cancel()
+            del self.voice_states[ctx.guild.id]
+            await state.voice.disconnect()
+        except Exception:
+            pass
+
+    @commands.command()
+    async def playing(self, ctx):
+
+        state = self.get_voice_state(ctx.guild)
+        if state.current is None:
+            await ctx.send('No song is playing')
+        else:
+            skip_count = len(state.skip_votes)
+            msg = 'Now playing [skips: {}/3]'.format(skip_count)
+            await self.refreshplayer(ctx.guild, msg)
+            await ctx.message.delete()
+
+    @commands.command(no_pm=True)
+    async def skip(self, ctx):
+        """Vote to skip a song. The song requester can automatically skip.
+        3 skip votes are needed for the song to be skipped.
+        """
+        guild = ctx.guild
+        state = self.get_voice_state(guild)
+        if not state.voice.is_playing():
+            return
+
+        voter = ctx.author
+        if voter == state.current.requester:
+            await self.refreshplayer(
+                guild,
+                'Requester {' + state.current.requester.name +
+                '#' + state.current.requester.discriminator +
+                ' skipped the following song...'
+            )
+            state.skip()
+        elif voter.id not in state.skip_votes:
+            state.skip_votes.add(voter.id)
+            total_votes = len(state.skip_votes)
+            if total_votes >= 3:
+                await self.refreshplayer(guild, 'Skip vote passed, skipping song...')
+                state.skip()
+            else:
+                await self.refreshplayer(guild, 'Skip vote added, currently at [{}/3]'.format(total_votes))
+        else:
+            await ctx.send('You have already voted to skip this song.')
+
 
 def setup(bot):
     bot.add_cog(Music(bot))

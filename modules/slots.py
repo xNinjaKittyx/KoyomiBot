@@ -22,7 +22,7 @@ class Slots:
     @commands.cooldown(3, 60, commands.BucketType.user)
     @commands.command()
     async def slots(self, ctx, bet: int):
-
+        """ Bet your Aragis for more Aragis. """
         if len(self.emojis) != 6:
             for x in self.bot.emojis:
                 if x.name == 'FeelsBadMan':
@@ -62,6 +62,7 @@ class Slots:
 
     @commands.command()
     async def slotpot(self, ctx):
+        """ The Current JackPot for Slots."""
         await ctx.send('The Current Jackpot for Slots is ' + self.bot.redis_db.get('jackpot').decode('utf-8') + ' Aragis.')
 
     @slots.error

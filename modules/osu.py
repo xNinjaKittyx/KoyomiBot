@@ -1,5 +1,6 @@
 
 from discord.ext import commands
+import ujson
 import utility.discordembed as dmbd
 
 class OsuPlayer:

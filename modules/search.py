@@ -214,6 +214,7 @@ class Search:
 
     @commands.command()
     async def urban(self, ctx, *, search: str):
+        """ Searches Urban Dictionary. """
         async with self.bot.session.get('https://api.urbandictionary.com/v0/define?term=' + search) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Urban Dictionary is Down')
@@ -261,6 +262,7 @@ class Search:
 
     @commands.command()
     async def sauce(self, ctx, *, search: str):
+        """ In Progress... Will return sauce of any linked photo. """
         pass
 
 

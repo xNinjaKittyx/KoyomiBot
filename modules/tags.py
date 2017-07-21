@@ -12,7 +12,7 @@ class Tags:
 
     @commands.group()
     async def tag(self, ctx):
-        """ Tags cannot be less than 3 fyi..."""
+        """ Display a tag. Subcommands: add, search, delete(admin-only)"""
         if ctx.invoked_subcommand is None:
             query = ctx.message.content.split(sep=' ', maxsplit=1)[1]
             result = self.bot.redis_db.hget('tags', query)

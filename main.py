@@ -60,6 +60,8 @@ class MyClient(commands.AutoShardedBot):
         self.logger = logging.getLogger('KoyomiBot')
         self.logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - [%(levelname)s]: %(message)s')
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
         fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
@@ -157,6 +159,10 @@ class MyClient(commands.AutoShardedBot):
             self.logger.warning("Opus library did not load. Voice may not work.")
 
 
+
 if __name__ == "__main__":
     description = 'KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.'
-    bot = MyClient(description=description, pm_help=True, setkeys=False)
+    bot = MyClient(description=description, pm_help=True, setkeys=False,
+                   game=discord.Game(name='https://xninjakittyx.github.io/KoyomiBot/',
+                                     url='https://xninjakittyx.github.io/KoyomiBot/',
+                                     type=1))
