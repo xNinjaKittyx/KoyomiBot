@@ -2,6 +2,8 @@
 
 # KoyomiBot
 
+This bot is coded in such a way that is VERY SPECIFIC to my own configuration. I suggest people to not run their own instance of this bot. I will make a new bot framework for others who wish to create their own bots.
+
 ## Requirements
 
 Requires the following:
