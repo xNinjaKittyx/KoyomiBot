@@ -9,7 +9,7 @@ class Sample:
         # Insert any other class variables you want.
 
     @commands.command()
-    async def exampleCommand(self):
+    async def exampleCommand(self, ctx):
         await ctx.send("Dennis is gay.")
 
     @commands.command() # there are different parameters you can pass into this

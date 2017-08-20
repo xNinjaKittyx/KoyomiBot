@@ -2,10 +2,11 @@
 import random
 
 import discord
+import ujson
 from discord.ext import commands
+
 import utility.discordembed as dmbd
 from utility.koyomiuser import KoyomiUser
-
 
 
 class Profile:
@@ -120,7 +121,6 @@ class Profile:
                 await ctx.message.add_reaction('✅')
                 self.bot.cogs['Wordcount'].cmdcount('description')
 
-
     @commands.command(hidden=True)
     @commands.is_owner()
     async def sudogive(self, ctx, *, args):
@@ -150,20 +150,23 @@ class Profile:
             args = args.split(' ', 1)
             coins = int(args[0])
             name = args[1]
-            user = self.getuser(ctx, name)
-            if not user or user == ctx.author or user.bot:
-                return
-            sender_koyomi_user = self.get_koyomi_user(ctx.author)
-            recipient_koyomi_user = self.get_koyomi_user(user)
-
-            if coins <= 0 or sender_koyomi_user.coins < coins:
-                await ctx.send('Not Enough Aragis')
-
-            sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
-            await ctx.send('{0} gave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
-            self.bot.cogs['Wordcount'].cmdcount('give')
-        except:
+        except IndexError:
             await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
+            return
+
+        user = self.getuser(ctx, name)
+        if not user or user == ctx.author or user.bot:
+            return
+        sender_koyomi_user = self.get_koyomi_user(ctx.author)
+        recipient_koyomi_user = self.get_koyomi_user(user)
+
+        if coins <= 0 or sender_koyomi_user.coins < coins:
+            await ctx.send('Not Enough Aragis')
+            return
+
+        sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
+        await ctx.send('{0} gave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
+        self.bot.cogs['Wordcount'].cmdcount('give')
 
     @commands.command()
     async def profile(self, ctx, *,  name: str=None):
@@ -210,7 +213,6 @@ class Profile:
         else:
             await ctx.send('You already used your poke! ({} seconds cooldown)'.format(3600 - koyomi_user.remaining_cooldown('poke_cd')))
 
-
     @commands.command()
     async def waifu(self, ctx, *, arg=None):
         """ Set your waifu lol..."""
@@ -242,6 +244,25 @@ class Profile:
 
         picture = discord.File(final, filename=user.name + '.png')
         await ctx.send(file=picture)
+
+    @commands.command()
+    async def assumemygender(self, ctx, name=None):
+        """ Usage: assumemygender [name]"""
+        if name is None:
+            name = ctx.author.name
+        url = 'https://api.genderize.io/?name=' + name
+        async with self.bot.session.get(url) as r:
+            if r.status != 200:
+                self.bot.logger.warning('genderize.io failed response')
+                return
+            response = await r.json(loads=ujson.loads)
+            if response['gender'] is None:
+                await ctx.send("I can't assume that name's gender. :thinking:")
+                return
+        gender = response['gender']
+        probability = response['probability'] * 100
+
+        await ctx.send('I am {}% sure that {} is a {}.'.format(probability, name, gender))
 
 
 def setup(bot):

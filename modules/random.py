@@ -125,12 +125,57 @@ class Random:
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('8ball')
 
-    @commands.command(description='Ask the Bot to choose one')
-    async def choose(self, ctx, *choices: str):
-        """Chooses between multiple choices."""
-        em = dmbd.newembed(ctx.author, random.choice(choices))
-        await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('choose')
+    @commands.command()
+    async def trump(self, ctx):
+        """ Returns a Trump Quote. """
+        async with self.bot.session.get('https://api.tronalddump.io/random/quote') as r:
+            if r.status != 200:
+                self.bot.logger.warning('tronalddump.io request failed')
+                return
+            request = await r.json(loads=ujson.loads, content_type='application/hal+json')
+            await ctx.send(request['value'])
+
+    @commands.command()
+    async def forismatic(self, ctx):
+        """ Get random quote from Forismatic """
+        async with self.bot.session.get('http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en') as r:
+            if r.status != 200:
+                self.bot.logger.warning('Forimsatic GET Failed')
+                return
+            request = await r.json(loads=ujson.loads)
+            em = dmbd.newembed(a=request['quoteAuthor'], d=request['quoteText'], u=request['quoteLink'])
+            await ctx.send(embed=em)
+
+    @commands.command()
+    async def dadjoke(self, ctx):
+        """ Random Dad Joke """
+        async with self.bot.session.get('http://icanhazdadjoke.com/', headers={'Accept': 'application/json'}) as r:
+            if r.status != 200:
+                self.bot.logger.warning('https://icanhazdadjoke.com/api request failed')
+                return
+            request = await r.json(loads=ujson.loads)
+            em = dmbd.newembed(a='Dad Joke... Why?', d=request['joke'])
+            await ctx.send(embed=em)
+
+    @commands.command()
+    async def quotesondesign(self, ctx):
+        """ Get Random Quote from Quotes on Design"""
+        url = 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
+        async with self.bot.session.get(url) as r:
+            if r.status != 200:
+                self.bot.logger.warning('Quotes on Design request failed')
+                return
+            request = (await r.json(loads=ujson.loads))[0]
+            source = request.get('custom_meta', None)
+            if source:
+                source = request.get('Source', '')
+            else:
+                source = ''
+            em = dmbd.newembed(
+                a=request['title'],
+                d=request['content'] + '\n' + 'Source: ' + source,
+                u=request['link'])
+            await ctx.send(embed=em)
 
 
 def setup(bot):

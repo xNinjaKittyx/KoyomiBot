@@ -83,7 +83,7 @@ class Anime:
 
         em.add_field(name="Score", value=series['average_score'])
         em.add_field(name="Type", value=series['type'])
-        if series['description'] != None:
+        if series.get('description', None):
             cleantext = BeautifulSoup(series['description'], "html.parser").text[:500] + "..."
             em.add_field(name="Synopsis", value=cleantext)
         return em

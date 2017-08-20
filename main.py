@@ -7,6 +7,7 @@ import os
 
 # Required for disocrd.py
 import aiohttp
+from aiohttp.web import Application
 import discord
 from discord.ext import commands
 
@@ -34,8 +35,10 @@ modules = {
     'modules.animehangman',
     'modules.cleverbot',
     'modules.comics',
+    'modules.forex',
     'modules.info',
     'modules.log',
+    'modules.mail',
     # 'modules.musicplayer',
     'modules.musicplayer_rewrite',
     'modules.osu',
@@ -82,7 +85,9 @@ class MyClient(commands.AutoShardedBot):
         self.logger.info('Prefix is set: ' + prefix)
         super().__init__(*args, command_prefix=prefix, **kwargs)
         import ujson
-        self.session = aiohttp.ClientSession(loop=self.loop, json_serialize=ujson.dumps)
+        self.session = aiohttp.ClientSession(loop=self.loop,
+                                             json_serialize=ujson.dumps,
+                                             headers={'User-Agent': 'Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)'})
 
         self.logger.info('Checking For Keys')
 

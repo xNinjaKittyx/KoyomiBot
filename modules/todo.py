@@ -12,7 +12,7 @@ class Todo:
     @commands.is_owner()
     async def todo(self, ctx):
         if ctx.invoked_subcommand is None:
-            result = '=========Todo List========='
+            result = '=============Todo List============='
             width = len(result)
             end = '\n' + '=' * width
             if self.bot.redis_db.exists('todo'):
