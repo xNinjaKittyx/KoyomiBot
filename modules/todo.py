@@ -31,7 +31,7 @@ class Todo:
         await ctx.message.add_reaction('✅')
 
     @todo.command()
-    async def delete(self, ctx, index: int):
+    async def rm(self, ctx, index: int):
         index -= 1
         if self.bot.redis_db.exists('todo'):
             if 0 <= index < self.bot.redis_db.llen('todo'):
