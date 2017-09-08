@@ -32,11 +32,19 @@ class Info:
 
     @staticmethod
     def getcpuusage():
-        return psutil.Process().cpu_percent() / psutil.cpu_count()
+        total = 0
+        for proc in psutil.process_iter():
+            if proc.name() == "python.exe":
+                total += proc.cpu_percent() / psutil.cpu_count()
+        return total
 
     @staticmethod
     def getmemusage():
-        return psutil.Process().memory_info().rss / (1024 ** 2)
+        total = 0
+        for proc in psutil.process_iter():
+            if proc.name() == "python.exe":
+                total += psutil.Process().memory_info().rss / (1024 ** 2)
+        return total
 
     def gettotalusers(self):
         totalmembers = set({})
