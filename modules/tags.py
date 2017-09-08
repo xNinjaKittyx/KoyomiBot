@@ -11,7 +11,7 @@ class Tags:
             bot.redis_db.hmset('tags', {'lol': 'xD'})
 
     @commands.group()
-    async def tag(self, ctx):
+    async def tags(self, ctx):
         """ Display a tag. Subcommands: add, search, delete(admin-only)"""
         if ctx.invoked_subcommand is None:
             query = ctx.message.content.split(sep=' ', maxsplit=1)[1]
@@ -21,7 +21,7 @@ class Tags:
             else:
                 return
 
-    @tag.command()
+    @tags.command()
     async def add(self, ctx, *, tag: str):
 
         if tag is None:
@@ -35,7 +35,7 @@ class Tags:
 
             def check(msg):
                 return msg.author == ctx.author and msg.channel == ctx.channel
-            value = await self.bot.wait_for_message(
+            value = await self.bot.wait_for(
                 'message',
                 check=check,
                 timeout=15
@@ -45,9 +45,9 @@ class Tags:
                 await ctx.send("Timed out. Try again.")
                 return
             self.bot.redis_db.hmset('tags', {tag: value.content})
-            await ctx.send("Tag Added")
+            await ctx.message.add_reaction('✅')
 
-    @tag.command()
+    @tags.command()
     async def search(self, ctx, *, query: str):
         if query is None:
             return
@@ -62,17 +62,16 @@ class Tags:
         em.set_footer(text=wew)
         await ctx.send(embed=em)
 
-    @tag.command()
-    async def delete(self, ctx, *, query: str):
+    @tags.command()
+    @commands.is_owner()
+    async def rm(self, ctx, *, query: str):
         if query is None:
-            return
-        if not self.bot.checkdev(ctx.author.id):
             return
         for x in self.bot.redis_db.hkeys('tags'):
             print(x.decode('utf-8'))
             if query == x.decode('utf-8'):
                 if self.bot.redis_db.hdel('tags', query) == 1:
-                    await ctx.send("Tag Deleted")
+                    await ctx.message.add_reaction('✅')
 
 def setup(bot):
     """ Setup Tags.py"""

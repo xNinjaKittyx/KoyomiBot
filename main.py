@@ -82,7 +82,7 @@ class MyClient(commands.AutoShardedBot):
             prefix = '.koyomi'
         else:
             prefix = prefix.decode('utf-8')
-        self.logger.info('Prefix is set: ' + prefix)
+        self.logger.info(f'Prefix is set: {prefix}')
         super().__init__(*args, command_prefix=prefix, **kwargs)
         import ujson
         self.session = aiohttp.ClientSession(loop=self.loop,
@@ -105,19 +105,19 @@ class MyClient(commands.AutoShardedBot):
         for mod in modules:
             try:
                 self.load_extension(mod)
-                self.logger.info('Load Successful: ' + mod)
+                self.logger.info(f'Load Successful: {mod}')
             except ImportError as e:
                 self.logger.warning(e)
-                self.logger.warning('[WARNING]: Module ' + mod + ' did not load')
+                self.logger.warning(f'[WARNING]: Module {mod} did not load')
 
     def check_keys(self):
         for x in essential_keys:
             if self.redis_db.get(x) is None:
-                self.logger.critical(x + ' key is missing. Please set it')
+                self.logger.critical(f'{x} key is missing. Please set it')
                 quit()
         for x in nonessential_keys:
             if self.redis_db.get(x) is None:
-                self.logger.warning(x + ' key is missing. Some functions may not work properly.')
+                self.logger.warning(f'{x} key is missing. Some functions may not work properly.')
 
     def set_keys(self):
         print('SetKeys was activated. Going through key setup.')
@@ -145,14 +145,10 @@ class MyClient(commands.AutoShardedBot):
     async def on_ready(self):
         random.seed()
         self.logger.info('Logged in as')
-        self.logger.info("Username " + self.user.name)
-        self.logger.info("ID: " + str(self.user.id))
-        url = (
-            "https://discordapp.com/api/oauth2/authorize?client_id=" +
-            str(self.user.id) +
-            "&scope=bot&permissions=0"
-        )
-        self.logger.info("Invite Link: " + url)
+        self.logger.info(f"Username {self.user.name}")
+        self.logger.info(f"ID: {self.user.id}")
+        url = f"https://discordapp.com/api/oauth2/authorize?client_id={self.user.id}&scope=bot&permissions=0"
+        self.logger.info(f"Invite Link: {url}")
         try:
             if not discord.opus.is_loaded() and os.name == 'nt':
                 discord.opus.load_opus("libopus0.x64.dll")
@@ -160,9 +156,9 @@ class MyClient(commands.AutoShardedBot):
             if not discord.opus.is_loaded() and os.name == 'posix':
                 discord.opus.load_opus("/usr/local/lib/libopus.so")
             self.logger.info("Loaded Opus Library")
-        except:
+        except Exception as e:
+            self.logger.error(e)
             self.logger.warning("Opus library did not load. Voice may not work.")
-
 
 
 if __name__ == "__main__":
