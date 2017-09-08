@@ -30,7 +30,7 @@ class Slots:
                     break
 
             for x in self.bot.emojis:
-                if x.name == 'thignkin':
+                if x.name == 'thonking':
                     self.emojis.append(x)
                     break
         user = self.bot.cogs['Profile'].get_koyomi_user(ctx.author)

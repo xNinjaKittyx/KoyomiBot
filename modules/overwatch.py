@@ -62,7 +62,7 @@ class Overwatch:
 
         async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats', headers=headers) as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('OWApi.net failed to connect.')
+                self.bot.logger.warning('OWApi.net failed to connect.')
                 return
             profile = await r.json(loads=ujson.loads)
             profile = profile[region]['stats']
@@ -82,8 +82,10 @@ class Overwatch:
         """ Get a random OW Team \nUsage: owteam [Optional: Teamsize]"""
         random.shuffle(self.heroes)
         result = self.heroes[:num]
-        await ctx.send("Here's your teamcomp! Good luck!\n" +
-                           "{}".format(", ".join(result)))
+        await ctx.send(
+            "Here's your teamcomp! Good luck!\n" +
+            "{}".format(", ".join(result))
+        )
         self.bot.cogs['Wordcount'].cmdcount('owteam')
 
 
