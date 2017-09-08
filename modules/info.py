@@ -34,7 +34,7 @@ class Info:
     def getcpuusage():
         total = 0
         for proc in psutil.process_iter():
-            if proc.name() == "python.exe":
+            if 'python' in proc.name():
                 total += proc.cpu_percent() / psutil.cpu_count()
         return total
 
@@ -42,7 +42,7 @@ class Info:
     def getmemusage():
         total = 0
         for proc in psutil.process_iter():
-            if proc.name() == "python.exe":
+            if 'python' in proc.name():
                 total += psutil.Process().memory_info().rss / (1024 ** 2)
         return total
 
