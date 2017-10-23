@@ -87,9 +87,9 @@ class Interactions:
             action = 'punched'
 
         if positive:
-            desc = f'{author} {action} {target}. {random.choice(self.positive_phrases)}'
+            desc = f'{author.display_name} {action} {target.display_name}. {random.choice(self.positive_phrases)}'
         else:
-            desc = f'{author} {action} {target}. {random.choice(self.negative_phrases)}'
+            desc = f'{author.display_name} {action} {target.display_name}. {random.choice(self.negative_phrases)}'
         em = dmbd.newembed(d=desc)
         em.set_image(url=img)
         return em
@@ -146,6 +146,15 @@ class Interactions:
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('slap')
+
+    @commands.command()
+    async def kanashi(self, ctx):
+
+        em = await self.get_phrase(ctx.author, 'cry', ctx.author, False)
+
+        em.description = f"{ctx.author.display_name} is so sad. Cheer up :("
+        await ctx.send(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('kanashi')
 
 
 def setup(bot):
