@@ -13,12 +13,19 @@ class Interactions:
 
     def __init__(self, bot):
         self.bot = bot
-        self.phrases = [
+        self.positive_phrases = [
             'Don\'t they look cute together?',
             'They must really like each other!',
             'Aww :^)',
             'They\'re really cute together.',
             'Comfy~ Comfy~'
+        ]
+        self.negative_phrases = [
+            'Damn Dude.',
+            'Shieeeeeeeeet',
+            'LOL',
+            'I wonder if tsundere...',
+            'Must be pretty pissed.'
         ]
         self.cache = {}
 
@@ -33,7 +40,7 @@ class Interactions:
             return
         return user
 
-    async def get_phrase(self, author, action, target):
+    async def get_phrase(self, author, action, target, positive):
 
         async with self.bot.session.get(
             f'https://api.gfycat.com/v1test/gfycats/search?search_text={action}%20anime&count=100'
@@ -74,8 +81,15 @@ class Interactions:
             action = 'kissed'
         elif action == 'cuddle':
             action = 'cuddled with'
+        elif action == 'slap':
+            action = 'slapped'
+        elif action == 'punch':
+            action = 'punched'
 
-        desc = f'{author} {action} {target}. {random.choice(self.phrases)}'
+        if positive:
+            desc = f'{author} {action} {target}. {random.choice(self.positive_phrases)}'
+        else:
+            desc = f'{author} {action} {target}. {random.choice(self.negative_phrases)}'
         em = dmbd.newembed(d=desc)
         em.set_image(url=img)
         return em
@@ -86,7 +100,7 @@ class Interactions:
         if target is None:
             return
 
-        em = await self.get_phrase(ctx.author, 'hug', target)
+        em = await self.get_phrase(ctx.author, 'hug', target, True)
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('hug')
 
@@ -96,7 +110,7 @@ class Interactions:
         if target is None:
             return
 
-        em = await self.get_phrase(ctx.author, 'kiss', target)
+        em = await self.get_phrase(ctx.author, 'kiss', target, True)
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('kiss')
 
@@ -106,10 +120,32 @@ class Interactions:
         if target is None:
             return
 
-        em = await self.get_phrase(ctx.author, 'cuddle', target)
+        em = await self.get_phrase(ctx.author, 'cuddle', target, True)
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('cuddle')
+
+    @commands.command()
+    async def punch(self, ctx, target):
+        target = self.get_user(ctx, target)
+        if target is None:
+            return
+
+        em = await self.get_phrase(ctx.author, 'punch', target, False)
+
+        await ctx.send(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('punch')
+
+    @commands.command()
+    async def slap(self, ctx, target):
+        target = self.get_user(ctx, target)
+        if target is None:
+            return
+
+        em = await self.get_phrase(ctx.author, 'slap', target, False)
+
+        await ctx.send(embed=em)
+        self.bot.cogs['Wordcount'].cmdcount('slap')
 
 
 def setup(bot):
