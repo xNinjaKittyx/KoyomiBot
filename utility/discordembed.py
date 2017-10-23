@@ -4,6 +4,7 @@ import random
 
 import discord
 
+
 def newembed(a=None, t=None, d=None, u=None, c=None):
     if c is None:
         c = random.randint(0, 16777215)

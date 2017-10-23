@@ -60,6 +60,9 @@ class Random:
             async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/?limit=0') as r:
                 if r.status == 200:
                     count = int((await r.json(loads=ujson.loads))['count'])
+                else:
+                    self.bot.logger('Pokemon did not return status 200')
+                    return
             numid = random.randint(1, count)
 
         async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/' + str(numid)) as r:

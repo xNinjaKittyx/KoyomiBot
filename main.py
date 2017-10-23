@@ -7,7 +7,6 @@ import os
 
 # Required for disocrd.py
 import aiohttp
-from aiohttp.web import Application
 import discord
 from discord.ext import commands
 
@@ -37,6 +36,7 @@ modules = {
     'modules.comics',
     'modules.forex',
     'modules.info',
+    'modules.interactions',
     'modules.log',
     'modules.mail',
     # 'modules.musicplayer',
