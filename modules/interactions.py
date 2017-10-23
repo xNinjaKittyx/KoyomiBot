@@ -45,7 +45,7 @@ class Interactions:
             cursor = response['cursor']
             total = response['found']
 
-        number = random.randint(0, min(500, total))
+        number = random.randint(0, min(99, total))
 
         while True:
             if number < 100:
