@@ -55,12 +55,7 @@ class Overwatch:
         if '#' in tag:
             tag = tag.replace('#', '-')
 
-        headers = {
-            'User-Agent': 'KoyomiBot for Discord.',
-            'From': 'firefwing42@gmail.com'
-        }
-
-        async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats', headers=headers) as r:
+        async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats') as r:
             if r.status != 200:
                 self.bot.logger.warning('OWApi.net failed to connect.')
                 return

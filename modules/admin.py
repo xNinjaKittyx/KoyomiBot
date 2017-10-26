@@ -3,9 +3,9 @@ import asyncio
 import time
 import sys
 
-import aiohttp
 import discord
 from discord.ext import commands
+
 
 class Admin:
     def __init__(self, bot):
@@ -38,7 +38,7 @@ class Admin:
     @commands.command(hidden=True)
     async def kys(self, ctx):
         """ Bot kills itself """
-        await ctx.send("*Bot is kill in 3 seconds...*")
+        await ctx.send("Bot is *kill*")
         await asyncio.sleep(3)
         await self.bot.close()
 
@@ -49,21 +49,19 @@ class Admin:
     @commands.command(hidden=True)
     async def changeavatar(self, ctx, *, url: str):
         """ Changes the Avatar"""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as r:
-                if r.status == 200:
-                    try:
-                        await self.bot.user.edit(avatar=await r.read())
-                    except discord.HTTPException:
-                        await ctx.send("Editing the profile failed.")
-                    except discord.InvalidArgument:
-                        await ctx.send("Wrong image format was passed.")
+        async with self.bot.session.get(url) as r:
+            if r.status == 200:
+                try:
+                    await self.bot.user.edit(avatar=await r.read())
+                except discord.HTTPException:
+                    await ctx.send("Editing the profile failed.")
+                except discord.InvalidArgument:
+                    await ctx.send("Wrong image format was passed.")
 
     @commands.command(hidden=True)
     async def changeusername(self, ctx, *, s: str):
         """ Changes the Username """
         await self.bot.user.edit(username=s)
-        """ Changes Status """
 
     @commands.command(hidden=True)
     async def serverlist(self, ctx):

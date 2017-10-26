@@ -1,13 +1,12 @@
 """ To Get an Anime or Manga from MyAnimeList"""
 
-# -*- coding: utf8 -*-
 from datetime import datetime
 
-from bs4 import BeautifulSoup
-from discord.ext import commands
 import utility.discordembed as dmbd
 import ujson
 
+from bs4 import BeautifulSoup
+from discord.ext import commands
 
 
 class Anime:
@@ -16,18 +15,14 @@ class Anime:
     @staticmethod
     def getlink(series_id, series_type):
         """Getter Function for Anime or Manga Link from MAL"""
-
-        if series_type == 'anime':
-            return str("https://anilist.co/anime/" + str(series_id))
-        elif series_type == 'manga':
-            return str("https://anilist.co/manga/" + str(series_id))
+        return f"https://anilist.co/{series_type}/{series_id}"
 
     async def getaccesstoken(self):
         async with self.bot.session.post(
             'https://anilist.co/api/auth/access_token', data={
                 'grant_type': 'client_credentials',
-                'client_id': self.anilistid,
-                'client_secret': self.anilistsecret
+                'client_id': self.bot.config['AnilistID'],
+                'client_secret': self.bot.config['AnilistSecret']
             }
         ) as r:
             if r.status == 200:
@@ -40,9 +35,7 @@ class Anime:
 
     def __init__(self, bot):
         self.bot = bot
-        self.anilistid = bot.redis_db.get('AnilistID').decode('utf-8')
-        self.anilistsecret = bot.redis_db.get('AnilistSecret').decode('utf-8')
-        if not self.anilistid or not self.anilistsecret:
+        if not self.bot.config['AnilistSecret'] or not self.bot.config['AnilistID']:
             self.bot.logger.warning('ID or Secret is missing for AniList')
             raise ImportError
         self.access_token = None
@@ -60,8 +53,7 @@ class Anime:
         )
         em.set_thumbnail(url="https://anilist.co/img/logo_al.png")
         em.set_image(url=series['image_url_med'])
-        if series['series_type'] == 'anime': # if anime
-            # self.bot.cogs['WordDB'].cmdcount('anime')
+        if series['series_type'] == 'anime':  # if anime
             em.add_field(name="Episodes", value=series['total_episodes'])
             try:
                 em.add_field(name="Length", value=str(series['duration']) + " minutes")
@@ -72,8 +64,7 @@ class Anime:
             except KeyError:
                 pass
 
-        elif series['series_type'] == 'manga': # if manga
-            # self.bot.cogs['WordDB'].cmdcount('manga')
+        elif series['series_type'] == 'manga':  # if manga
             em.add_field(name="Chapters", value=series['total_chapters'])
             em.add_field(name="Volumes", value=series['total_volumes'])
             try:
@@ -101,10 +92,7 @@ class Anime:
         """ Returns the top anime of whatever the user asked for."""
         await self.refreshtoken()
 
-        url = (
-            'https://anilist.co/api/anime/search/' +
-            ani + "?access_token=" + self.access_token
-        )
+        url = f'https://anilist.co/api/anime/search/{ani}?access_token={self.access_token}'
 
         async with self.bot.session.get(url) as r:
             if r.status == 200:
@@ -144,10 +132,8 @@ class Anime:
         """ Returns the top manga of whatever the user asked for."""
 
         await self.refreshtoken()
-        url = (
-            'https://anilist.co/api/manga/search/' +
-            mang + "?access_token=" + self.access_token
-        )
+        url = f'https://anilist.co/api/manga/search/{mang}?access_token={self.access_token}'
+
         async with self.bot.session.get(url) as r:
             if r.status == 200:
                 mangalist = await r.json(loads=ujson.loads)

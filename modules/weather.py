@@ -31,7 +31,7 @@ class Weather:
             return ""
 
     async def getgoogle(self, search):
-        key = self.bot.redis_db.get('GoogleMapsAPI').decode('utf-8')
+        key = self.bot.config['GoogleMapsAPI']
         url = (
             "https://maps.googleapis.com/maps/api/geocode/json?address=" +
             search.replace(" ", "+") + "&key=" + key
@@ -43,7 +43,7 @@ class Weather:
             return await r.json(loads=ujson.loads)
 
     async def getdarksky(self, lat, lng):
-        key = self.bot.redis_db.get('DarkSkyAPI').decode('utf-8')
+        key = self.bot.config['DarkSkyAPI']
         url = (
             "https://api.darksky.net/forecast/" + key +
             "/" + str(lat) + "," + str(lng) + "?exclude=minutely,hourly,daily,alerts,flags"

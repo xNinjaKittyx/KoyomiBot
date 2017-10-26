@@ -1,7 +1,9 @@
 
-from discord.ext import commands
 import ujson
 import utility.discordembed as dmbd
+
+from discord.ext import commands
+
 
 class OsuPlayer:
 
@@ -48,9 +50,8 @@ class Osu:
         self.bot = bot
 
     async def getlink(self, mode, playername):
-        cookiezi = self.bot.redis_db.get('OsuAPI').decode('utf-8')
-        link = ('http://osu.ppy.sh/api/get_user?k=' + cookiezi + '&u=' + playername
-                + '&m=' + str(mode))
+        cookiezi = self.bot.config['OsuAPI']
+        link = f'http://osu.ppy.sh/api/get_user?k={cookiezi}&u={playername}&m={mode}'
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
@@ -63,9 +64,7 @@ class Osu:
     async def osu(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(0, name))
         em = player.display(ctx.author)
-        em.set_image(
-            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
-            name + "&mode=0")
+        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=0")
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('osu')
@@ -74,9 +73,7 @@ class Osu:
     async def taiko(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(1, name))
         em = player.display(ctx.author)
-        em.set_image(
-            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
-            name + "&mode=1")
+        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=1")
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('taiko')
@@ -85,9 +82,7 @@ class Osu:
     async def ctb(self, ctx, *, name: str):
         player = OsuPlayer(await self.getlink(2, name))
         em = player.display(ctx.author)
-        em.set_image(
-            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
-            name + "&mode=2")
+        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=2")
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('ctb')
@@ -97,8 +92,7 @@ class Osu:
         player = OsuPlayer(await self.getlink(3, name))
         em = player.display(ctx.author)
         em.set_image(
-            url="http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname=" +
-            name + "&mode=3")
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=3")
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('mania')

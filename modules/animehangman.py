@@ -1,17 +1,17 @@
-# -*- coding: utf8 -*-
 import random
+
+import ujson
 
 from discord.ext import commands
 from utility import discordembed as dmbd
 
-import ujson
 
 class Animehangman:
 
     def __init__(self, bot):
         self.bot = bot
-        self.anilistid = bot.redis_db.get('AnilistID').decode('utf-8')
-        self.anilistsecret = bot.redis_db.get('AnilistSecret').decode('utf-8')
+        self.anilistid = self.bot.config['AnilistID']
+        self.anilistsecret = self.bot.config['AnilistSecret']
         if not self.anilistid or not self.anilistsecret:
             print('ID or Secret is missing for AniList')
             raise ImportError
