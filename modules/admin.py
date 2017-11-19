@@ -21,6 +21,10 @@ class Admin:
             return False
 
     @commands.command(hidden=True)
+    async def refresh_config(self, ctx):
+        await self.bot.refresh_config()
+
+    @commands.command(hidden=True)
     async def test(self, ctx, *, code: str):
         """ Tests something :o """
         if code.startswith("```Python\n"):

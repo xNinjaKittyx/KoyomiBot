@@ -135,8 +135,6 @@ class MyClient(commands.AutoShardedBot):
         if msg.author.bot:
             return
 
-        await self.refresh_config()
-
         await self.process_commands(msg)
 
     async def on_guild_join(self, guild):
