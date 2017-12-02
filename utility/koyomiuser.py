@@ -123,7 +123,7 @@ class KoyomiUser:
             return
 
     def use_coins(self, coins):
-        if self.coins > coins:
+        if self.coins >= coins:
             self.coins -= coins
         else:
             raise NameError('Not Enough Minerals')

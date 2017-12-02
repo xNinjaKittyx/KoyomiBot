@@ -130,7 +130,7 @@ class Music:
                 return
         opts = {
             'format': 'bestaudio/best',
-            'default-search': 'ytsearch',
+            'default-search': 'auto',
             'quiet': True,
             'noplaylist': True,
             'forceurl': True,
