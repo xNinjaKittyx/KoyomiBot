@@ -133,18 +133,23 @@ class MyClient(commands.AutoShardedBot):
                 self.logger.warning(e)
                 self.logger.warning(f'[WARNING]: Module {mod} did not load')
 
-    async def on_message(self, msg):
-        if isinstance(msg.channel, discord.abc.PrivateChannel):
-            return
-        if msg.content.startswith(self.command_prefix + 'guess'):
-            return
+    async def check_blacklist(self, msg):
         if msg.author.bot:
-            return
+            return False
+        if isinstance(msg.channel, discord.abc.PrivateChannel):
+            return False
         if msg.author.id == 298492601756024835:
             # hardcoding blacklist for "GIVEAWAY NETWORK BETA" which uses a userbot for some reason...
-            return
+            return False
+        if msg.content.startswith(self.command_prefix + 'guess'):
+            return False
+        if not msg.content.startswith(self.command_prefix):
+            return False
+        return True
 
-        await self.process_commands(msg)
+    async def on_message(self, msg):
+        if await self.check_blacklist(msg):
+            await self.process_commands(msg)
 
     async def on_guild_join(self, guild):
         data = {

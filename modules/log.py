@@ -12,7 +12,7 @@ class Log:
 
     # All them event overrides....
     async def on_message(self, msg):
-        if msg.content.startswith(self.bot.command_prefix):
+        if await self.bot.check_blacklist(msg):
             cmd_used = f"{msg.author.name} <@{msg.author.id}> used command in {msg.guild.name}/{msg.guild.id}: {msg.content}"
             self.bot.logger.info(cmd_used)
             if msg.guild:
