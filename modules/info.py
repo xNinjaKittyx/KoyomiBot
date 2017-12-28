@@ -67,7 +67,7 @@ class Info:
         )
         em = dmbd.newembed(ctx.author, d=description)
         await second.edit(new_content='', embed=em)
-        self.bot.cogs['Wordcount'].cmdused('ping')
+        self.bot.cogs['Wordcount'].cmdcount('ping')
 
     @commands.command()
     async def stats(self, ctx):

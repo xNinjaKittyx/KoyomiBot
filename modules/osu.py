@@ -1,4 +1,6 @@
 
+from urllib import parse
+
 import ujson
 import utility.discordembed as dmbd
 
@@ -62,6 +64,7 @@ class Osu:
 
     @commands.command()
     async def osu(self, ctx, *, name: str):
+        name = parse.quote(name)
         player = OsuPlayer(await self.getlink(0, name))
         em = player.display(ctx.author)
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=0")

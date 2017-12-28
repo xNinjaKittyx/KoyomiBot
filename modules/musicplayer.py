@@ -158,7 +158,6 @@ class Music:
         await state.songs.put(entry)
         await self.refreshplayer(ctx.guild)
 
-
     @commands.command()
     async def volume(self, ctx, value: int):
         state = self.get_voice_state(ctx.guild)

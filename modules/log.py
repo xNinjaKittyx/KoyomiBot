@@ -1,5 +1,4 @@
 
-# -*- coding: utf8 -*-
 import codecs
 from datetime import datetime
 import os
@@ -14,7 +13,7 @@ class Log:
     # All them event overrides....
     async def on_message(self, msg):
         if msg.content.startswith(self.bot.command_prefix):
-            cmd_used = msg.author.name + " attempted to use the command: " + msg.content
+            cmd_used = f"{msg.author.name} <@{msg.author.id}> used command in {msg.guild.name}/{msg.guild.id}: {msg.content}"
             self.bot.logger.info(cmd_used)
             if msg.guild:
                 mod_log = find(lambda c: c.name == "modlog", msg.guild.channels)
@@ -23,24 +22,33 @@ class Log:
                 await mod_log.send(cmd_used)
 
     async def on_member_join(self, member):
+        if member.guild.id in [264445053596991498, 110373943822540800]:
+            # Hardcoding ignores for two discord bot servers.
+            # TODO: Needs a json list of servers to ignore.
+            return
         try:
-            self.bot.logger.info(member.name + " has joined the guild at " + member.guild.name)
+            self.bot.logger.info(
+                f"{member.name} <@{member.id}> has joined the guild at {member.guild.name}/{member.guild.id}")
         except UnicodeEncodeError:
             self.bot.logger.info(
-                member.name.encode('ascii', 'ignore').decode('ascii', 'ignore') +
-                " has joined the guild at " +
-                member.guild.name.encode('ascii', 'ignore').decode('ascii', 'ignore')
+                f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
+                " has joined the guild at "
+                f"{member.guild.name.encode('ascii', 'ignore').decode('ascii', 'ignore')}/{member.guild.id}"
 
             )
 
     async def on_member_remove(self, member):
+        if member.guild.id in [264445053596991498, 110373943822540800]:
+            # Hardcoding ignores for two discord bot servers.
+            return
         try:
-            self.bot.logger.info(member.name + " has left the guild at " + member.guild.name)
+            self.bot.logger.info(
+                f"{member.name} <@{member.id}> has left the guild at {member.guild.name}/{member.guild.id}")
         except UnicodeEncodeError:
             self.bot.logger.info(
-                member.name.encode('ascii', 'ignore').decode('ascii', 'ignore') +
-                " has left the guild at " +
-                member.guild.name.encode('ascii', 'ignore').decode('ascii', 'ignore')
+                f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
+                " has left the guild at "
+                f"{member.guild.name.encode('ascii', 'ignore').decode('ascii', 'ignore')}/{member.guild.id}"
             )
 
     async def on_message_delete(self, msg):

@@ -104,5 +104,5 @@ ENV/
 /.idea
 
 # Config Files
-config/
+config/config.json
 lmfao.png

@@ -63,7 +63,7 @@ class MyClient(commands.AutoShardedBot):
 
         self.logger = logging.getLogger('KoyomiBot')
         self.logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - [%(levelname)s]: %(message)s')
+        formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(filename)s:%(lineno)d - %(message)s')
         fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
@@ -117,6 +117,12 @@ class MyClient(commands.AutoShardedBot):
         async with aiofiles.open('config/config.json', mode='w') as f:
             await f.write(ujson.dumps(self.config, indent=4))
 
+    async def ignore_user(self, user):
+        pass
+
+    async def ignore_guild(self, user):
+        pass
+
     def load_all_modules(self):
         self.logger.info('Loading all Modules'.center(30).replace(' ', '-'))
         for mod in modules:
@@ -143,7 +149,7 @@ class MyClient(commands.AutoShardedBot):
             'shard_count': self.shard_count,
             'server_count': len(self.guilds)
         }
-        self.logger.info(f'Joined a new guild! {guild}')
+        self.logger.info(f'KoyomiBot joined a new guild! {guild}')
         async with self.session.post(
             f'https://discordbots.org/api/bots/{self.user.id}/stats',
             headers={
