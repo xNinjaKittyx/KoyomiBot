@@ -140,6 +140,9 @@ class MyClient(commands.AutoShardedBot):
             return
         if msg.author.bot:
             return
+        if msg.author.id == "298492601756024835":
+            # hardcoding blacklist for "GIVEAWAY NETWORK BETA" which uses a userbot for some reason...
+            return
 
         await self.process_commands(msg)
 
