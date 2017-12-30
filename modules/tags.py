@@ -53,11 +53,12 @@ class Tags:
             return
         results = []
         for x in self.bot.redis_db.hkeys('tags'):
-            if query in x.decode('utf-8'):
-                results.append(x.decode('utf-8'))
+            x = x.decode('utf-8')
+            if query in x:
+                results.append(x)
         wew = ""
         for x, y in enumerate(results):
-            wew += str(x+1) + ") " + y + "\n"
+            wew += f"{x+1}) {y}\n"
         em = dmbd.newembed(ctx.author)
         em.set_footer(text=wew)
         await ctx.send(embed=em)
@@ -72,6 +73,7 @@ class Tags:
             if query == x.decode('utf-8'):
                 if self.bot.redis_db.hdel('tags', query) == 1:
                     await ctx.message.add_reaction('✅')
+
 
 def setup(bot):
     """ Setup Tags.py"""

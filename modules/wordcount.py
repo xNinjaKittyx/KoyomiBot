@@ -14,7 +14,7 @@ class Wordcount:
                           'out', 'day', 'get', 'has', 'him', 'his', 'how',
                           'man', 'new', 'now', 'old', 'see', 'two', 'way',
                           'who', 'boy', 'did', 'its', 'let', 'put', 'say',
-                          'she', 'too', 'use', 'dad', 'mom']
+                          'she', 'too', 'use', 'dad', 'mom', '246107833295175681', ]
 
     def cmdcount(self, name: str):
         self.bot.redis_db.zincrby('CmdDB', name)

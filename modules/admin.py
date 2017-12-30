@@ -34,7 +34,7 @@ class Admin:
                 exec(code)
                 await ctx.send("```Code Executed```")
             except (TypeError, SyntaxError):
-                await ctx.send("```\n" + sys.exc_info() + "```")
+                await ctx.send(f"```\n{sys.exc_info()}```")
                 self.bot.logger.warning("Syntax Error")
             total_time = time.time() - start_time
             await ctx.send("This took *" + str(total_time) + "* seconds")

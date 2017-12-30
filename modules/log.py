@@ -13,7 +13,7 @@ class Log:
     # All them event overrides....
     async def on_message(self, msg):
         if await self.bot.check_blacklist(msg):
-            cmd_used = f"{msg.author.name} <@{msg.author.id}> used command in {msg.guild.name}/{msg.guild.id}: {msg.content}"
+            cmd_used = f"{msg.author.name}/{msg.author.id} used command in {msg.guild.name}/{msg.guild.id}: {msg.content}"
             self.bot.logger.info(cmd_used)
             if msg.guild:
                 mod_log = find(lambda c: c.name == "modlog", msg.guild.channels)
@@ -28,7 +28,7 @@ class Log:
             return
         try:
             self.bot.logger.info(
-                f"{member.name} <@{member.id}> has joined the guild at {member.guild.name}/{member.guild.id}")
+                f"{member.name}/{msg.author.id} has joined the guild at {member.guild.name}/{member.guild.id}")
         except UnicodeEncodeError:
             self.bot.logger.info(
                 f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
@@ -43,7 +43,7 @@ class Log:
             return
         try:
             self.bot.logger.info(
-                f"{member.name} <@{member.id}> has left the guild at {member.guild.name}/{member.guild.id}")
+                f"{member.name}/{msg.author.id} has left the guild at {member.guild.name}/{member.guild.id}")
         except UnicodeEncodeError:
             self.bot.logger.info(
                 f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
