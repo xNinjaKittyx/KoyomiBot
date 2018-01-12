@@ -28,7 +28,7 @@ class Log:
             return
         try:
             self.bot.logger.info(
-                f"{member.name}/{msg.author.id} has joined the guild at {member.guild.name}/{member.guild.id}")
+                f"{member.name}/{member.id} has joined the guild at {member.guild.name}/{member.guild.id}")
         except UnicodeEncodeError:
             self.bot.logger.info(
                 f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
@@ -43,7 +43,7 @@ class Log:
             return
         try:
             self.bot.logger.info(
-                f"{member.name}/{msg.author.id} has left the guild at {member.guild.name}/{member.guild.id}")
+                f"{member.name}/{member.id} has left the guild at {member.guild.name}/{member.guild.id}")
         except UnicodeEncodeError:
             self.bot.logger.info(
                 f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
