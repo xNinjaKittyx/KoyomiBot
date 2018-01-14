@@ -97,7 +97,7 @@ class MyClient(commands.AutoShardedBot):
 
         prefix = self.config['Prefix']
         self.logger.info(f'Prefix is set: {prefix}')
-        super().__init__(*args, command_prefix=prefix, loop=loop**kwargs)
+        super().__init__(*args, command_prefix=prefix, loop=loop, **kwargs)
         self.session = aiohttp.ClientSession(
             loop=self.loop,
             json_serialize=ujson.dumps,
