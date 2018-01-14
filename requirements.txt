@@ -3,6 +3,7 @@ beautifulsoup4
 redis
 aiohttp
 aiofiles
+aioredis
 psutil
 wikipedia
 requests

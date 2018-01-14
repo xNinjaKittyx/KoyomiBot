@@ -67,7 +67,7 @@ class Info:
         )
         em = dmbd.newembed(ctx.author, d=description)
         await second.edit(new_content='', embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('ping')
+        await self.bot.cogs['Wordcount'].cmdcount('ping')
 
     @commands.command()
     async def stats(self, ctx):
@@ -96,12 +96,12 @@ class Info:
         em.add_field(name='Support', value='[Discord Link]({})'.format(supporturl))
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('stats')
+        await self.bot.cogs['Wordcount'].cmdcount('stats')
 
     @commands.command()
     async def uptime(self, ctx):
         await ctx.send("```" + self.getuptime() + "```")
-        self.bot.cogs['Wordcount'].cmdcount('uptime')
+        await self.bot.cogs['Wordcount'].cmdcount('uptime')
 
 
 def setup(bot):

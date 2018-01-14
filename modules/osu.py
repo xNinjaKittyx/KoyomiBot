@@ -70,7 +70,7 @@ class Osu:
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=0")
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('osu')
+        await self.bot.cogs['Wordcount'].cmdcount('osu')
 
     @commands.command()
     async def taiko(self, ctx, *, name: str):
@@ -79,7 +79,7 @@ class Osu:
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=1")
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('taiko')
+        await self.bot.cogs['Wordcount'].cmdcount('taiko')
 
     @commands.command()
     async def ctb(self, ctx, *, name: str):
@@ -88,7 +88,7 @@ class Osu:
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=2")
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('ctb')
+        await self.bot.cogs['Wordcount'].cmdcount('ctb')
 
     @commands.command()
     async def mania(self, ctx, *, name: str):
@@ -98,7 +98,7 @@ class Osu:
             url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=3")
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('mania')
+        await self.bot.cogs['Wordcount'].cmdcount('mania')
 
 
 def setup(bot):

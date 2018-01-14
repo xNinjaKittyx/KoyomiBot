@@ -16,10 +16,10 @@ class Animehangman:
             print('ID or Secret is missing for AniList')
             raise ImportError
         self.max = 90248
-        bot.redis_db.delete('achminst')
+        self.bot.loop.run_until_complete(self.bot.redis_pool.delete('achminst'))
 
     async def refreshtoken(self):
-        if self.bot.redis_db.exists('AnilistToken'):
+        if await self.bot.redis_pool.exists('AnilistToken'):
             return
         else:
             async with self.bot.session.post(
@@ -32,7 +32,7 @@ class Animehangman:
                 if r.status != 200:
                     return
                 results = await r.json(loads=ujson.loads)
-                self.bot.redis_db.setex('AnilistToken', 3600, results['access_token'])
+                await self.bot.redis_pool.setex('AnilistToken', 3600, results['access_token'])
 
     async def display(self, ctx, currentboard, guess, misses, picture, win=0):
         subtitle = "Where you test your weeb level!"
@@ -40,7 +40,7 @@ class Animehangman:
         em.set_image(url=picture)
 
         em.add_field(name="Word", value="`" + currentboard.title() + "`", inline=False)
-        if misses != []:
+        if misses:
             em.add_field(name="Guess", value=guess)
             em.add_field(name="Misses", value=' '.join(misses))
         if not (len(misses) == 6 or win == 1):
@@ -99,7 +99,7 @@ class Animehangman:
                 "https://anilist.co/api/character/" +
                 str(random.randint(1, self.max)) +
                 "/page?access_token=" +
-                self.bot.redis_db.get('AnilistToken').decode('utf-8')
+                await self.bot.redis_pool.get('AnilistToken').decode('utf-8')
             ) as r:
                 if r.status != 200:
                     self.bot.logger.warning("ANIME CHARACTER RETURNING 404")
@@ -117,8 +117,8 @@ class Animehangman:
     async def achm(self, ctx):
         """ Play Anime Character Hangman!"""
         self.bot.cogs['Wordcount'].cmdused('achm')
-        if self.bot.redis_db.exists('achminst'):
-            for instance in self.bot.redis_db.lrange('achminst', 0, -1):
+        if await self.bot.redis_pool.exists('achminst'):
+            for instance in await self.bot.redis_pool.lrange('achminst', 0, -1):
                 if ctx.channel.id == int(instance.decode('utf-8')):
                     await ctx.send("There's already a game running!")
                     return
@@ -137,7 +137,7 @@ class Animehangman:
         picture = char["image_url_lge"]
         author = ctx.author
         prev_message = await self.display(ctx, currentboard, guess, misses, picture)
-        self.bot.redis_db.rpush('achminst', ctx.channel.id)
+        await self.bot.redis_pool.rpush('achminst', ctx.channel.id)
         while True:
 
             def check(msg):
@@ -179,7 +179,6 @@ class Animehangman:
             else:
                 misses.append(guess)
 
-
             # checking if the answer has been done, or if the game has finished.
 
             if currentboard == answer:
@@ -192,7 +191,7 @@ class Animehangman:
                 prev_message = await self.display(ctx, currentboard, guess, misses, picture, 0)
 
         await self.displayanswer(ctx, char)
-        self.bot.redis_db.lrem('achminst', 1, ctx.channel.id)
+        await self.bot.redis_pool.lrem('achminst', 1, ctx.channel.id)
         return
 
 def setup(bot):

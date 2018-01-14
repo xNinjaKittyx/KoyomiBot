@@ -16,8 +16,10 @@ class Slots:
             ':watermelon:',
             ':cherries:'
         ]
-        if not self.bot.redis_db.get('jackpot'):
-            self.bot.redis_db.set('jackpot', 0)
+        if not self.bot.loop.run_until_complete(
+                self.bot.redis_pool.get('jackpot')):
+            self.bot.loop.run_until_complete(
+                self.bot.redis_pool.set('jackpot', 0))
 
     @commands.cooldown(3, 60, commands.BucketType.user)
     @commands.command()
@@ -46,16 +48,16 @@ class Slots:
             )
             if len(result) == 3:
                 final += '\nBetter Luck Next Time. You lost {} Aragis'.format(bet)
-                self.bot.redis_db.incrby('jackpot', max(int(bet * .5), 1))
+                await self.bot.redis_pool.incrby('jackpot', max(int(bet * .5), 1))
                 user.use_coins(bet)
             elif len(result) == 2:
                 final += '\nSo close... You won {} Aragis'.format(bet)
                 user.coins += bet
             elif len(result) == 1:
-                jack = int(self.bot.redis_db.get('jackpot').decode('utf-8'))
+                jack = int(await self.bot.redis_pool.get('jackpot').decode('utf-8'))
                 final += '\nJACKPOT!! You won {} Aragis'.format(bet * 3 + jack)
                 user.coins += bet * 3 + jack
-                self.bot.redis_db.set('jackpot', 0)
+                await self.bot.redis_pool.set('jackpot', 0)
 
             em = dmbd.newembed(ctx.author, 'SLOT MACHINE', final)
             await ctx.send(embed=em)
@@ -63,7 +65,7 @@ class Slots:
     @commands.command()
     async def slotpot(self, ctx):
         """ The Current JackPot for Slots."""
-        await ctx.send('The Current Jackpot for Slots is ' + self.bot.redis_db.get('jackpot').decode('utf-8') + ' Aragis.')
+        await ctx.send('The Current Jackpot for Slots is ' + await self.bot.redis_pool.get('jackpot').decode('utf-8') + ' Aragis.')
 
     @slots.error
     async def on_slot_error(self, ctx, error):

@@ -37,7 +37,7 @@ class Forex:
             em.set_thumbnail(url='http://fixer.io/img/money.png')
             em.add_field(name='1 ' + base, value=str(results['rates'][conversion]) + ' ' + conversion)
             await ctx.send(embed=em)
-            self.bot.cogs['Wordcount'].cmdcount('forex')
+            await self.bot.cogs['Wordcount'].cmdcount('forex')
 
 
 def setup(bot):

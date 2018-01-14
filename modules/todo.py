@@ -15,8 +15,8 @@ class Todo:
             result = '=============Todo List============='
             width = len(result)
             end = '\n' + '=' * width
-            if self.bot.redis_db.exists('todo'):
-                todolist = self.bot.redis_db.lrange('todo', 0, -1)
+            if await self.bot.redis_pool.exists('todo'):
+                todolist = await self.bot.redis_pool.lrange('todo', 0, -1)
                 for n, x in enumerate(todolist):
                     result += '\n' + '\n'.join(textwrap.wrap('{0}. {1}'.format(n+1, x.decode('utf-8')), width=width))
                 result += end
@@ -27,16 +27,16 @@ class Todo:
 
     @todo.command()
     async def add(self, ctx, *, msg: str):
-        self.bot.redis_db.rpush('todo', msg)
+        await self.bot.redis_pool.rpush('todo', msg)
         await ctx.message.add_reaction('✅')
 
     @todo.command()
     async def rm(self, ctx, index: int):
         index -= 1
-        if self.bot.redis_db.exists('todo'):
-            if 0 <= index < self.bot.redis_db.llen('todo'):
-                value = self.bot.redis_db.lindex('todo', index)
-                self.bot.redis_db.lrem('todo', 1, value)
+        if await self.bot.redis_pool.exists('todo'):
+            if 0 <= index < await self.bot.redis_pool.llen('todo'):
+                value = await self.bot.redis_pool.lindex('todo', index)
+                await self.bot.redis_pool.lrem('todo', 1, value)
                 await ctx.message.add_reaction('✅')
                 return
 
@@ -51,9 +51,9 @@ class Todo:
         index = int(args[0])
         value = args[1]
         index -= 1
-        if self.bot.redis_db.exists('todo'):
-            if 0 <= index < self.bot.redis_db.llen('todo'):
-                self.bot.redis_db.lset('todo', index, value)
+        if await self.bot.redis_pool.exists('todo'):
+            if 0 <= index < await self.bot.redis_pool.llen('todo'):
+                await self.bot.redis_pool.lset('todo', index, value)
                 await ctx.message.add_reaction('✅')
 
 

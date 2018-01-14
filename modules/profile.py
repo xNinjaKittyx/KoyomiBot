@@ -58,7 +58,7 @@ class Profile:
         if user.id in self.users:
             koyomi_user = self.users[user.id]
         else:
-            koyomi_user = KoyomiUser(user)
+            koyomi_user = KoyomiUser(user, self.bot.loop)
             self.users[user.id] = koyomi_user
         return koyomi_user
 
@@ -72,9 +72,9 @@ class Profile:
 
         user = self.get_koyomi_user(msg.author)
 
-        if user.check_cooldown('msg_cd', 150):
+        if await user.check_cooldown('msg_cd', 150):
             user.xp += random.randint(5, 20)
-            user.set_cooldown('msg_cd')
+            await user.set_cooldown('msg_cd')
 
     @commands.command()
     async def avatar(self, ctx, *, name: str=None):
@@ -207,11 +207,11 @@ class Profile:
             return
         to_koyomi_user = self.get_koyomi_user(user)
         koyomi_user = self.get_koyomi_user(ctx.author)
-        if koyomi_user.poke(to_koyomi_user):
+        if await koyomi_user.poke(to_koyomi_user):
             await ctx.send('{} poked {}!'.format(ctx.author.mention, user.mention))
             self.bot.cogs['Wordcount'].cmdcount('poke')
         else:
-            await ctx.send('You already used your poke! ({} seconds cooldown)'.format(3600 - koyomi_user.remaining_cooldown('poke_cd')))
+            await ctx.send('You already used your poke! ({} seconds cooldown)'.format(3600 - await koyomi_user.remaining_cooldown('poke_cd')))
 
     @commands.command()
     async def waifu(self, ctx, *, arg=None):

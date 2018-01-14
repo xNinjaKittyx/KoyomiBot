@@ -8,32 +8,33 @@ from discord.ext import commands
 from utility import discordembed as dmbd
 import ujson
 
+
 class Comics:
     def __init__(self, bot):
         self.bot = bot
 
     async def refreshxkcd(self):
-        if self.bot.redis_db.get('xkcdmax') is not None:
+        if await self.bot.redis_pool.get('xkcdmax') is not None:
             return True
         async with self.bot.session.get("http://xkcd.com/info.0.json") as r:
             if r.status != 200:
                 self.bot.logger.warning("XKCD is down")
                 return False
             j = await r.json(loads=ujson.loads)
-            self.bot.redis_db.set('xkcdmax', j['num'], ex=86400)
+            await self.bot.redis_pool.set('xkcdmax', j['num'], ex=86400)
             return True
 
     async def getxkcd(self, num, url):
         """ Num should be passed as an INT """
         num = int(num)
-        result = self.bot.redis_db.hget('xkcd', num)
+        result = await self.bot.redis_pool.hget('xkcd', num)
         if result is None:
             async with self.bot.session.get(url + "/info.0.json") as r:
                 if not r.status == 200:
                     self.bot.logger.warning("Unable to get XKCD #" + str(num))
                     return
                 j = await r.json(loads=ujson.loads)
-                self.bot.redis_db.hmset('xkcd', {num: j})
+                await self.bot.redis_pool.hmset('xkcd', {num: j})
                 return j
         else:
             j = result.decode('utf-8')
@@ -46,7 +47,7 @@ class Comics:
         chk = await self.refreshxkcd()
         if not chk:
             return
-        maxnum = int(self.bot.redis_db.get('xkcdmax').decode('utf-8'))
+        maxnum = int(await self.bot.redis_pool.get('xkcdmax').decode('utf-8'))
         number = random.randint(1, maxnum)
         url = "http://xkcd.com/" + str(number)
         j = await self.getxkcd(number, url)
@@ -55,10 +56,10 @@ class Comics:
         em.set_image(url=j['img'])
         em.add_field(name=j['alt'], value="{0}/{1}/{2}".format(j['month'], j['day'], j['year']))
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('xkcd')
+        await self.bot.cogs['Wordcount'].cmdcount('xkcd')
 
     async def refreshcyanide(self):
-        if self.bot.redis_db.get('cyanidemax') is not None:
+        if await self.bot.redis_pool.get('cyanidemax') is not None:
             return True
         async with self.bot.session.get("http://explosm.net/comics/latest") as r:
             if r.status != 200:
@@ -66,12 +67,12 @@ class Comics:
                 return False
             soup = BeautifulSoup(await r.text(), 'html.parser')
             current = int(re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
-            self.bot.redis_db.set('cyanidemax', current, ex=86400)
+            await self.bot.redis_pool.set('cyanidemax', current, ex=86400)
             return True
 
     async def getcyanide(self, num, url):
         num = int(num)
-        result = self.bot.redis_db.hget('cyanide', num)
+        result = await self.bot.redis_pool.hget('cyanide', num)
         if result is None:
             async with self.bot.session.get(url) as r:
                 if not r.status == 200:
@@ -82,7 +83,7 @@ class Comics:
                     await self.bot.send('Report this number as a dead comic: ' + str(num))
                     return
                 img = 'http:' + str(soup.find(id="main-comic")['src'])
-                self.bot.redis_db.hmset('xkcd', {num: img})
+                await self.bot.redis_pool.hmset('xkcd', {num: img})
                 return img
         else:
             img = result.decode('utf-8')
@@ -96,7 +97,7 @@ class Comics:
             return
 
         # whatever reason, comics 1 - 38 don't exist.
-        number = random.randint(39, int(self.bot.redis_db.get('cyanidemax').decode('utf-8')))
+        number = random.randint(39, int(await self.bot.redis_pool.get('cyanidemax').decode('utf-8')))
         link = 'http://explosm.net/comics/' + str(number)
 
         img = await self.getcyanide(number, link)
@@ -105,7 +106,7 @@ class Comics:
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness', str(number), u=link)
         em.set_image(url=img)
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('cyanide')
+        await self.bot.cogs['Wordcount'].cmdcount('cyanide')
 
     @commands.command()
     async def cyanidercg(self, ctx):
@@ -121,7 +122,7 @@ class Comics:
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img)
         em.set_image(url=img)
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('cyanidercg')
+        await self.bot.cogs['Wordcount'].cmdcount('cyanidercg')
 
 
 def setup(bot):

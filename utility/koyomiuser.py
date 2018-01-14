@@ -6,7 +6,7 @@ import time
 
 from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageColor
 
-import redis
+import aioredis
 
 
 background_imgs = [
@@ -38,10 +38,12 @@ ui = Image.open('images/Koyomi_Background_Template.png')
 
 class KoyomiUser:
 
-    def __init__(self, author):
-        self.redis_db = redis.StrictRedis(db=1)
+    def __init__(self, author, loop):
+        self.loop = loop
+        self.redis_pool = self.loop.run_until_complete(
+            aioredis.create_redis_pool(('localhost', 6379), db=1))
         self.author_id = author.id
-        if not self.redis_db.exists(author.id):
+        if not self.loop.run_until_complete(self.redis_pool.exists(author.id)):
             default_profile = {
                 'msg_cd': 0,
                 'poke_cd': 0,
@@ -56,45 +58,48 @@ class KoyomiUser:
                 'description': 'Kamimashita',
                 'waifu': 'None',
             }
-            self.redis_db.hmset(author.id, default_profile)
+            self.loop.run_until_complete(self.redis_pool.hmset(author.id, default_profile))
         else:
-            self.redis_db.hset(author.id, 'name', author.name + "#" + author.discriminator)
+            self.loop.run_until_complete(
+                self.redis_pool.hset(author.id, 'name', author.name + "#" + author.discriminator))
 
     # Generic functions used often for redis.
-    def get_field(self, key):
-        return self.redis_db.hget(self.author_id, key).decode('utf-8')
+    async def get_field(self, key):
+        return await self.redis_pool.hget(self.author_id, key).decode('utf-8')
 
-    def set_field(self, key, value):
-        return self.redis_db.hset(self.author_id, key, value)
+    async def set_field(self, key, value):
+        return await self.redis_pool.hset(self.author_id, key, value)
 
-    def inc_field(self, key, amount):
-        return self.redis_db.hincrby(self.author_id, key, amount)
+    async def inc_field(self, key, amount):
+        return await self.redis_pool.hincrby(self.author_id, key, amount)
 
     # Cooldown commands.
-    def get_cooldown(self, cooldown_type):
-        return int(self.get_field(cooldown_type))
+    async def get_cooldown(self, cooldown_type):
+        return int(await self.get_field(cooldown_type))
 
-    def set_cooldown(self, cooldown_type):
-        self.redis_db.hset(self.author_id, cooldown_type, int(time.time()))
+    async def set_cooldown(self, cooldown_type):
+        await self.redis_pool.hset(self.author_id, cooldown_type, int(time.time()))
 
-    def check_cooldown(self, cooldown_type, seconds):
-        if int(time.time()) - self.get_cooldown(cooldown_type) > seconds:
+    async def check_cooldown(self, cooldown_type, seconds):
+        if int(time.time()) - await self.get_cooldown(cooldown_type) > seconds:
             return True
         return False
 
-    def remaining_cooldown(self, cooldown_type):
-        return int(time.time() - self.get_cooldown(cooldown_type))
+    async def remaining_cooldown(self, cooldown_type):
+        return int(time.time() - await self.get_cooldown(cooldown_type))
 
     # xp commands.
     @property
     def xp(self):
-        return int(self.get_field('xp'))
+        return int(self.loop.run_until_complete(self.get_field('xp')))
 
     @xp.setter
     def xp(self, exp: int):
         if exp < 0:
             return
-        self.set_field('xp', exp)
+        self.loop.run_until_complete(
+            self.set_field('xp', exp)
+        )
         if self.xp > self.get_required_xp():
             # the player leveled up!
             self.coins += 100
@@ -104,21 +109,29 @@ class KoyomiUser:
     # name getter and setter.
     @property
     def name(self):
-        return str(self.get_field('name'))
+        return str(self.loop.run_until_complete(
+            self.get_field('name')
+        ))
 
     @name.setter
     def name(self, value):
-        self.set_field('name', value)
+        self.loop.run_until_complete(
+            self.set_field('name', value)
+        )
 
     # Coins get, add, use
     @property
     def coins(self):
-        return int(self.get_field('coins'))
+        return int(self.loop.run_until_complete(
+            self.get_field('coins'))
+        )
 
     @coins.setter
     def coins(self, value):
         if value >= 0:
-            self.set_field('coins', value)
+            self.loop.run_until_complete(
+                self.set_field('coins', value)
+            )
         else:
             return
 
@@ -138,11 +151,14 @@ class KoyomiUser:
     # Level getter and setter.
     @property
     def level(self):
-        return int(self.get_field('level'))
+        return int(self.loop.run_until_complete(
+            self.get_field('level')))
 
     @level.setter
     def level(self, value):
-        self.set_field('level', value)
+        self.loop.run_until_complete(
+            self.set_field('level', value)
+        )
 
     # Find out how much xp is left.
     def get_required_xp(self):
@@ -155,54 +171,79 @@ class KoyomiUser:
 
     @property
     def pokes_given(self):
-        return int(self.get_field('pokes_given'))
+        return int(
+            self.loop.run_until_complete(
+                self.get_field('pokes_given'))
+        )
 
     @pokes_given.setter
     def pokes_given(self, value):
-        self.set_field('pokes_given', value)
+        self.loop.run_until_complete(
+            self.set_field('pokes_given', value)
+        )
 
     @property
     def pokes_received(self):
-        return int(self.get_field('pokes_received'))
+        return int(
+            self.loop.run_until_complete(
+                self.get_field('pokes_received'))
+        )
 
     @pokes_received.setter
     def pokes_received(self, value):
-        self.set_field('pokes_received', value)
+        self.loop.run_until_complete(
+            self.set_field('pokes_received', value)
+        )
 
     def get_owned_badges(self):
-        return json.loads(self.get_field('owned_badges'))
+        return json.loads(
+            self.loop.run_until_complete(
+                self.get_field('owned_badges'))
+        )
 
     @property
     def badge(self):
-        return self.get_field('selected_badge')
+        return self.loop.run_until_complete(
+            self.get_field('selected_badge')
+        )
 
     @badge.setter
     def badge(self, value):
-        self.set_field('selected_badge', value)
+        self.loop.run_until_complete(
+            self.set_field('selected_badge', value)
+        )
 
     @property
     def description(self):
-        return self.get_field("description")
+        return self.loop.run_until_complete(
+            self.get_field("description")
+        )
 
     @description.setter
     def description(self, value):
-        self.set_field('description', value)
+        self.loop.run_until_complete(
+            self.set_field('description', value)
+        )
 
     @property
     def waifu(self):
-        return self.get_field('waifu')
+        return self.loop.run_until_complete(
+            self.get_field('waifu')
+        )
 
     @waifu.setter
     def waifu(self, value):
-        self.set_field('waifu', value)
+        self.loop.run_until_complete(
+            self.set_field('waifu', value)
+        )
 
-    def poke(self, koyomi_user):
-        if koyomi_user and self.check_cooldown('poke_cd', 3600):
+    async def poke(self, koyomi_user):
+        if koyomi_user and await self.check_cooldown('poke_cd', 3600):
             self.pokes_given += 1
             self.xp += 300
             koyomi_user.pokes_received += 1
             koyomi_user.coins += 300
-            self.set_cooldown('poke_cd')
+            await self.set_cooldown('poke_cd')
             return True
         return False
 
@@ -215,11 +256,10 @@ class KoyomiUser:
         pass
 
     def text_at_angle(self, text, angle, font):
-
         txt = Image.new('L', (500, 50))
         d = ImageDraw.Draw(txt)
-        d.text((0,0), text, font=font, fill=255)
-        txt=txt.rotate(angle, Image.BICUBIC, expand=1)
+        d.text((0, 0), text, font=font, fill=255)
+        txt = txt.rotate(angle, Image.BICUBIC, expand=1)
         return txt
 
     async def get_profile(self, avatar_file, user):

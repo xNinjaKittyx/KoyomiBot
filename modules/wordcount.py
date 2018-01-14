@@ -16,8 +16,8 @@ class Wordcount:
                           'who', 'boy', 'did', 'its', 'let', 'put', 'say',
                           'she', 'too', 'use', 'dad', 'mom', '246107833295175681', ]
 
-    def cmdcount(self, name: str):
-        self.bot.redis_db.zincrby('CmdDB', name)
+    async def cmdcount(self, name: str):
+        await self.bot.redis_pool.zincrby('CmdDB', name)
 
     async def wordcount(self, content):
         for x in re.compile('\w+').findall(content.replace('\n', ' ')):
@@ -28,7 +28,7 @@ class Wordcount:
             if x in self.blacklist:
                 continue
             else:
-                self.bot.redis_db.zincrby('WordDB', x)
+                await self.bot.redis_pool.zincrby('WordDB', x)
 
     async def on_message(self, message):
         if (len(message.content) <= 2 or message.author.bot or
@@ -42,17 +42,17 @@ class Wordcount:
         title = "Top 10 Words Used"
         desc = "This is counted across all guilds " + self.bot.user.name + " is on."
         em = dmbd.newembed(ctx.author, title, desc)
-        for x in self.bot.redis_db.zrevrange('WordDB', 0, 9, withscores=True):
+        for x in await self.bot.redis_pool.zrevrange('WordDB', 0, 9, withscores=True):
             em.add_field(name=x[0].decode('utf-8'), value=int(x[1]))
 
         await ctx.send(embed=em)
-        self.cmdcount('topwords')
+        await self.cmdcount('topwords')
 
     @commands.command()
     async def wordused(self, ctx, word: str):
         """ Shows how many times a word has been used."""
 
-        num = int(self.bot.redis_db.zscore('WordDB', word))
+        num = int(await self.bot.redis_pool.zscore('WordDB', word))
         if num == 0:
             title = "This word has never been used yet :o"
         elif num == 1:
@@ -64,14 +64,14 @@ class Wordcount:
         em = dmbd.newembed(ctx.author, title, desc)
 
         await ctx.send(embed=em)
-        self.cmdcount('wordused')
+        await self.cmdcount('wordused')
 
     @commands.command()
     async def blackwords(self, ctx):
         """ Words that are not included in wordDB"""
         result = " ".join(self.blacklist)
         await ctx.send("```\n" + result + "\nGrabbed from YourDictionary as the most common three letter words.\n```")
-        self.cmdcount('blackwords')
+        await self.cmdcount('blackwords')
 
     @commands.command()
     async def topcmds(self, ctx):
@@ -80,16 +80,16 @@ class Wordcount:
         title = "Top 10 Commands Used"
         desc = "This is counted across all guilds " + self.bot.user.name + " is on."
         em = dmbd.newembed(author, title, desc)
-        for x in self.bot.redis_db.zrevrange('CmdDB', 0, 9, withscores=True):
+        for x in await self.bot.redis_pool.zrevrange('CmdDB', 0, 9, withscores=True):
             em.add_field(name=x[0].decode('utf-8'), value=int(x[1]))
 
         await ctx.send(embed=em)
-        self.cmdcount('topcmds')
+        await self.cmdcount('topcmds')
 
     @commands.command()
     async def cmdused(self, ctx, word: str):
         """ Shows how many times a cmd has been used."""
-        num = int(self.bot.redis_db.zscore('CmdDB', word))
+        num = int(await self.bot.redis_pool.zscore('CmdDB', word))
         if num == 0:
             title = "This command has never been used yet :o"
         elif num == 1:
@@ -101,7 +101,7 @@ class Wordcount:
         em = dmbd.newembed(ctx.author, title, desc)
 
         await ctx.send(embed=em)
-        self.cmdcount('cmdused')
+        await self.cmdcount('cmdused')
 
 
 def setup(bot):

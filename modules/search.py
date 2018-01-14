@@ -9,6 +9,7 @@ import wikipedia
 
 import utility.discordembed as dmbd
 
+
 class Search:
 
     def __init__(self, bot):
@@ -25,7 +26,7 @@ class Search:
             gif = giflist["gfycats"][num]
             title = gif["gfyName"]
             desc = gif["title"]
-            if gif["tags"] != None:
+            if gif["tags"] is not None:
                 desc += " #" + " #".join([x for x in gif["tags"]])
 
             url = "https://gfycat.com/" + title
@@ -37,7 +38,7 @@ class Search:
         em = await self.gfylink("overwatch", 100, ctx.author)
         await ctx.send(embed=em)
         await ctx.send(em.url)
-        self.bot.cogs['Wordcount'].cmdcount('owgif')
+        await self.bot.cogs['Wordcount'].cmdcount('owgif')
 
     @commands.command()
     async def gfy(self, ctx, *, keyword: str):
@@ -45,13 +46,13 @@ class Search:
         em = await self.gfylink(keyword, 50, ctx.author)
         await ctx.send(embed=em)
         await ctx.send(em.url)
-        self.bot.cogs['Wordcount'].cmdcount('gfy')
+        await self.bot.cogs['Wordcount'].cmdcount('gfy')
 
     @commands.command()
     async def safebooru(self, ctx, *, search: str):
         """Searches Safebooru"""
 
-        self.bot.cogs['Wordcount'].cmdcount('safebooru')
+        await self.bot.cogs['Wordcount'].cmdcount('safebooru')
         link = ("https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=20&tags=" +
                 search.replace(' ', '_'))
 
@@ -131,11 +132,10 @@ class Search:
                 em.add_field(name='Tags', value=weeblist[page]['@tags'])
                 await msg.edit(embed=em)
 
-
     @commands.command()
     async def konachan(self, ctx, *, search: str):
         """Searches Konachan (rating:safe)"""
-        self.bot.cogs['Wordcount'].cmdcount('konachan')
+        await self.bot.cogs['Wordcount'].cmdcount('konachan')
         link = ("https://konachan.com/post.json?limit=20&tags=rating:safe%20" +
                 search.replace('rating:questionable', '').replace('rating:explicit', ''))
 
@@ -257,7 +257,7 @@ class Search:
 
             em.set_image(url=page.images[0])
             em.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
-            self.bot.cogs['Wordcount'].cmdcount('wiki')
+            await self.bot.cogs['Wordcount'].cmdcount('wiki')
             await ctx.send(embed=em)
 
     @commands.command()

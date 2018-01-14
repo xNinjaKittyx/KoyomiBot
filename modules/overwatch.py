@@ -64,13 +64,13 @@ class Overwatch:
             quick = profile['quickplay']
             comp = profile['competitive']
             await ctx.send(embed=self.display(ctx.author, tag, quick, comp))
-        self.bot.cogs['Wordcount'].cmdcount('owstats')
+            await self.bot.cogs['Wordcount'].cmdcount('owstats')
 
     @commands.command()
     async def owrng(self, ctx):
         """ RNG OVERWATCH """
         await ctx.send("Play {}!".format(random.choice(self.heroes)))
-        self.bot.cogs['Wordcount'].cmdcount('owrng')
+        await self.bot.cogs['Wordcount'].cmdcount('owrng')
 
     @commands.command()
     async def owteam(self, ctx, num: int = 6):
@@ -81,7 +81,7 @@ class Overwatch:
             "Here's your teamcomp! Good luck!\n" +
             "{}".format(", ".join(result))
         )
-        self.bot.cogs['Wordcount'].cmdcount('owteam')
+        await self.bot.cogs['Wordcount'].cmdcount('owteam')
 
 
 

@@ -102,7 +102,7 @@ class Interactions:
 
         em = await self.get_phrase(ctx.author, 'hug', target, True)
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('hug')
+        await self.bot.cogs['Wordcount'].cmdcount('hug')
 
     @commands.command()
     async def kiss(self, ctx, target):
@@ -112,7 +112,7 @@ class Interactions:
 
         em = await self.get_phrase(ctx.author, 'kiss', target, True)
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('kiss')
+        await self.bot.cogs['Wordcount'].cmdcount('kiss')
 
     @commands.command()
     async def cuddle(self, ctx, target):
@@ -123,7 +123,7 @@ class Interactions:
         em = await self.get_phrase(ctx.author, 'cuddle', target, True)
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('cuddle')
+        await self.bot.cogs['Wordcount'].cmdcount('cuddle')
 
     @commands.command()
     async def punch(self, ctx, target):
@@ -134,7 +134,7 @@ class Interactions:
         em = await self.get_phrase(ctx.author, 'punch', target, False)
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('punch')
+        await self.bot.cogs['Wordcount'].cmdcount('punch')
 
     @commands.command()
     async def slap(self, ctx, target):
@@ -145,7 +145,7 @@ class Interactions:
         em = await self.get_phrase(ctx.author, 'slap', target, False)
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('slap')
+        await self.bot.cogs['Wordcount'].cmdcount('slap')
 
     @commands.command()
     async def kanashi(self, ctx):
@@ -154,7 +154,7 @@ class Interactions:
 
         em.description = f"{ctx.author.display_name} is so sad. Cheer up :("
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('kanashi')
+        await self.bot.cogs['Wordcount'].cmdcount('kanashi')
 
 
 def setup(bot):

@@ -125,7 +125,7 @@ class Anime:
                 await ctx.send(embed=self.getinfo(ctx.author, chosen))
             else:
                 self.bot.logger.warning("No 200 status from Anime")
-        self.bot.cogs['Wordcount'].cmdcount('anime')
+        await self.bot.cogs['Wordcount'].cmdcount('anime')
 
     @commands.command()
     async def manga(self, ctx, *, mang: str):
@@ -163,7 +163,7 @@ class Anime:
                 await ctx.send(embed=self.getinfo(ctx.author, chosen))
             else:
                 self.bot.logger.warning("No 200 status from Manga")
-        self.bot.cogs['Wordcount'].cmdcount('anime')
+        await self.bot.cogs['Wordcount'].cmdcount('anime')
 
 
 def setup(bot):

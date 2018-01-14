@@ -95,7 +95,7 @@ class Random:
             em.add_field(name="Dice #" + str(r+1), value=str(random.randint(1, limit)))
         # result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('roll')
+        await self.bot.cogs['Wordcount'].cmdcount('roll')
 
     @commands.command()
     async def flip(self, ctx, coins=1):
@@ -110,7 +110,7 @@ class Random:
 
         await ctx.send(embed=em)
 
-        self.bot.cogs['Wordcount'].cmdcount('flip')
+        await self.bot.cogs['Wordcount'].cmdcount('flip')
 
     @commands.command(name='8ball')
     async def ball(self, ctx):
@@ -126,7 +126,7 @@ class Random:
 
         em = dmbd.newembed(ctx.author, random.choice(answers))
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('8ball')
+        await self.bot.cogs['Wordcount'].cmdcount('8ball')
 
     @commands.command()
     async def trump(self, ctx):
