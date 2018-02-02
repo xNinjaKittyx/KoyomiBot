@@ -134,10 +134,11 @@ class Profile:
                 return
             recipient_koyomi_user = await self.get_koyomi_user(user)
 
-            await recipient_koyomi_user.set_coins(recipient_koyomi_user.get_coins() + coins)
+            await recipient_koyomi_user.set_coins(await recipient_koyomi_user.get_coins() + coins)
             await ctx.send('{0} sudogave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
-        except:
+        except (ValueError, IndexError):
             await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
+            
 
     @sudogive.error
     async def on_not_owner_error(self, ctx, error):
