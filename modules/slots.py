@@ -36,8 +36,8 @@ class Slots:
                 if x.name == 'thonking':
                     self.emojis.append(x)
                     break
-        user = self.bot.cogs['Profile'].get_koyomi_user(ctx.author)
-        if user.coins >= bet >= 0:
+        user = await self.bot.cogs['Profile'].get_koyomi_user(ctx.author)
+        if await user.get_coins() >= bet >= 0:
             slot1 = random.randint(0, 5)
             slot2 = random.randint(0, 5)
             slot3 = random.randint(0, 5)
@@ -50,14 +50,14 @@ class Slots:
             if len(result) == 3:
                 final += '\nBetter Luck Next Time. You lost {} Aragis'.format(bet)
                 await redis_pool.incrby('jackpot', max(int(bet * .5), 1))
-                user.use_coins(bet)
+                await user.use_coins(bet)
             elif len(result) == 2:
                 final += '\nSo close... You won {} Aragis'.format(bet)
-                user.coins += bet
+                await user.set_coins(await user.get_coins() + bet)
             elif len(result) == 1:
                 jack = int(await redis_pool.get('jackpot').decode('utf-8'))
                 final += '\nJACKPOT!! You won {} Aragis'.format(bet * 3 + jack)
-                user.coins += bet * 3 + jack
+                await user.set_coins(await user.get_coins() + (bet * 3 + jack))
                 await redis_pool.set('jackpot', 0)
 
             em = dmbd.newembed(ctx.author, 'SLOT MACHINE', final)
