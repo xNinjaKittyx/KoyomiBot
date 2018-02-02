@@ -95,7 +95,7 @@ class Profile:
             await koyomiuser.set_xp(await koyomiuser.get_xp + random.randint(1, 5))
 
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('avatar')
+        await self.bot.cogs['Wordcount'].cmdcount('avatar')
 
     @commands.command()
     async def badge(self, ctx, *, arg):
@@ -120,7 +120,7 @@ class Profile:
             else:
                 await koyomiuser.set_description(desc)
                 await ctx.message.add_reaction('✅')
-                self.bot.cogs['Wordcount'].cmdcount('description')
+                await self.bot.cogs['Wordcount'].cmdcount('description')
 
     @commands.command(hidden=True)
     @commands.is_owner()
@@ -167,7 +167,7 @@ class Profile:
 
         await sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
         await ctx.send('{0} gave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
-        self.bot.cogs['Wordcount'].cmdcount('give')
+        await self.bot.cogs['Wordcount'].cmdcount('give')
 
     @commands.command()
     async def profile(self, ctx, *,  name: str=None):
@@ -187,7 +187,7 @@ class Profile:
         if user.bot:
             em.add_field(name='Im a', value='bot keke')
             await ctx.send(embed=em)
-            self.bot.cogs['Wordcount'].cmdcount('profile')
+            await self.bot.cogs['Wordcount'].cmdcount('profile')
             return
 
         koyomi_user = await self.get_koyomi_user(user)
@@ -198,7 +198,7 @@ class Profile:
         em.add_field(name="Pokes Given", value=await koyomi_user.get_pokes_given())
         em.add_field(name="Pokes Received", value=await koyomi_user.get_pokes_received())
         await ctx.send(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('profile')
+        await self.bot.cogs['Wordcount'].cmdcount('profile')
 
     @commands.command()
     async def poke(self, ctx, *, name: str=None):
@@ -210,7 +210,7 @@ class Profile:
         koyomi_user = await self.get_koyomi_user(ctx.author)
         if await koyomi_user.poke(to_koyomi_user):
             await ctx.send('{} poked {}!'.format(ctx.author.mention, user.mention))
-            self.bot.cogs['Wordcount'].cmdcount('poke')
+            await self.bot.cogs['Wordcount'].cmdcount('poke')
         else:
             await ctx.send('You already used your poke! ({} seconds cooldown)'.format(3600 - await koyomi_user.remaining_cooldown('poke_cd')))
 
