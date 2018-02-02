@@ -195,7 +195,7 @@ class KoyomiUser:
             await self.set_pokes_given(await self.get_pokes_given() + 1)
             await self.set_xp(await self.get_xp() + 300)
             await koyomi_user.set_pokes_received(await koyomi_user.get_pokes_received() + 1)
-            await koyomi_user.set_coins(await koyomi_user.set_coins() + 300)
+            await koyomi_user.set_coins(await koyomi_user.get_coins() + 300)
             await self.set_cooldown('poke_cd')
             return True
         return False
