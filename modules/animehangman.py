@@ -4,6 +4,7 @@ import ujson
 
 from discord.ext import commands
 from utility import discordembed as dmbd
+from utility.redis import redis_pool
 
 
 class Animehangman:
@@ -16,10 +17,10 @@ class Animehangman:
             print('ID or Secret is missing for AniList')
             raise ImportError
         self.max = 90248
-        self.bot.loop.run_until_complete(self.bot.redis_pool.delete('achminst'))
+        self.bot.loop.run_until_complete(redis_pool.delete('achminst'))
 
     async def refreshtoken(self):
-        if await self.bot.redis_pool.exists('AnilistToken'):
+        if await redis_pool.exists('AnilistToken'):
             return
         else:
             async with self.bot.session.post(
@@ -32,7 +33,7 @@ class Animehangman:
                 if r.status != 200:
                     return
                 results = await r.json(loads=ujson.loads)
-                await self.bot.redis_pool.setex('AnilistToken', 3600, results['access_token'])
+                await redis_pool.setex('AnilistToken', 3600, results['access_token'])
 
     async def display(self, ctx, currentboard, guess, misses, picture, win=0):
         subtitle = "Where you test your weeb level!"
@@ -99,7 +100,7 @@ class Animehangman:
                 "https://anilist.co/api/character/" +
                 str(random.randint(1, self.max)) +
                 "/page?access_token=" +
-                await self.bot.redis_pool.get('AnilistToken').decode('utf-8')
+                await redis_pool.get('AnilistToken').decode('utf-8')
             ) as r:
                 if r.status != 200:
                     self.bot.logger.warning("ANIME CHARACTER RETURNING 404")
@@ -116,9 +117,9 @@ class Animehangman:
     @commands.command(no_pm=True)
     async def achm(self, ctx):
         """ Play Anime Character Hangman!"""
-        self.bot.cogs['Wordcount'].cmdused('achm')
-        if await self.bot.redis_pool.exists('achminst'):
-            for instance in await self.bot.redis_pool.lrange('achminst', 0, -1):
+        await self.bot.cogs['Wordcount'].cmdused('achm')
+        if await redis_pool.exists('achminst'):
+            for instance in await redis_pool.lrange('achminst', 0, -1):
                 if ctx.channel.id == int(instance.decode('utf-8')):
                     await ctx.send("There's already a game running!")
                     return
@@ -137,7 +138,7 @@ class Animehangman:
         picture = char["image_url_lge"]
         author = ctx.author
         prev_message = await self.display(ctx, currentboard, guess, misses, picture)
-        await self.bot.redis_pool.rpush('achminst', ctx.channel.id)
+        await redis_pool.rpush('achminst', ctx.channel.id)
         while True:
 
             def check(msg):
@@ -191,7 +192,7 @@ class Animehangman:
                 prev_message = await self.display(ctx, currentboard, guess, misses, picture, 0)
 
         await self.displayanswer(ctx, char)
-        await self.bot.redis_pool.lrem('achminst', 1, ctx.channel.id)
+        await redis_pool.lrem('achminst', 1, ctx.channel.id)
         return
 
 def setup(bot):

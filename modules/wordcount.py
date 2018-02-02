@@ -4,6 +4,8 @@ import re
 from discord.ext import commands
 import utility.discordembed as dmbd
 
+from utility.redis import redis_pool
+
 
 class Wordcount:
 
@@ -17,7 +19,7 @@ class Wordcount:
                           'she', 'too', 'use', 'dad', 'mom', '246107833295175681', ]
 
     async def cmdcount(self, name: str):
-        await self.bot.redis_pool.zincrby('CmdDB', name)
+        await redis_pool.zincrby('CmdDB', 1, name)
 
     async def wordcount(self, content):
         for x in re.compile('\w+').findall(content.replace('\n', ' ')):
@@ -28,7 +30,7 @@ class Wordcount:
             if x in self.blacklist:
                 continue
             else:
-                await self.bot.redis_pool.zincrby('WordDB', x)
+                await redis_pool.zincrby('WordDB', 1, x)
 
     async def on_message(self, message):
         if (len(message.content) <= 2 or message.author.bot or
@@ -42,7 +44,7 @@ class Wordcount:
         title = "Top 10 Words Used"
         desc = "This is counted across all guilds " + self.bot.user.name + " is on."
         em = dmbd.newembed(ctx.author, title, desc)
-        for x in await self.bot.redis_pool.zrevrange('WordDB', 0, 9, withscores=True):
+        for x in await redis_pool.zrevrange('WordDB', 0, 9, withscores=True):
             em.add_field(name=x[0].decode('utf-8'), value=int(x[1]))
 
         await ctx.send(embed=em)
@@ -52,7 +54,7 @@ class Wordcount:
     async def wordused(self, ctx, word: str):
         """ Shows how many times a word has been used."""
 
-        num = int(await self.bot.redis_pool.zscore('WordDB', word))
+        num = int(await redis_pool.zscore('WordDB', word))
         if num == 0:
             title = "This word has never been used yet :o"
         elif num == 1:
@@ -80,7 +82,7 @@ class Wordcount:
         title = "Top 10 Commands Used"
         desc = "This is counted across all guilds " + self.bot.user.name + " is on."
         em = dmbd.newembed(author, title, desc)
-        for x in await self.bot.redis_pool.zrevrange('CmdDB', 0, 9, withscores=True):
+        for x in await redis_pool.zrevrange('CmdDB', 0, 9, withscores=True):
             em.add_field(name=x[0].decode('utf-8'), value=int(x[1]))
 
         await ctx.send(embed=em)
@@ -89,7 +91,7 @@ class Wordcount:
     @commands.command()
     async def cmdused(self, ctx, word: str):
         """ Shows how many times a cmd has been used."""
-        num = int(await self.bot.redis_pool.zscore('CmdDB', word))
+        num = int(await redis_pool.zscore('CmdDB', word))
         if num == 0:
             title = "This command has never been used yet :o"
         elif num == 1:

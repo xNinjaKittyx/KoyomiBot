@@ -54,11 +54,12 @@ class Profile:
                         return user
         return user
 
-    def get_koyomi_user(self, user):
+    async def get_koyomi_user(self, user):
         if user.id in self.users:
             koyomi_user = self.users[user.id]
         else:
             koyomi_user = KoyomiUser(user, self.bot.loop)
+            await koyomi_user.initialize_user()
             self.users[user.id] = koyomi_user
         return koyomi_user
 
@@ -70,10 +71,10 @@ class Profile:
         if msg.guild.id == 264445053596991498 or msg.guild.id == 110373943822540800:
             return
 
-        user = self.get_koyomi_user(msg.author)
+        user = await self.get_koyomi_user(msg.author)
 
         if await user.check_cooldown('msg_cd', 150):
-            user.xp += random.randint(5, 20)
+            await user.set_xp(await user.get_xp() + random.randint(5, 20))
             await user.set_cooldown('msg_cd')
 
     @commands.command()
@@ -90,8 +91,8 @@ class Profile:
         em.add_field(name=user.name + '#' + user.discriminator + '\'s Avatar', value="Sugoi :D")
 
         if author != user or not user.bot:
-            koyomiuser = self.get_koyomi_user(user)
-            koyomiuser.xp += random.randint(1, 5)
+            koyomiuser = await self.get_koyomi_user(user)
+            await koyomiuser.set_xp(await koyomiuser.get_xp + random.randint(1, 5))
 
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('avatar')
@@ -110,14 +111,14 @@ class Profile:
     async def description(self, ctx, *, desc=None):
         """Either display the description, or give a description for your profile."""
 
-        koyomiuser = self.get_koyomi_user(ctx.author)
+        koyomiuser = await self.get_koyomi_user(ctx.author)
         if desc is None:
             await ctx.send(koyomiuser.description)
         else:
             if len(desc) > 25:
                 await ctx.send('Description is too long.')
             else:
-                koyomiuser.description = desc
+                await koyomiuser.set_description(desc)
                 await ctx.message.add_reaction('✅')
                 self.bot.cogs['Wordcount'].cmdcount('description')
 
@@ -131,9 +132,9 @@ class Profile:
             user = self.getuser(ctx, name)
             if not user or user.bot:
                 return
-            recipient_koyomi_user = self.get_koyomi_user(user)
+            recipient_koyomi_user = await self.get_koyomi_user(user)
 
-            recipient_koyomi_user.coins += coins
+            await recipient_koyomi_user.set_coins(recipient_koyomi_user.get_coins() + coins)
             await ctx.send('{0} sudogave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
         except:
             await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
@@ -157,14 +158,14 @@ class Profile:
         user = self.getuser(ctx, name)
         if not user or user == ctx.author or user.bot:
             return
-        sender_koyomi_user = self.get_koyomi_user(ctx.author)
-        recipient_koyomi_user = self.get_koyomi_user(user)
+        sender_koyomi_user = await self.get_koyomi_user(ctx.author)
+        recipient_koyomi_user = await self.get_koyomi_user(user)
 
-        if coins <= 0 or sender_koyomi_user.coins < coins:
+        if coins <= 0 or await sender_koyomi_user.get_coins() < coins:
             await ctx.send('Not Enough Aragis')
             return
 
-        sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
+        await sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
         await ctx.send('{0} gave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
         self.bot.cogs['Wordcount'].cmdcount('give')
 
@@ -189,13 +190,13 @@ class Profile:
             self.bot.cogs['Wordcount'].cmdcount('profile')
             return
 
-        koyomi_user = self.get_koyomi_user(user)
-        percent = koyomi_user.get_percent()
+        koyomi_user = await self.get_koyomi_user(user)
+        percent = await koyomi_user.get_percent()
 
-        em.add_field(name="Lv. " + str(koyomi_user.level), value='{}%'.format(percent))
-        em.add_field(name="Bank", value='{} Aragis'.format(koyomi_user.coins))
-        em.add_field(name="Pokes Given", value=koyomi_user.pokes_given)
-        em.add_field(name="Pokes Received", value=koyomi_user.pokes_received)
+        em.add_field(name="Lv. " + str(await koyomi_user.get_level()), value='{}%'.format(percent))
+        em.add_field(name="Bank", value='{} Aragis'.format(await koyomi_user.get_coins()))
+        em.add_field(name="Pokes Given", value=await koyomi_user.get_pokes_given())
+        em.add_field(name="Pokes Received", value=await koyomi_user.get_pokes_received())
         await ctx.send(embed=em)
         self.bot.cogs['Wordcount'].cmdcount('profile')
 
@@ -205,8 +206,8 @@ class Profile:
         user = self.getuser(ctx, name)
         if not user or user == ctx.author or user.bot:
             return
-        to_koyomi_user = self.get_koyomi_user(user)
-        koyomi_user = self.get_koyomi_user(ctx.author)
+        to_koyomi_user = await self.get_koyomi_user(user)
+        koyomi_user = await self.get_koyomi_user(ctx.author)
         if await koyomi_user.poke(to_koyomi_user):
             await ctx.send('{} poked {}!'.format(ctx.author.mention, user.mention))
             self.bot.cogs['Wordcount'].cmdcount('poke')
@@ -217,17 +218,17 @@ class Profile:
     async def waifu(self, ctx, *, arg=None):
         """ Set your waifu lol..."""
 
-        koyomiuser = self.get_koyomi_user(ctx.author)
+        koyomiuser = await self.get_koyomi_user(ctx.author)
         if arg is None:
             await ctx.send(koyomiuser.waifu)
         else:
             if len(arg) > 18:
                 await ctx.send('Waifu\'s name is too long.')
             else:
-                koyomiuser.waifu = arg
+                await koyomiuser.set_waifu(arg)
                 await ctx.message.add_reaction('✅')
 
-                self.bot.cogs['Wordcount'].cmdcount('waifu')
+                await self.bot.cogs['Wordcount'].cmdcount('waifu')
 
     @commands.command(hidden=True)
     async def testprofile(self, ctx, *, name: str=None):
@@ -235,7 +236,7 @@ class Profile:
         user = self.getuser(ctx, name)
         if not user:
             return
-        koyomi_user = self.get_koyomi_user(user)
+        koyomi_user = await self.get_koyomi_user(user)
         async with self.bot.session.get(user.avatar_url) as r:
             if r.status != 200:
                 return

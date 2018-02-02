@@ -237,7 +237,6 @@ class Search:
         em = dmbd.newembed(ctx.author, t=title, d=desc, u=url)
         await ctx.send(embed=em)
 
-
     @commands.command()
     async def wiki(self, ctx, *, search: str):
         """ Grabs Wikipedia Article """

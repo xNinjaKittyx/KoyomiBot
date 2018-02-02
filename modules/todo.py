@@ -1,6 +1,7 @@
 import textwrap
 
 from discord.ext import commands
+from utility.redis import redis_pool
 
 
 class Todo:
@@ -15,8 +16,8 @@ class Todo:
             result = '=============Todo List============='
             width = len(result)
             end = '\n' + '=' * width
-            if await self.bot.redis_pool.exists('todo'):
-                todolist = await self.bot.redis_pool.lrange('todo', 0, -1)
+            if await redis_pool.exists('todo'):
+                todolist = await redis_pool.lrange('todo', 0, -1)
                 for n, x in enumerate(todolist):
                     result += '\n' + '\n'.join(textwrap.wrap('{0}. {1}'.format(n+1, x.decode('utf-8')), width=width))
                 result += end
@@ -27,16 +28,16 @@ class Todo:
 
     @todo.command()
     async def add(self, ctx, *, msg: str):
-        await self.bot.redis_pool.rpush('todo', msg)
+        await redis_pool.rpush('todo', msg)
         await ctx.message.add_reaction('✅')
 
     @todo.command()
     async def rm(self, ctx, index: int):
         index -= 1
-        if await self.bot.redis_pool.exists('todo'):
-            if 0 <= index < await self.bot.redis_pool.llen('todo'):
-                value = await self.bot.redis_pool.lindex('todo', index)
-                await self.bot.redis_pool.lrem('todo', 1, value)
+        if await redis_pool.exists('todo'):
+            if 0 <= index < await redis_pool.llen('todo'):
+                value = await redis_pool.lindex('todo', index)
+                await redis_pool.lrem('todo', 1, value)
                 await ctx.message.add_reaction('✅')
                 return
 
@@ -51,9 +52,9 @@ class Todo:
         index = int(args[0])
         value = args[1]
         index -= 1
-        if await self.bot.redis_pool.exists('todo'):
-            if 0 <= index < await self.bot.redis_pool.llen('todo'):
-                await self.bot.redis_pool.lset('todo', index, value)
+        if await redis_pool.exists('todo'):
+            if 0 <= index < await redis_pool.llen('todo'):
+                await redis_pool.lset('todo', index, value)
                 await ctx.message.add_reaction('✅')
 
 

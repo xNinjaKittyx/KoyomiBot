@@ -1,8 +1,11 @@
 
+import ujson as json
+
 from discord.ext import commands
+
 import utility.discordembed as dmbd
 
-import ujson as json
+from utility.redis import redis_pool
 
 
 class PAD:
@@ -89,7 +92,7 @@ class PAD:
         sta = await self.refresh()
         if sta is False:
             return
-        monsters = json.loads(self.bot.redis_pool.get('PADMonsters').decode('utf-8'))
+        monsters = json.loads(redis_pool.get('PADMonsters').decode('utf-8'))
         author = ctx.author
         results = []
         try:

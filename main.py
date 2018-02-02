@@ -5,15 +5,13 @@ import os
 
 from logging.handlers import TimedRotatingFileHandler
 
-import asyncio
 import aiohttp
 import aiofiles
-import aioredis
 import discord
 import ujson
 
 from discord.ext import commands
-
+from  utility.redis import redis_pool, initialize_redis_pool
 
 modules = {
     'modules.admin',
@@ -74,11 +72,6 @@ class MyClient(commands.AutoShardedBot):
 
         self.logger.info("Bot Started".center(30).replace(' ', '-'))
 
-        self.logger.info("Initializing Redis Database".center(30).replace(' ', '-'))
-        loop = asyncio.get_event_loop()
-        self.redis_pool = loop.run_until_complete(aioredis.create_pool(('localhost', 6379)))
-        self.logger.info('Initialized Redis Database'.center(30).replace(' ', '-'))
-
         self.logger.info("Initializing Config File".center(30).replace(' ', '-'))
         if not os.path.exists('config'):
             os.makedirs('config')
@@ -97,7 +90,11 @@ class MyClient(commands.AutoShardedBot):
 
         prefix = self.config['Prefix']
         self.logger.info(f'Prefix is set: {prefix}')
-        super().__init__(*args, command_prefix=prefix, loop=loop, **kwargs)
+        super().__init__(*args, command_prefix=prefix, **kwargs)
+
+        self.logger.info("Initializing Redis Database".center(30).replace(' ', '-'))
+        initialize_redis_pool(self.loop)
+        self.logger.info('Initialized Redis Database'.center(30).replace(' ', '-'))
         self.session = aiohttp.ClientSession(
             loop=self.loop,
             json_serialize=ujson.dumps,
