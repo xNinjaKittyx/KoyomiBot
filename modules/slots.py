@@ -47,16 +47,17 @@ class Slots:
                 self.emojis[slot2],
                 self.emojis[slot3]
             )
+            final += '\nPlaced {} into the machine\n'.format(bet)
             if len(result) == 3:
-                final += '\nBetter Luck Next Time. You lost {} Aragis'.format(bet)
+                final += '\nBetter Luck Next Time.'
                 await redis_pool.incrby('jackpot', max(int(bet * .5), 1))
                 await user.use_coins(bet)
             elif len(result) == 2:
-                final += '\nSo close... You won {} Aragis'.format(bet)
+                final += '\nSo close... You won {} Aragis'.format(bet * 2)
                 await user.set_coins(await user.get_coins() + bet)
             elif len(result) == 1:
                 jack = int(await redis_pool.get('jackpot').decode('utf-8'))
-                final += '\nJACKPOT!! You won {} Aragis'.format(bet * 3 + jack)
+                final += '\nJACKPOT!! You won {} Aragis'.format(bet * 4 + jack)
                 await user.set_coins(await user.get_coins() + (bet * 3 + jack))
                 await redis_pool.set('jackpot', 0)
 
