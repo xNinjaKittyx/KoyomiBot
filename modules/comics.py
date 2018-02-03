@@ -36,7 +36,7 @@ class Comics:
                     self.bot.logger.warning("Unable to get XKCD #" + str(num))
                     return
                 j = await r.json(loads=ujson.loads)
-            await redis_pool.hmset_dict('xkcd', {num: j})
+            await redis_pool.hmset_dict('xkcd', {num: ujson.dumps(j)})
             return j
         else:
             j = result.decode('utf-8')
