@@ -23,7 +23,7 @@ class Comics:
                 self.bot.logger.warning("XKCD is down")
                 return False
             j = await r.json(loads=ujson.loads)
-            await redis_pool.set('xkcdmax', j['num'], ex=86400)
+            await redis_pool.set('xkcdmax', j['num'], expire=86400)
             return True
 
     async def getxkcd(self, num, url):
@@ -49,7 +49,7 @@ class Comics:
         chk = await self.refreshxkcd()
         if not chk:
             return
-        maxnum = int(await redis_pool.get('xkcdmax').decode('utf-8'))
+        maxnum = int((await redis_pool.get('xkcdmax')).decode('utf-8'))
         number = random.randint(1, maxnum)
         url = "http://xkcd.com/" + str(number)
         j = await self.getxkcd(number, url)
@@ -99,7 +99,7 @@ class Comics:
             return
 
         # whatever reason, comics 1 - 38 don't exist.
-        number = random.randint(39, int(await redis_pool.get('cyanidemax').decode('utf-8')))
+        number = random.randint(39, int((await redis_pool.get('cyanidemax')).decode('utf-8')))
         link = 'http://explosm.net/comics/' + str(number)
 
         img = await self.getcyanide(number, link)

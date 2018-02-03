@@ -46,7 +46,7 @@ class PAD:
 
     async def getawaken(self, skills):
         result = ""
-        awakenings = json.loads(await self.bot.redis_pool.get('PADAwakening').decode('utf-8'))
+        awakenings = json.loads((await self.bot.redis_pool.get('PADAwakening')).decode('utf-8'))
         if not skills:
             return 'None'
         for x in skills:
@@ -92,7 +92,7 @@ class PAD:
         sta = await self.refresh()
         if sta is False:
             return
-        monsters = json.loads(redis_pool.get('PADMonsters').decode('utf-8'))
+        monsters = json.loads((await redis_pool.get('PADMonsters')).decode('utf-8'))
         author = ctx.author
         results = []
         try:

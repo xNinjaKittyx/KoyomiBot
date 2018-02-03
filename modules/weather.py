@@ -96,7 +96,7 @@ class Weather:
                     return
 
                 await ctx.send(embed=self.display(ctx.author, place, darksky))
-                await self.bot.cogs['Wordcount'].get_redis_pool()('weather')
+                await self.bot.cogs['Wordcount'].cmdused('weather')
                 return
             else:
                 self.bot.logger.warning("Status Error: " + location["status"])
