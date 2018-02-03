@@ -23,8 +23,8 @@ class Comics:
                 self.bot.logger.warning("XKCD is down")
                 return False
             j = await r.json(loads=ujson.loads)
-            await redis_pool.set('xkcdmax', j['num'], expire=86400)
-            return True
+        await redis_pool.set('xkcdmax', j['num'], expire=86400)
+        return True
 
     async def getxkcd(self, num, url):
         """ Num should be passed as an INT """
@@ -36,8 +36,8 @@ class Comics:
                     self.bot.logger.warning("Unable to get XKCD #" + str(num))
                     return
                 j = await r.json(loads=ujson.loads)
-                await redis_pool.hmset('xkcd', {num: j})
-                return j
+            await redis_pool.hmset_dict('xkcd', {num: j})
+            return j
         else:
             j = result.decode('utf-8')
             j = ujson.loads(j)
@@ -68,9 +68,9 @@ class Comics:
                 self.bot.logger.warning("Cyanide&Happiness is down")
                 return False
             soup = BeautifulSoup(await r.text(), 'html.parser')
-            current = int(re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
-            await redis_pool.set('cyanidemax', current, ex=86400)
-            return True
+        current = int(re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
+        await redis_pool.set('cyanidemax', current, expire=86400)
+        return True
 
     async def getcyanide(self, num, url):
         num = int(num)
@@ -81,12 +81,12 @@ class Comics:
                     self.bot.logger.warning("Unable to get Cyanide #" + str(num))
                     return
                 soup = BeautifulSoup(await r.text(), 'html.parser')
-                if soup.prettify().startswith('Could not'):
-                    await self.bot.send('Report this number as a dead comic: ' + str(num))
-                    return
-                img = 'http:' + str(soup.find(id="main-comic")['src'])
-                await redis_pool.hmset('xkcd', {num: img})
-                return img
+            if soup.prettify().startswith('Could not'):
+                await self.bot.send('Report this number as a dead comic: ' + str(num))
+                return
+            img = 'http:' + str(soup.find(id="main-comic")['src'])
+            await redis_pool.hmset_dict('xkcd', {num: img})
+            return img
         else:
             img = result.decode('utf-8')
             return img
@@ -119,7 +119,7 @@ class Comics:
                 self.bot.logger.warning("Unable to get RCG for Cyanide")
                 return
             soup = BeautifulSoup(await r.text(), 'html.parser')
-            img = 'http:' + str(soup.find(id='rcg-comic').img['src'])
+        img = 'http:' + str(soup.find(id='rcg-comic').img['src'])
         self.bot.logger.info(img)
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img)
         em.set_image(url=img)
