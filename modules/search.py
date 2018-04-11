@@ -1,5 +1,6 @@
 
 # -*- coding: utf8 -*-
+import logging
 import random
 import xmltodict
 
@@ -16,11 +17,11 @@ class Search:
         self.bot = bot
 
     async def gfylink(self, keyword, count, author):
-        link = "https://api.gfycat.com/v1test/gfycats/search?search_text=" + str(keyword) + "&count=" + str(count)
+        link = "https://api.gfycat.com/v1/gfycats/search?search_text=" + str(keyword) + "&count=" + str(count)
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('Gyfcat returned ' + r.status)
+                logging.error('Gyfcat returned ' + r.status)
             giflist = await r.json(loads=ujson.loads)
             num = random.randint(0, count-1)
             gif = giflist["gfycats"][num]

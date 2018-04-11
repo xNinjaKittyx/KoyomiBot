@@ -221,7 +221,10 @@ class Profile:
 
         koyomiuser = await self.get_koyomi_user(ctx.author)
         if arg is None:
-            await ctx.send(koyomiuser.waifu)
+            try:
+                await ctx.send(koyomiuser.waifu)
+            except AttributeError:
+                await koyomiuser.set_waifu('None')
         else:
             if len(arg) > 18:
                 await ctx.send('Waifu\'s name is too long.')
