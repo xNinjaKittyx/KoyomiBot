@@ -152,7 +152,7 @@ class Music:
                     url = x['url']
         sauce = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(url), volume=0.5)
         x = await ctx.send('Hold on one moment... Processing your song request.')
-        entry = VoiceEntry(ctx.message, sauce, song_info, 0.5)
+        entry = VoiceEntry(ctx.message, sauce, song_info, 0.25)
         await x.delete()
         await ctx.send('Enqueued ' + str(entry))
         await state.songs.put(entry)
@@ -161,10 +161,10 @@ class Music:
     @commands.command()
     async def volume(self, ctx, value: int):
         state = self.get_voice_state(ctx.guild)
-        if 0 < value < 201 and state.voice.is_playing():
+        if 0 < value < 50 and state.voice.is_playing():
             state.voice.source.volume = value / 100
             state.current.volume = value / 100
-            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value / 100, req=ctx.author))
+            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value / 50, req=ctx.author))
 
     @commands.command()
     async def pause(self, ctx):

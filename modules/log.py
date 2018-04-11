@@ -41,15 +41,11 @@ class Log:
         if member.guild.id in [264445053596991498, 110373943822540800]:
             # Hardcoding ignores for two discord bot servers.
             return
-        try:
-            self.bot.logger.info(
-                f"{member.name}/{member.id} has left the guild at {member.guild.name}/{member.guild.id}")
-        except UnicodeEncodeError:
-            self.bot.logger.info(
-                f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
-                " has left the guild at "
-                f"{member.guild.name.encode('ascii', 'ignore').decode('ascii', 'ignore')}/{member.guild.id}"
-            )
+        self.bot.logger.info(
+            f"{member.name.encode('utf-8', 'ignore').decode('utf-8', 'ignore')} <@{member.id}>"
+            " has left the guild at "
+            f"{member.guild.name.encode('utf-8', 'ignore').decode('utf-8', 'ignore')}/{member.guild.id}"
+        )
 
     async def on_message_delete(self, msg):
         if msg.author == self.bot.user:

@@ -63,6 +63,9 @@ class Slots:
 
             em = dmbd.newembed(ctx.author, 'SLOT MACHINE', final)
             await ctx.send(embed=em)
+        else:
+            await ctx.send("Not enough Aragis")
+            return False
 
     @commands.command()
     async def slotpot(self, ctx):

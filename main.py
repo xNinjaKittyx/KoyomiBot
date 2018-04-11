@@ -17,6 +17,7 @@ modules = {
     'modules.admin',
     'modules.anime',
     'modules.animehangman',
+    'modules.blackjack',
     'modules.cleverbot',
     'modules.comics',
     'modules.forex',
