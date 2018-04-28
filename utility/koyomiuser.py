@@ -235,7 +235,7 @@ class KoyomiUser:
         final.paste(ImageOps.colorize(pokes_r, (0, 0, 0), discord_color), (455, 255), pokes_r)
         final.paste(ImageOps.colorize(pokes_g, (0, 0, 0), discord_color), (625, 500), pokes_g)
         draw = ImageDraw.Draw(final)
-        draw.text((350, 250), user.display_name + await self.get_name()[-5:], font=font28, fill=(69,69,69))
+        draw.text((350, 250), user.display_name + (await self.get_name())[-5:], font=font28, fill=(69,69,69))
         draw.text((80, 2), 'Lv. ' + str(await self.get_level()), font=font28, fill=discord_complementary)
         draw.text((350, 290), (await self.get_description()).center(25), font=font24, fill=discord_color)
         draw.text((90, 360), 'ID: ' + str(user.id), font=font22, fill=discord_color)
