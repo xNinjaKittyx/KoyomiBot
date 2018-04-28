@@ -161,10 +161,10 @@ class Music:
     @commands.command()
     async def volume(self, ctx, value: int):
         state = self.get_voice_state(ctx.guild)
-        if 0 < value < 50 and state.voice.is_playing():
-            state.voice.source.volume = value / 100
-            state.current.volume = value / 100
-            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value / 50, req=ctx.author))
+        if 0 < value <= 100 and state.voice.is_playing():
+            state.voice.source.volume = value / 200
+            state.current.volume = value / 200
+            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value, req=ctx.author))
 
     @commands.command()
     async def pause(self, ctx):
