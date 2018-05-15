@@ -96,7 +96,7 @@ class Music:
             except:
                 print('something happened')
 
-    async def refreshplayer(self, guild, msg='Currently Playing'):
+    async def refreshplayer(self, guild, msg='Currently Playing', last=False):
         state = self.get_voice_state(guild)
         if state.current is None:
             return
@@ -104,6 +104,8 @@ class Music:
         if state.message:
             await state.message.delete()
         state.message = await state.message.channel.send(embed=state.current.get_embed(msg))
+        if last:
+            state.message = None
 
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel=None):
@@ -185,7 +187,7 @@ class Music:
     async def stop(self, ctx):
         state = self.get_voice_state(ctx.guild)
         if state.voice.is_playing:
-            _ = await self.refreshplayer(ctx.guild, 'Session ended')
+            _ = await self.refreshplayer(ctx.guild, 'Session ended', last=True)
             state.voice.stop()
 
         try:
