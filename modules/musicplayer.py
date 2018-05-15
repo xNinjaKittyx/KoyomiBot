@@ -148,14 +148,18 @@ class Music:
         bitrate = 0
         url = ''
         for x in song_info['formats']:
-            if x['acodec'] == 'opus':
-                if x['abr'] > bitrate:
-                    bitrate = x['abr']
-                    url = x['url']
+            abr = x.get('abr', 0)
+            if abr > bitrate:
+                url = x['url']
+                bitrate = abr
+        
+        if not url:
+            logging.error(f'Could not find a suitable audio for {song}')
+            return
+
         sauce = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(url), volume=0.5)
-        x = await ctx.send('Hold on one moment... Processing your song request.')
+        logging.info(f'Hold on one moment... Processing this song request request. {bitrate}, {url}')
         entry = VoiceEntry(ctx.message, sauce, song_info, 0.25)
-        await x.delete()
         await ctx.send('Enqueued ' + str(entry))
         await state.songs.put(entry)
         await self.refreshplayer(ctx.guild)
