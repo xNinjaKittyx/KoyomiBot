@@ -1,5 +1,7 @@
 
 import asyncio
+import logging
+
 import discord
 from discord.ext import commands
 import youtube_dl
@@ -58,7 +60,7 @@ class VoiceState:
             self.voice.stop()
 
     def toggle_next(self, error):
-        print(error)
+        logging.error(error)
         self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
 
     async def audio_player_task(self):
@@ -93,8 +95,8 @@ class Music:
                 state.audio_player.cancel()
                 if state.voice:
                     self.bot.loop.create_task(state.voice.disconnect())
-            except:
-                print('something happened')
+            except Exception as e:
+                logging.error('something happened', e)
 
     async def refreshplayer(self, guild, msg='Currently Playing', last=False):
         state = self.get_voice_state(guild)
@@ -153,6 +155,8 @@ class Music:
                 url = x['url']
                 bitrate = abr
         
+        logging.info(url)
+        logging.info(bitrate)
         if not url:
             logging.error(f'Could not find a suitable audio for {song}')
             return
