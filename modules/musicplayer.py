@@ -31,7 +31,7 @@ class VoiceEntry:
         return fmt.format(self.info['title'], self.info['uploader'], self.requester)
 
     def get_embed(self, title):
-        desc = str(self) + "\nVolume: {}%".format(int(self.volume * 100))
+        desc = str(self) + "\nVolume: {}%".format(int(self.volume * 200))
         if 'https://' in self.info['url']:
             em = dmbd.newembed(title, None, desc, self.info['url'])
             em.set_image(url='https://img.youtube.com/vi/' + self.info['id'] + '/maxresdefault.jpg')
@@ -164,7 +164,7 @@ class Music:
         if 0 < value <= 100 and state.voice.is_playing():
             state.voice.source.volume = value / 200
             state.current.volume = value / 200
-            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value, req=ctx.author))
+            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value / 100, req=ctx.author))
 
     @commands.command()
     async def pause(self, ctx):
