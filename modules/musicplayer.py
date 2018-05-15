@@ -157,7 +157,7 @@ class Music:
             logging.error(f'Could not find a suitable audio for {song}')
             return
 
-        sauce = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(url), volume=0.5)
+        sauce = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(url), volume=0.25)
         logging.info(f'Hold on one moment... Processing this song request request. {bitrate}, {url}')
         entry = VoiceEntry(ctx.message, sauce, song_info, 0.25)
         await ctx.send('Enqueued ' + str(entry))
