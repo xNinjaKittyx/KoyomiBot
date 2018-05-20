@@ -1,5 +1,5 @@
 
-import ujson
+import rapidjson
 from discord.ext import commands
 
 import utility.discordembed as dmbd
@@ -31,7 +31,7 @@ class Forex:
             if r.status != 200:
                 self.bot.logger.warning('Could not get info from fixer.io')
                 return
-            results = await r.json(loads=ujson.loads)
+            results = await r.json(loads=rapidjson.loads)
             desc = base + ' to ' + conversion + ' conversion.'
             em = dmbd.newembed(ctx.author, 'Foreign Exchange', desc, 'http://fixer.io/')
             em.set_thumbnail(url='http://fixer.io/img/money.png')

@@ -1,12 +1,12 @@
 """ To Get an Anime or Manga from MyAnimeList"""
-
+import logging
 from datetime import datetime
 
-import utility.discordembed as dmbd
-import ujson
-
+import rapidjson
 from bs4 import BeautifulSoup
 from discord.ext import commands
+
+import utility.discordembed as dmbd
 
 
 class Anime:
@@ -26,7 +26,7 @@ class Anime:
             }
         ) as r:
             if r.status == 200:
-                results = await r.json(loads=ujson.loads)
+                results = await r.json(loads=rapidjson.loads)
                 self.access_token = results['access_token']
                 self.lastaccess = datetime.today()
             else:
@@ -96,10 +96,11 @@ class Anime:
 
         async with self.bot.session.get(url) as r:
             if r.status == 200:
-                animelist = await r.json(loads=ujson.loads)
+                animelist = await r.json(loads=rapidjson.loads)
                 try:
                     await ctx.send(animelist["error"]["message"][0])
-                except:
+                except Exception as e:
+                    logging.error(f'Anime returned {e}')
                     pass
 
                 chosen = {}
@@ -136,7 +137,7 @@ class Anime:
 
         async with self.bot.session.get(url) as r:
             if r.status == 200:
-                mangalist = await r.json(loads=ujson.loads)
+                mangalist = await r.json(loads=rapidjson.loads)
                 if 'error' in mangalist:
                     await ctx.send(mangalist["error"]["message"][0])
                     return

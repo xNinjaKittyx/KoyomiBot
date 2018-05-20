@@ -149,14 +149,16 @@ class Music:
             song_info = ydl.extract_info(song, download=False)
         bitrate = 0
         url = ''
+        codec = ''
         for x in song_info['formats']:
             abr = x.get('abr', 0)
-            if abr > bitrate:
+            if 192 >= abr > bitrate:
                 url = x['url']
                 bitrate = abr
-        
+                codec = x['acodec']
+
         logging.info(url)
-        logging.info(bitrate)
+        logging.info((codec, bitrate))
         if not url:
             logging.error(f'Could not find a suitable audio for {song}')
             return

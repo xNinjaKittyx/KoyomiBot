@@ -3,7 +3,7 @@
 import random
 
 from discord.ext import commands
-import ujson
+import rapidjson
 from utility import discordembed as dmbd
 
 
@@ -14,12 +14,13 @@ class Overwatch:
         self.heroes = ['Genji', 'McCree', 'Pharrah', 'Reaper', 'Soldier 76',
                        'Tracer', 'Bastion', 'Hanzo', 'Junkrat', 'Mei',
                        'Torbjorn', 'Widowmaker', 'D.va', 'Reinhardt', 'Roadhog',
-                       'Winston','Zarya', 'Lucio', 'Mercy',
+                       'Winston', 'Zarya', 'Lucio', 'Mercy',
                        'Symmetra', 'Zenyatta', 'Sombra', 'Orisa']
 
     @staticmethod
     def display(author, player, qp, comp):
-        em = dmbd.newembed(author, player.replace('-', '#'), "Please let me know if you'd like to see more different stats.")
+        em = dmbd.newembed(
+            author, player.replace('-', '#'), "Please let me know if you'd like to see more different stats.")
         em.set_thumbnail(url=qp['overall_stats']['avatar'])
         level = qp['overall_stats']['prestige'] * 100 + qp['overall_stats']['level']
         cmpwinrate = (
@@ -59,7 +60,7 @@ class Overwatch:
             if r.status != 200:
                 self.bot.logger.warning('OWApi.net failed to connect.')
                 return
-            profile = await r.json(loads=ujson.loads)
+            profile = await r.json(loads=rapidjson.loads)
             profile = profile[region]['stats']
             quick = profile['quickplay']
             comp = profile['competitive']
@@ -82,7 +83,6 @@ class Overwatch:
             "{}".format(", ".join(result))
         )
         await self.bot.cogs['Wordcount'].cmdcount('owteam')
-
 
 
 def setup(bot):

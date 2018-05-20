@@ -13,7 +13,10 @@ class Log:
     # All them event overrides....
     async def on_message(self, msg):
         if await self.bot.check_blacklist(msg):
-            cmd_used = f"{msg.author.name}/{msg.author.id} used command in {msg.guild.name}/{msg.guild.id}: {msg.content}"
+            cmd_used = (
+                f"{msg.author.name}/{msg.author.id} used command in"
+                f"{msg.guild.name}/{msg.guild.id}: {msg.content}"
+            )
             self.bot.logger.info(cmd_used)
             if msg.guild:
                 mod_log = find(lambda c: c.name == "modlog", msg.guild.channels)

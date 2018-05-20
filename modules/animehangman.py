@@ -1,6 +1,6 @@
 import random
 
-import ujson
+import rapidjson
 
 from discord.ext import commands
 from utility import discordembed as dmbd
@@ -32,7 +32,7 @@ class Animehangman:
             ) as r:
                 if r.status != 200:
                     return
-                results = await r.json(loads=ujson.loads)
+                results = await r.json(loads=rapidjson.loads)
                 await redis_pool.setex('AnilistToken', 3600, results['access_token'])
 
     async def display(self, ctx, currentboard, guess, misses, picture, win=0):
@@ -88,8 +88,11 @@ class Animehangman:
         em.add_field(name=anime['title_romaji'], value=anime['title_english'])
         em.add_field(name="Type", value=anime['type'])
         em.add_field(name='Rating', value=anime['average_score'])
-        xstr = lambda s: s or ""
-        em.add_field(name=char['name_japanese'], value=char['name_first'] + " " + xstr(char['name_last']))
+        try:
+            name_last = str(char['name_last'])
+        except Exception as e:
+            name_last = ""
+        em.add_field(name=char['name_japanese'], value=char['name_first'] + " " + name_last)
 
         await ctx.send(embed=em)
 
@@ -105,7 +108,7 @@ class Animehangman:
                 if r.status != 200:
                     self.bot.logger.warning("ANIME CHARACTER RETURNING 404")
                     continue
-                tempchar = await r.json(loads=ujson.loads)
+                tempchar = await r.json(loads=rapidjson.loads)
 
                 self.bot.logger.debug(tempchar["id"])
             default = "https://cdn.anilist.co/img/dir/character/reg/default.jpg"
@@ -194,6 +197,7 @@ class Animehangman:
         await self.displayanswer(ctx, char)
         await redis_pool.lrem('achminst', 1, ctx.channel.id)
         return
+
 
 def setup(bot):
     bot.add_cog(Animehangman(bot))

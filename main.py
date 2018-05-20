@@ -8,10 +8,11 @@ from logging.handlers import TimedRotatingFileHandler
 import aiohttp
 import aiofiles
 import discord
-import ujson
+import rapidjson
 
 from discord.ext import commands
-from  utility.redis import redis_pool, initialize_redis_pool
+from utility.redis import redis_pool, initialize_redis_pool
+
 
 modules = {
     'modules.admin',
@@ -36,8 +37,7 @@ modules = {
     'modules.tags',
     'modules.todo',
     'modules.weather',
-    'modules.wordcount'
-
+    'modules.wordcount',
 }
 
 example_config = {
@@ -79,13 +79,13 @@ class MyClient(commands.AutoShardedBot):
 
         if not os.path.exists('config/config.json'):
             with open('config/config.json', 'w') as f:
-                f.write(ujson.dumps(example_config, indent=4))
+                f.write(rapidjson.dumps(example_config, indent=4))
             self.logger.error('No Configuration Found.')
             self.logger.error('Please edit the config file and reboot again.')
             raise RuntimeError('No Config Found')
         else:
             with open('config/config.json', 'r') as f:
-                self.config = ujson.loads(f.read())
+                self.config = rapidjson.loads(f.read())
 
         self.logger.info("Initialized Config File".center(30).replace(' ', '-'))
 
@@ -98,7 +98,7 @@ class MyClient(commands.AutoShardedBot):
         self.logger.info('Initialized Redis Database'.center(30).replace(' ', '-'))
         self.session = aiohttp.ClientSession(
             loop=self.loop,
-            json_serialize=ujson.dumps,
+            json_serialize=rapidjson.dumps,
             headers={'User-Agent': 'Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)'}
         )
 
@@ -109,13 +109,13 @@ class MyClient(commands.AutoShardedBot):
 
     async def refresh_config(self):
         async with aiofiles.open('config/config.json', mode='r') as f:
-            self.config = ujson.loads(await f.read())
+            self.config = rapidjson.loads(await f.read())
             for key in example_config.keys():
                 if key not in self.config:
                     self.config[key] = ''
 
         async with aiofiles.open('config/config.json', mode='w') as f:
-            await f.write(ujson.dumps(self.config, indent=4))
+            await f.write(rapidjson.dumps(self.config, indent=4))
 
     async def ignore_user(self, user):
         pass
@@ -164,11 +164,11 @@ class MyClient(commands.AutoShardedBot):
                 'Authorization': self.config['DiscordBots'],
                 'Content-Type': 'application/json'
             },
-            data=ujson.dumps(data)
+            data=rapidjson.dumps(data)
         ) as f:
             if f.status != 200:
                 self.logger.error(f'Bad Bot Post Status: {f}')
-                self.logger.error(await f.json(loads=ujson.loads))
+                self.logger.error(await f.json(loads=rapidjson.loads))
             else:
                 self.logger.error('SUCCESS!')
 
@@ -178,11 +178,11 @@ class MyClient(commands.AutoShardedBot):
                 'Authorization': self.config['DiscordPW'],
                 'Content-Type': 'application/json'
             },
-            data=ujson.dumps(data)
+            data=rapidjson.dumps(data)
         ) as f:
             if f.status != 200:
                 self.logger.error(f'Bad Bot Post Status: {f}')
-                self.logger.error(await f.json(loads=ujson.loads))
+                self.logger.error(await f.json(loads=rapidjson.loads))
             else:
                 self.logger.error('SUCCESS!')
 

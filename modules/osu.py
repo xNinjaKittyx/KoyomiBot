@@ -1,7 +1,7 @@
 
 from urllib import parse
 
-import ujson
+import rapidjson
 import utility.discordembed as dmbd
 
 from discord.ext import commands
@@ -59,7 +59,7 @@ class Osu:
             if r.status != 200:
                 self.bot.logger.warning('Peppy Failed')
                 return
-            j = await r.json(loads=ujson.loads)
+            j = await r.json(loads=rapidjson.loads)
             return j[0]
 
     @commands.command()

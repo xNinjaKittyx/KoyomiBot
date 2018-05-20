@@ -70,7 +70,8 @@ class Slots:
     @commands.command()
     async def slotpot(self, ctx):
         """ The Current JackPot for Slots."""
-        await ctx.send('The Current Jackpot for Slots is ' + (await redis_pool.get('jackpot')).decode('utf-8') + ' Aragis.')
+        await ctx.send(
+            'The Current Jackpot for Slots is ' + (await redis_pool.get('jackpot')).decode('utf-8') + ' Aragis.')
 
     @slots.error
     async def on_slot_error(self, ctx, error):

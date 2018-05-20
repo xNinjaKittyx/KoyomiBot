@@ -1,4 +1,3 @@
-
 import aioredis
 
 redis_pool = None

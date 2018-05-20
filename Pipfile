@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+"discord.py" = {git = "https://github.com/Rapptz/discord.py", ref = "rewrite", extras = ["voice"]}
+"beautifulsoup4" = "*"
+redis = "*"
+aiohttp = "*"
+aiofiles = "*"
+aioredis = "*"
+psutil = "*"
+wikipedia = "*"
+python-rapidjson = "*"
+cleverwrap = "*"
+xmltodict = "*"
+Pillow = "*"
+youtube_dl = "*"
+
+[dev-packages]
+pylint = "*"
+
+[requires]
+python_version = "3.6"

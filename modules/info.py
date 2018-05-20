@@ -3,9 +3,10 @@ from datetime import datetime
 import time
 
 from discord.ext import commands
-import ujson
+import rapidjson
 import psutil
 import utility.discordembed as dmbd
+
 
 class Info:
 

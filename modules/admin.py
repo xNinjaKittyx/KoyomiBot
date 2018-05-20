@@ -74,6 +74,7 @@ class Admin:
             result.append(x.name)
         await ctx.send("\n".join(result))
 
+
 def setup(bot):
     """Setup admin.py"""
     bot.add_cog(Admin(bot))

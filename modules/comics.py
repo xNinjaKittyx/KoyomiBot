@@ -2,7 +2,7 @@
 import random
 import re
 
-import ujson
+import rapidjson
 
 from bs4 import BeautifulSoup
 from discord.ext import commands
@@ -22,7 +22,7 @@ class Comics:
             if r.status != 200:
                 self.bot.logger.warning("XKCD is down")
                 return False
-            j = await r.json(loads=ujson.loads)
+            j = await r.json(loads=rapidjson.loads)
         await redis_pool.set('xkcdmax', j['num'], expire=86400)
         return True
 
@@ -35,12 +35,12 @@ class Comics:
                 if not r.status == 200:
                     self.bot.logger.warning("Unable to get XKCD #" + str(num))
                     return
-                j = await r.json(loads=ujson.loads)
-            await redis_pool.hmset_dict('xkcd', {num: ujson.dumps(j)})
+                j = await r.json(loads=rapidjson.loads)
+            await redis_pool.hmset_dict('xkcd', {num: rapidjson.dumps(j)})
             return j
         else:
             j = result.decode('utf-8')
-            j = ujson.loads(j)
+            j = rapidjson.loads(j)
             return j
 
     @commands.command()

@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 import utility.discordembed as dmbd
 
-import ujson
+import rapidjson
 
 
 class Random:
@@ -25,7 +25,7 @@ class Random:
             if r.status != 200:
                 self.bot.logger.warning("Could not get a meow")
                 return
-            catlink = await r.json(loads=ujson.loads)
+            catlink = await r.json(loads=rapidjson.loads)
             rngcat = catlink['file']
             title = 'Random.Cat'
             desc = 'Here, have a cat.'
@@ -59,7 +59,7 @@ class Random:
         if numid is None:
             async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/?limit=0') as r:
                 if r.status == 200:
-                    count = int((await r.json(loads=ujson.loads))['count'])
+                    count = int((await r.json(loads=rapidjson.loads))['count'])
                 else:
                     self.bot.logger('Pokemon did not return status 200')
                     return
@@ -67,7 +67,7 @@ class Random:
 
         async with self.bot.session.get('http://pokeapi.co/api/v2/pokemon/' + str(numid)) as r:
             if r.status == 200:
-                pokeman = await r.json(loads=ujson.loads)
+                pokeman = await r.json(loads=rapidjson.loads)
                 em = dmbd.newembed(ctx.author, pokeman['name'].title())
                 shiny = (random.randint(1, 65536) < int(65535/(8200 - self.shinychance * 200)))
                 if not shiny:
@@ -135,7 +135,7 @@ class Random:
             if r.status != 200:
                 self.bot.logger.warning('tronalddump.io request failed')
                 return
-            request = await r.json(loads=ujson.loads, content_type='application/hal+json')
+            request = await r.json(loads=rapidjson.loads, content_type='application/hal+json')
             await ctx.send(request['value'])
 
     @commands.command()
@@ -145,7 +145,7 @@ class Random:
             if r.status != 200:
                 self.bot.logger.warning('Forimsatic GET Failed')
                 return
-            request = await r.json(loads=ujson.loads)
+            request = await r.json(loads=rapidjson.loads)
             em = dmbd.newembed(a=request['quoteAuthor'], d=request['quoteText'], u=request['quoteLink'])
             await ctx.send(embed=em)
 
@@ -156,7 +156,7 @@ class Random:
             if r.status != 200:
                 self.bot.logger.warning('https://icanhazdadjoke.com/api request failed')
                 return
-            request = await r.json(loads=ujson.loads)
+            request = await r.json(loads=rapidjson.loads)
             em = dmbd.newembed(a='Dad Joke... Why?', d=request['joke'])
             await ctx.send(embed=em)
 
@@ -168,7 +168,7 @@ class Random:
             if r.status != 200:
                 self.bot.logger.warning('Quotes on Design request failed')
                 return
-            request = (await r.json(loads=ujson.loads))[0]
+            request = (await r.json(loads=rapidjson.loads))[0]
             source = request.get('custom_meta', None)
             if source:
                 source = request.get('Source', '')

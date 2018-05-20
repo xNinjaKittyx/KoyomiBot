@@ -2,7 +2,7 @@
 import random
 
 import discord
-import ujson
+import rapidjson
 from discord.ext import commands
 
 import utility.discordembed as dmbd
@@ -13,7 +13,7 @@ class Profile:
 
     def __init__(self, bot):
         self.bot = bot
-        self.users = {} # userid: KoyomiUser
+        self.users = {}  # userid: KoyomiUser
         self.XP_RATE = 1
         """ So in this section, there's going to be some way of having "points"
         and therefore leveling up after reaching x number of points.
@@ -138,7 +138,6 @@ class Profile:
             await ctx.send('{0} sudogave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
         except (ValueError, IndexError):
             await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
-            
 
     @sudogive.error
     async def on_not_owner_error(self, ctx, error):
@@ -213,7 +212,9 @@ class Profile:
             await ctx.send('{} poked {}!'.format(ctx.author.mention, user.mention))
             await self.bot.cogs['Wordcount'].cmdcount('poke')
         else:
-            await ctx.send('You already used your poke! ({} seconds cooldown)'.format(3600 - await koyomi_user.remaining_cooldown('poke_cd')))
+            await ctx.send(
+                'You already used your poke! ({} seconds cooldown)'.format(
+                    3600 - await koyomi_user.remaining_cooldown('poke_cd')))
 
     @commands.command()
     async def waifu(self, ctx, *, arg=None):
@@ -260,7 +261,7 @@ class Profile:
             if r.status != 200:
                 self.bot.logger.warning('genderize.io failed response')
                 return
-            response = await r.json(loads=ujson.loads)
+            response = await r.json(loads=rapidjson.loads)
             if response['gender'] is None:
                 await ctx.send("I can't assume that name's gender. :thinking:")
                 return

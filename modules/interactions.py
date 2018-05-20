@@ -4,7 +4,7 @@ import random
 
 
 import utility.discordembed as dmbd
-import ujson
+import rapidjson
 
 from discord.ext import commands
 
@@ -43,12 +43,12 @@ class Interactions:
     async def get_phrase(self, author, action, target, positive):
 
         async with self.bot.session.get(
-            f'https://api.gfycat.com/v1test/gfycats/search?search_text={action}%20anime&count=100'
+            f'https://api.gfycat.com/v1/gfycats/search?search_text={action}%20anime&count=100'
         ) as r:
             if r.status != 200:
                 raise ConnectionError(f'Could not GET from Gfycat {r.status}')
 
-            response = await r.json(loads=ujson.loads)
+            response = await r.json(loads=rapidjson.loads)
             cursor = response['cursor']
             total = response['found']
 
@@ -60,7 +60,10 @@ class Interactions:
                 img = gfycats[number]['gifUrl']
                 break
             else:
-                url = f'https://api.gfycat.com/v1test/gfycats/search?search_text={action}%20anime&count=100&cursor={cursor}'
+                url = (
+                    f'https://api.gfycat.com/v1/gfycats/' +
+                    f'search?search_text={action}%20anime&count=100&cursor={cursor}'
+                )
 
                 if url in self.cache:
                     response = self.cache[url]
@@ -71,7 +74,7 @@ class Interactions:
                         if r.status != 200:
                             raise ConnectionError(f'Could not GET from Gfycat {r.status}')
 
-                        response = await r.json(loads=ujson.loads)
+                        response = await r.json(loads=rapidjson.loads)
                         cursor = response['cursor']
                         number -= 100
 

@@ -5,7 +5,7 @@ import random
 import xmltodict
 
 from discord.ext import commands
-import ujson
+import rapidjson
 import wikipedia
 
 import utility.discordembed as dmbd
@@ -22,7 +22,7 @@ class Search:
         async with self.bot.session.get(link) as r:
             if r.status != 200:
                 logging.error('Gyfcat returned ' + r.status)
-            giflist = await r.json(loads=ujson.loads)
+            giflist = await r.json(loads=rapidjson.loads)
             num = random.randint(0, count-1)
             gif = giflist["gfycats"][num]
             title = gif["gfyName"]
@@ -143,7 +143,7 @@ class Search:
         async with self.bot.session.get(link) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('[WARNING]: Konachan Search Failed')
-            weeblist = await r.json(loads=ujson.loads)
+            weeblist = await r.json(loads=rapidjson.loads)
 
         results = len(weeblist)
 
@@ -219,7 +219,7 @@ class Search:
         async with self.bot.session.get('https://api.urbandictionary.com/v0/define?term=' + search) as r:
             if r.status != 200:
                 self.bot.cogs['Log'].output('Urban Dictionary is Down')
-            results = await r.json(loads=ujson.loads)
+            results = await r.json(loads=rapidjson.loads)
 
         if results['result_type'] != 'exact':
             em = dmbd.newembed(ctx.author, 'Urban Dictionary', 'No Results Found For' + search)
@@ -234,7 +234,7 @@ class Search:
         thumbs_down = definition['thumbs_down']
         example = definition['example']
         author = definition['author']
-        desc = 'Defined by: {0}\n{1}\n\nExample: {2}\n\n👍{3}\t👎{4}'.format(author, define, example, thumbs_up, thumbs_down)
+        desc = f'Defined by: {author}\n{define}\n\nExample: {example}\n\n👍{thumbs_up}\t👎{thumbs_down}'
         em = dmbd.newembed(ctx.author, t=title, d=desc, u=url)
         await ctx.send(embed=em)
 
@@ -256,7 +256,9 @@ class Search:
             em = dmbd.newembed(ctx.author, title, desc, url)
 
             em.set_image(url=page.images[0])
-            em.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
+            em.set_thumbnail(
+                url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/" +
+                    "Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
             await self.bot.cogs['Wordcount'].cmdcount('wiki')
             await ctx.send(embed=em)
 

@@ -1,5 +1,5 @@
 
-import ujson as json
+import rapidjson
 
 from discord.ext import commands
 
@@ -15,19 +15,19 @@ class PAD:
         # if r.status_code is not 200:
         #     print('/api/active_skills/ is down')
         # else:
-        #     self.active_skills = json.loads(r.text)
+        #     self.active_skills = rapidjson.loads(r.text)
         #
         # r = requests.get('https://www.padherder.com/api/evolutions/')
         # if r.status_code is not 200:
         #     print('/api/evolutions/ is down')
         # else:
-        #     self.evolutions = json.loads(r.text)
+        #     self.evolutions = rapidjson.loads(r.text)
         #
         # r = requests.get('https://www.padherder.com/api/food/')
         # if r.status_code is not 200:
         #     print('/api/food/ is down')
         # else:
-        #     self.monsterdb = json.loads(r.text)
+        #     self.monsterdb = rapidjson.loads(r.text)
 
     async def refresh(self):
         if await self.bot.redis_pool.get('PADMonsters') is None:
@@ -46,7 +46,7 @@ class PAD:
 
     async def getawaken(self, skills):
         result = ""
-        awakenings = json.loads((await self.bot.redis_pool.get('PADAwakening')).decode('utf-8'))
+        awakenings = rapidjson.loads((await self.bot.redis_pool.get('PADAwakening')).decode('utf-8'))
         if not skills:
             return 'None'
         for x in skills:
@@ -92,7 +92,7 @@ class PAD:
         sta = await self.refresh()
         if sta is False:
             return
-        monsters = json.loads((await redis_pool.get('PADMonsters')).decode('utf-8'))
+        monsters = rapidjson.loads((await redis_pool.get('PADMonsters')).decode('utf-8'))
         author = ctx.author
         results = []
         try:

@@ -1,11 +1,10 @@
 
-
 import asyncio
-import json
 import io
 import random
 import time
 
+import rapidjson
 from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageColor
 
 from .redis import redis_pool1 as redis_pool
@@ -56,7 +55,7 @@ class KoyomiUser:
                 'level': 1,
                 'pokes_given': 0,
                 'pokes_received': 0,
-                'owned_badges': json.dumps({'discord': 1}),
+                'owned_badges': rapidjson.dumps({'discord': 1}),
                 'selected_badge': 'discord',
                 'description': 'Kamimashita',
                 'waifu': 'None',
@@ -170,7 +169,7 @@ class KoyomiUser:
         await self.set_field('pokes_received', value)
 
     async def get_owned_badges(self):
-        return json.loads(await self.get_field('owned_badges'))
+        return rapidjson.loads(await self.get_field('owned_badges'))
 
     async def get_badge(self):
         return await self.get_field('selected_badge')
@@ -235,14 +234,15 @@ class KoyomiUser:
         final.paste(ImageOps.colorize(pokes_r, (0, 0, 0), discord_color), (455, 255), pokes_r)
         final.paste(ImageOps.colorize(pokes_g, (0, 0, 0), discord_color), (625, 500), pokes_g)
         draw = ImageDraw.Draw(final)
-        draw.text((350, 250), user.display_name + (await self.get_name())[-5:], font=font28, fill=(69,69,69))
+        draw.text((350, 250), user.display_name + (await self.get_name())[-5:], font=font28, fill=(69, 69, 69))
         draw.text((80, 2), 'Lv. ' + str(await self.get_level()), font=font28, fill=discord_complementary)
         draw.text((350, 290), (await self.get_description()).center(25), font=font24, fill=discord_color)
         draw.text((90, 360), 'ID: ' + str(user.id), font=font22, fill=discord_color)
         draw.text((960, 22), '{:02d}%'.format(await self.get_percent()), font=font24, fill=discord_complementary)
         draw.text((520, 600), '{}'.format(await self.get_pokes_received()).rjust(6), font=font24, fill=(117, 218, 255))
         draw.text((620, 600), '{}'.format(await self.get_pokes_given()).rjust(6), font=font24, fill=(117, 218, 255))
-        draw.text((85, 420), 'Aragis : ' + '{}'.format(await self.get_coins()).rjust(20), font=font28, fill=(154, 117, 255))
+        draw.text(
+            (85, 420), 'Aragis : ' + '{}'.format(await self.get_coins()).rjust(20), font=font28, fill=(154, 117, 255))
         draw.text((85, 480), 'Waifu : ' + (await self.get_waifu()).rjust(18), font=font28, fill=(154, 117, 255))
 
         top_side = (int((await self.get_percent()) * 6.6) + 365,  0)
