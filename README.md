@@ -14,7 +14,6 @@ Requires the following:
 * aiohttp
 * psutil
 * wikipedia
-* requests
 
 Also requires redis database.
 
@@ -46,7 +45,7 @@ chrng | Gives a randomly generated Cyanide & Happiness Comic
 **Info** |
 uptime | Returns the uptime
 ping | Returns a ping and a hearbeat...
-stats | Shows you stats, and other info    
+stats | Shows you stats, and other info
 **Osu!** |
 osu [player] | Look up Standard Osu! Stats of Player
 taiko [player] | Look up Taiko Stats of Player

@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 "discord.py" = {git = "https://github.com/Rapptz/discord.py", ref = "rewrite", extras = ["voice"]}
 "beautifulsoup4" = "*"
+yarl = {version = "<1.2"}
 redis = "*"
 aiohttp = "*"
 aiofiles = "*"
