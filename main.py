@@ -22,6 +22,7 @@ modules = {
     'modules.cleverbot',
     'modules.comics',
     'modules.forex',
+    'modules.image',
     'modules.info',
     'modules.interactions',
     'modules.log',

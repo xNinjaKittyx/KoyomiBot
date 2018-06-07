@@ -22,6 +22,7 @@ class Search:
         async with self.bot.session.get(link) as r:
             if r.status != 200:
                 logging.error('Gyfcat returned ' + r.status)
+                return
             giflist = await r.json(loads=rapidjson.loads)
             num = random.randint(0, count-1)
             gif = giflist["gfycats"][num]
