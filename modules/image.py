@@ -40,7 +40,7 @@ class ImageManipulator:
         await load_msg.delete()
         f = io.BytesIO()
         image_file.save(f, format='JPEG', quality=random.randint(10, 20))
-        await ctx.send("Here's more jpg", file=File(f.getvalue(), filename='morejpg.png'))
+        await ctx.send("Here's more jpg", file=File(f.getvalue(), filename='more.jpg'))
 
     @commands.command()
     async def toomuchjpg(self, ctx, *, link):

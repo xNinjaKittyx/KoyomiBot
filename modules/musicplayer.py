@@ -96,7 +96,7 @@ class Music:
                 if state.voice:
                     self.bot.loop.create_task(state.voice.disconnect())
             except Exception as e:
-                logging.error('something happened', e)
+                logging.error(f"Exception raised: {e}")
 
     async def refreshplayer(self, guild, msg='Currently Playing', last=False):
         state = self.get_voice_state(guild)
