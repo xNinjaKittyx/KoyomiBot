@@ -29,13 +29,15 @@ class DiscordBotUpdates:
             await asyncio.sleep(1800)
 
             async with self.bot.session.post(
-                f'https://bots.ondiscord.xyz/bot-api/bots/{self.bot.user.id}/guilds',
+                f'https://discord.bots.gg/api/v1/{self.bot.user.id}/guilds',
                 headers={
                     'Authorization': self.bot.key_config['DiscordPW'],
                     'Content-Type': 'application/json'
                 },
                 data=rapidjson.dumps({
-                    'guildCount': len(self.bot.guilds)
+                    'shard_id': self.bot.shard_id,
+                    'shard_count': self.bot.shard_count,
+                    'server_count': len(self.bot.guilds)
                 })
             ) as f:
                 if f.status != 204:

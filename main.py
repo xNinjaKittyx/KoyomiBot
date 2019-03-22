@@ -53,10 +53,10 @@ def _get_prefix(bot, msg):
     user_id = bot.user_id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
     if msg.guild is None:
-        base.append('>')
+        base.append('!>')
         base.append('!')
     else:
-        base.extend(bot.db.get_guild_prefixes(msg.guild), ['>'])
+        base.extend(bot.db.get_guild_prefixes(msg.guild), ['!>'])
 
 
 class MyClient(commands.AutoShardedBot):
