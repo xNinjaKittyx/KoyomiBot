@@ -5,22 +5,25 @@ name = "pypi"
 
 [packages]
 "discord.py" = {git = "https://github.com/Rapptz/discord.py", ref = "rewrite", extras = ["voice"]}
-"beautifulsoup4" = "*"
-yarl = {version = "<1.2"}
-redis = "*"
-aiohttp = "*"
 aiofiles = "*"
+aiohttp = "*"
 aioredis = "*"
-psutil = "*"
-wikipedia = "*"
-python-rapidjson = "*"
+"beautifulsoup4" = "*"
 cleverwrap = "*"
+click = "*"
+dblpy = "*"
+motor = "*"
+pymongo = "*"
+python-rapidjson = "*"
+psutil = "*"
+toml = "*"
+wikipedia = "*"
 xmltodict = "*"
-Pillow = "*"
 youtube_dl = "*"
 
 [dev-packages]
-pylint = "*"
+pylama = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.6"

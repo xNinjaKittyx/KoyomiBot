@@ -108,4 +108,4 @@ config/config.json
 lmfao.png
 
 /.vscode*
-Pipfile.lock
+.mypy_cache/
