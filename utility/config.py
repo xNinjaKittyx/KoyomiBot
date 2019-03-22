@@ -26,6 +26,7 @@ class Config:
                     'OsuAPI': '',
                     'DiscordPW': '',
                     'DiscordBots': '',
+                    'debug': True,
                 }))
             raise FileNotFoundError(f"Filename {filename} not found. Created one for you.")
 
