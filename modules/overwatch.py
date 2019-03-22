@@ -3,6 +3,7 @@
 import random
 
 from discord.ext import commands
+import rapidjson
 from utility import discordembed as dmbd
 
 
@@ -13,12 +14,13 @@ class Overwatch:
         self.heroes = ['Genji', 'McCree', 'Pharrah', 'Reaper', 'Soldier 76',
                        'Tracer', 'Bastion', 'Hanzo', 'Junkrat', 'Mei',
                        'Torbjorn', 'Widowmaker', 'D.va', 'Reinhardt', 'Roadhog',
-                       'Winston','Zarya', 'Lucio', 'Mercy',
+                       'Winston', 'Zarya', 'Lucio', 'Mercy',
                        'Symmetra', 'Zenyatta', 'Sombra', 'Orisa']
 
     @staticmethod
     def display(author, player, qp, comp):
-        em = dmbd.newembed(author, player.replace('-', '#'), "Please let me know if you'd like to see more different stats.")
+        em = dmbd.newembed(
+            author, player.replace('-', '#'), "Please let me know if you'd like to see more different stats.")
         em.set_thumbnail(url=qp['overall_stats']['avatar'])
         level = qp['overall_stats']['prestige'] * 100 + qp['overall_stats']['level']
         cmpwinrate = (
@@ -38,54 +40,49 @@ class Overwatch:
 
         return em
 
-
-    @commands.command(pass_context=True)
+    @commands.command()
     async def owstats(self, ctx, *, tag: str):
         """ Usage: owstats [region] [battletag]\nRegions: kr, eu, us"""
         splitstr = tag.split(sep=' ')
         print(splitstr)
         if len(splitstr) != 2:
-            await self.bot.say("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
+            await ctx.send("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
             return
         region = splitstr[0].lower()
         if len(region) != 2:
-            await self.bot.say("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
+            await ctx.send("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
             return
         tag = splitstr[1]
         if '#' in tag:
             tag = tag.replace('#', '-')
 
-        headers = {
-            'User-Agent': 'KoyomiBot for Discord.',
-            'From': 'firefwing42@gmail.com'
-        }
-
-        async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats', headers=headers) as r:
+        async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats') as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('OWApi.net failed to connect.')
+                self.bot.logger.warning('OWApi.net failed to connect.')
                 return
-            profile = await r.json()
+            profile = await r.json(loads=rapidjson.loads)
             profile = profile[region]['stats']
             quick = profile['quickplay']
             comp = profile['competitive']
-            await self.bot.say(embed=self.display(ctx.message.author, tag, quick, comp))
-        self.bot.cogs['Wordcount'].cmdcount('owstats')
+            await ctx.send(embed=self.display(ctx.author, tag, quick, comp))
+            await self.bot.cogs['Wordcount'].cmdcount('owstats')
 
     @commands.command()
-    async def owrng(self):
+    async def owrng(self, ctx):
         """ RNG OVERWATCH """
-        await self.bot.say("Play {}!".format(random.choice(self.heroes)))
-        self.bot.cogs['Wordcount'].cmdcount('owrng')
+        await ctx.send("Play {}!".format(random.choice(self.heroes)))
+        await self.bot.cogs['Wordcount'].cmdcount('owrng')
 
     @commands.command()
-    async def owteam(self, num: int = 6):
+    async def owteam(self, ctx, num: int = 6):
         """ Get a random OW Team \nUsage: owteam [Optional: Teamsize]"""
         random.shuffle(self.heroes)
         result = self.heroes[:num]
-        await self.bot.say("Here's your teamcomp! Good luck!\n" +
-                           "{}".format(", ".join(result)))
-        self.bot.cogs['Wordcount'].cmdcount('owteam')
-
+        await ctx.send(
+            "Here's your teamcomp! Good luck!\n" +
+            "{}".format(", ".join(result))
+        )
+        await self.bot.cogs['Wordcount'].cmdcount('owteam')
 
 
 def setup(bot):

@@ -1,11 +1,12 @@
 
-# -*- coding: utf8 -*-
-import json
+import rapidjson
 
-import aiohttp
 from discord.ext import commands
-import redis
+
 import utility.discordembed as dmbd
+
+from utility.redis import redis_pool
+
 
 class PAD:
     def __init__(self, bot):
@@ -14,39 +15,39 @@ class PAD:
         # if r.status_code is not 200:
         #     print('/api/active_skills/ is down')
         # else:
-        #     self.active_skills = json.loads(r.text)
+        #     self.active_skills = rapidjson.loads(r.text)
         #
         # r = requests.get('https://www.padherder.com/api/evolutions/')
         # if r.status_code is not 200:
         #     print('/api/evolutions/ is down')
         # else:
-        #     self.evolutions = json.loads(r.text)
+        #     self.evolutions = rapidjson.loads(r.text)
         #
         # r = requests.get('https://www.padherder.com/api/food/')
         # if r.status_code is not 200:
         #     print('/api/food/ is down')
         # else:
-        #     self.monsterdb = json.loads(r.text)
+        #     self.monsterdb = rapidjson.loads(r.text)
 
     async def refresh(self):
-        if self.bot.redis_db.get('PADMonsters') is None:
+        if await self.bot.redis_pool.get('PADMonsters') is None:
             async with self.bot.session.get('https://www.padherder.com/api/monsters/') as r:
                 if r.status != 200:
-                    print('/api/monsters/ is down')
+                    self.bot.logger.warning('/api/monsters/ is down')
                     return False
-                self.bot.redis_db.set('PADMonsters', await r.read(), ex=43200)
-        if self.bot.redis_db.get('PADAwakening') is None:
+                await self.bot.redis_pool.set('PADMonsters', await r.read(), ex=43200)
+        if await self.bot.redis_pool.get('PADAwakening') is None:
             async with self.bot.session.get('https://www.padherder.com/api/awakenings/') as r:
                 if r.status != 200:
-                    print('/api/awakenings/ is down')
+                    self.bot.logger.warning('/api/awakenings/ is down')
                     return False
-                self.bot.redis_db.set('PADAwakening', await r.read(), ex=43200)
+                await self.bot.redis_pool.set('PADAwakening', await r.read(), ex=43200)
         return True
 
-    def getawaken(self, skills):
+    async def getawaken(self, skills):
         result = ""
-        awakenings = json.loads(self.bot.redis_db.get('PADAwakening').decode('utf-8'))
-        if skills == []:
+        awakenings = rapidjson.loads((await self.bot.redis_pool.get('PADAwakening')).decode('utf-8'))
+        if not skills:
             return 'None'
         for x in skills:
             result += awakenings[x+1]['name'] + "\n"
@@ -55,17 +56,17 @@ class PAD:
     @staticmethod
     def gettype(type1, type2=None, type3=None):
         types = [
-        "Evo Material", "Balanced", "Physical", "Healer", "Dragon", "God",
-        "Attacker", "Devil", "Machine", "", "", "", "", "", "Enhance Material"
+            "Evo Material", "Balanced", "Physical", "Healer", "Dragon", "God",
+            "Attacker", "Devil", "Machine", "", "", "", "", "", "Enhance Material"
         ]
-        if type2 == None:
+        if type2 is None:
             return types[type1]
-        elif type3 == None:
+        elif type3 is None:
             return "{0}/{1}".format(types[type1], types[type2])
         else:
             return "/".join([types[type1], types[type2], types[type3]])
 
-    def getlink(self, mon, author):
+    async def getlink(self, mon, author):
         title = mon['name']
         description = mon["name_jp"] + "\n" + "*" * mon["rarity"]
         url = 'http://puzzledragonx.com/en/monster.asp?n=' + str(mon['id'])
@@ -80,32 +81,32 @@ class PAD:
         em.add_field(name='Leader Skill', value=str(mon['leader_skill']))
         em.add_field(name='Active Skill', value=str(mon['active_skill']))
         em.add_field(name='MP Sell Price', value=mon['monster_points'])
-        em.add_field(name='Awakenings', value=self.getawaken(mon['awoken_skills']), inline=False)
+        em.add_field(name='Awakenings', value=await self.getawaken(mon['awoken_skills']), inline=False)
 
-        self.bot.cogs['Wordcount'].cmdcount('pad')
+        await self.bot.cogs['Wordcount'].cmdcount('pad')
         return em
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(no_pm=True)
     async def pad(self, ctx, *, arg: str):
         """ Searches a PAD monster"""
         sta = await self.refresh()
         if sta is False:
             return
-        monsters = json.loads(self.bot.redis_db.get('PADMonsters').decode('utf-8'))
-        author = ctx.message.author
+        monsters = rapidjson.loads((await redis_pool.get('PADMonsters')).decode('utf-8'))
+        author = ctx.author
         results = []
         try:
             arg = int(arg)
             if arg in range(1, monsters[-1]['id']+1):
                 for (n, x) in enumerate(monsters):
                     if arg == x['id']:
-                        await self.bot.say(embed=self.getlink(x, author))
+                        await ctx.send(embed=await self.getlink(x, author))
                         return
-            await self.bot.say("ID is not valid.")
+            await ctx.send("ID is not valid.")
             return
         except ValueError:
             if len(arg) < 4:
-                await self.bot.say('Please use more than 3 letters')
+                await ctx.send('Please use more than 3 letters')
                 return
             arg = arg.lower()
         # First check if str is too short...
@@ -117,30 +118,31 @@ class PAD:
             string = ''
             for (n, m) in enumerate(results):
                 if arg == m['name'].lower():
-                    await self.bot.say(embed=self.getlink(m, author))
+                    await ctx.send(embed=await self.getlink(m, author))
                     return
                 string += str(n) + ") " + str(m['name']) + '\n'
-            confused = await self.bot.say('Which one did you mean? Respond with number.\n' + string)
+            confused = await ctx.send('Which one did you mean? Respond with number.\n' + string)
+
             def check(msg):
                 if msg.content.isdigit():
-                    if int(msg.content) >= 0 and int(msg.content) < len(results):
-                        return True
-            determine = await self.bot.wait_for_message(
-                timeout=10,
-                author=ctx.message.author,
-                channel=ctx.message.channel,
-                check=check
+                    return (msg.author == ctx.author and msg.channel == ctx.channel
+                            and 0 <= int(msg.content) < len(results))
+
+            determine = await self.bot.wait_for(
+                'message',
+                check=check,
+                timeout=10
             )
 
-            await self.bot.delete_message(confused)
+            await confused.delete()
             if determine is None:
-                await self.bot.say('Didn\'t respond in time...')
+                await ctx.send('Didn\'t respond in time...')
             else:
-                await self.bot.say(embed=self.getlink(results[int(determine.content)], author))
+                await ctx.send(embed=await self.getlink(results[int(determine.content)], author))
         elif len(results) == 1:
-            await self.bot.say(embed=self.getlink(results[0], author))
+            await ctx.send(embed=await self.getlink(results[0], author))
         else:
-            await self.bot.say('No Monster Found')
+            await ctx.send('No Monster Found')
 
 
 def setup(bot):

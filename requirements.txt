@@ -1,7 +1,0 @@
-discord.py[voice]
-beautifulsoup4
-redis
-aiohttp
-psutil
-wikipedia
-requests

@@ -102,3 +102,10 @@ ENV/
 
 # PyCharm files
 /.idea
+
+# Config Files
+config/config.json
+lmfao.png
+
+/.vscode*
+Pipfile.lock

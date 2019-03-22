@@ -3,76 +3,77 @@ import asyncio
 import time
 import sys
 
-import aiohttp
 import discord
 from discord.ext import commands
+
 
 class Admin:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True, hidden=True)
+    async def __local_check(self, ctx):
+        try:
+            await ctx.bot.is_owner(ctx.author)
+            return True
+        except discord.ext.commands.errors.CheckFailure:
+
+            self.bot.logger.warning(ctx.author.name + ' tried to use an Admin command!')
+            return False
+
+    @commands.command(hidden=True)
+    async def refresh_config(self, ctx):
+        await self.bot.refresh_config()
+
+    @commands.command(hidden=True)
     async def test(self, ctx, *, code: str):
         """ Tests something :o """
-        if not self.bot.checkdev(ctx.message.author.id):
-            return
         if code.startswith("```Python\n"):
             code = code[10:-3]
             start_time = time.time()
             try:
                 exec(code)
-                await self.bot.say("```Code Executed```")
+                await ctx.send("```Code Executed```")
             except (TypeError, SyntaxError):
-                await self.bot.say("```\n" + sys.exc_info() + "```")
-                print("Syntax Error")
+                await ctx.send(f"```\n{sys.exc_info()}```")
+                self.bot.logger.warning("Syntax Error")
             total_time = time.time() - start_time
-            await self.bot.say("This took *" + str(total_time) + "* seconds")
+            await ctx.send("This took *" + str(total_time) + "* seconds")
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     async def kys(self, ctx):
         """ Bot kills itself """
-        if not self.bot.checkdev(ctx.message.author.id):
-            return
-        await self.bot.say("*Bot is kill in 3 seconds...*")
+        await ctx.send("Bot is *kill*")
         await asyncio.sleep(3)
         await self.bot.close()
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     async def status(self, ctx, *, s: str):
-        """ Changes Status """
-        if not self.bot.checkdev(ctx.message.author.id):
-            return
         await self.bot.change_presence(game=discord.Game(name=s))
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     async def changeavatar(self, ctx, *, url: str):
         """ Changes the Avatar"""
-        if not self.bot.checkdev(ctx.message.author.id):
-            return
+        async with self.bot.session.get(url) as r:
+            if r.status == 200:
+                try:
+                    await self.bot.user.edit(avatar=await r.read())
+                except discord.HTTPException:
+                    await ctx.send("Editing the profile failed.")
+                except discord.InvalidArgument:
+                    await ctx.send("Wrong image format was passed.")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as r:
-                if r.status == 200:
-                    try:
-                        await self.bot.edit_profile(avatar=await r.read())
-                    except discord.HTTPException:
-                        await self.bot.say("Editing the profile failed.")
-                    except discord.InvalidArgument:
-                        await self.bot.say("Wrong image format was passed.")
-
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     async def changeusername(self, ctx, *, s: str):
         """ Changes the Username """
-        if self.bot.checkdev(ctx.message.author.id):
-            await self.bot.edit_profile(username=s)
+        await self.bot.user.edit(username=s)
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     async def serverlist(self, ctx):
-        if self.bot.checkdev(ctx.message.author.id):
-            result = []
-            for x in self.bot.servers:
-                result.append(x.name)
-            await self.bot.say("\n".join(result))
+        result = []
+        for x in self.bot.guilds:
+            result.append(x.name)
+        await ctx.send("\n".join(result))
+
 
 def setup(bot):
     """Setup admin.py"""

@@ -1,19 +1,20 @@
 
 import random
-import time
 
+import discord
+import rapidjson
 from discord.ext import commands
-import redis
+
 import utility.discordembed as dmbd
+from utility.koyomiuser import KoyomiUser
 
 
 class Profile:
 
     def __init__(self, bot):
         self.bot = bot
-        self.EXP_CURVE = 1 / 1.5
-        self.EXP_BOOST = 1
-        self.profile_db = redis.StrictRedis(db=1)
+        self.users = {}  # userid: KoyomiUser
+        self.XP_RATE = 1
         """ So in this section, there's going to be some way of having "points"
         and therefore leveling up after reaching x number of points.
 
@@ -34,36 +35,18 @@ class Profile:
         Expected Value of highstake (33%) will be 0.495x exp..
 
         """
-    def newuser(self, author, xp, timestamp=0):
-        if author.bot:
-            return
-        self.profile_db.lpush(author.id, author.name + "#" + author.discriminator)
-        self.profile_db.lpush(author.id, xp)
-        self.profile_db.lpush(author.id, timestamp)
-
-    def addpoints(self, author, xp, cooldown=0):
-        xp = xp * self.EXP_BOOST
-        if self.profile_db.exists(author.id):
-            timestamp = self.profile_db.lindex(author.id, 0).decode('utf-8')
-            xp += int(self.profile_db.lindex(author.id, 1).decode('utf-8'))
-            if int(time.time()) - int(timestamp) > cooldown:
-
-                self.profile_db.lset(author.id, 0, timestamp)
-                self.profile_db.lset(author.id, 1, xp)
-        else:
-            self.newuser(author, xp, int(time.time()))
 
     @staticmethod
     def getuser(ctx, name=None):
         if name is None:
-            return ctx.message.author
+            return ctx.author
         if ctx.message.mentions:
             user = ctx.message.mentions[0]
         else:
-            user = ctx.message.server.get_member_named(name)
+            user = ctx.guild.get_member_named(name)
         if not user:
             name = name.lower()
-            for x in ctx.message.server.members:
+            for x in ctx.guild.members:
                 if x.name.lower() == name:
                     return user
                 elif x.nick:
@@ -71,26 +54,30 @@ class Profile:
                         return user
         return user
 
-    def getlevel(self, authorid):
-        if self.profile_db.exists(authorid):
-            xp = int(self.profile_db.lindex(authorid, 1).decode('utf-8'))
-            total = ((xp/100)**self.EXP_CURVE) + 1
-            lvl = int(total)
-            percent = total - lvl
-            return lvl, percent
+    async def get_koyomi_user(self, user):
+        if user.id in self.users:
+            koyomi_user = self.users[user.id]
         else:
-            return 1, 0
+            koyomi_user = KoyomiUser(user, self.bot.loop)
+            await koyomi_user.initialize_user()
+            self.users[user.id] = koyomi_user
+        return koyomi_user
 
     async def on_message(self, msg):
         if msg.author.bot:
             return
-        if msg.server is None:
+        if msg.guild is None:
             return
-        if msg.server.id == 264445053596991498 or msg.server.id == 110373943822540800:
+        if msg.guild.id == 264445053596991498 or msg.guild.id == 110373943822540800:
             return
-        self.addpoints(msg.author, random.randint(5, 20), 180)
 
-    @commands.command(pass_context=True)
+        user = await self.get_koyomi_user(msg.author)
+
+        if await user.check_cooldown('msg_cd', 150):
+            await user.set_xp(await user.get_xp() + random.randint(5, 20))
+            await user.set_cooldown('msg_cd')
+
+    @commands.command()
     async def avatar(self, ctx, *, name: str=None):
         """ Grabbing an avatar of a person """
 
@@ -98,31 +85,190 @@ class Profile:
 
         if not user:
             return
-        author = ctx.message.author
+        author = ctx.author
         em = dmbd.newembed(author, u=user.avatar_url)
         em.set_image(url=user.avatar_url)
         em.add_field(name=user.name + '#' + user.discriminator + '\'s Avatar', value="Sugoi :D")
 
-        if author != user:
-            self.addpoints(user, random.randint(1, 5))
+        if author != user or not user.bot:
+            koyomiuser = await self.get_koyomi_user(user)
+            await koyomiuser.set_xp(await koyomiuser.get_xp + random.randint(1, 5))
 
-        await self.bot.say(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('avatar')
+        await ctx.send(embed=em)
+        await self.bot.cogs['Wordcount'].cmdcount('avatar')
 
-    @commands.command(pass_context=True)
+    @commands.command()
+    async def badge(self, ctx, *, arg):
+        # TODO
+        if arg is None:
+            """ print list of owned badges"""
+            pass
+        else:
+            """ Set badge to arg """
+            pass
+
+    @commands.command()
+    async def description(self, ctx, *, desc=None):
+        """Either display the description, or give a description for your profile."""
+
+        koyomiuser = await self.get_koyomi_user(ctx.author)
+        if desc is None:
+            await ctx.send(koyomiuser.description)
+        else:
+            if len(desc) > 25:
+                await ctx.send('Description is too long.')
+            else:
+                await koyomiuser.set_description(desc)
+                await ctx.message.add_reaction('✅')
+                await self.bot.cogs['Wordcount'].cmdcount('description')
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def sudogive(self, ctx, *, args):
+        try:
+            args = args.split(' ', 1)
+            coins = int(args[0])
+            name = args[1]
+            user = self.getuser(ctx, name)
+            if not user or user.bot:
+                return
+            recipient_koyomi_user = await self.get_koyomi_user(user)
+
+            await recipient_koyomi_user.set_coins(await recipient_koyomi_user.get_coins() + coins)
+            await ctx.send('{0} sudogave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
+        except (ValueError, IndexError):
+            await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
+
+    @sudogive.error
+    async def on_not_owner_error(self, ctx, error):
+        if type(error) == commands.NotOwner:
+            self.bot.logger.warning('{} tried to use sudogive.. But failed :DD'.format(ctx.author))
+
+    @commands.command()
+    async def give(self, ctx, *, args):
+        """ Give another user Aragis """
+        try:
+            args = args.split(' ', 1)
+            coins = int(args[0])
+            name = args[1]
+        except IndexError:
+            await ctx.send('Wrong Syntax. {}give [coins] [user]'.format(self.bot.command_prefix))
+            return
+
+        user = self.getuser(ctx, name)
+        if not user or user == ctx.author or user.bot:
+            return
+        sender_koyomi_user = await self.get_koyomi_user(ctx.author)
+        recipient_koyomi_user = await self.get_koyomi_user(user)
+
+        if coins <= 0 or await sender_koyomi_user.get_coins() < coins:
+            await ctx.send('Not Enough Aragis')
+            return
+
+        await sender_koyomi_user.give_coins(coins, recipient_koyomi_user)
+        await ctx.send('{0} gave {1} Aragis to {2}'.format(ctx.author.mention, coins, user.mention))
+        await self.bot.cogs['Wordcount'].cmdcount('give')
+
+    @commands.command()
     async def profile(self, ctx, *,  name: str=None):
         """ Display Profile :o """
 
         user = self.getuser(ctx, name)
         if not user:
             return
-        author = ctx.message.author
-        em = dmbd.newembed(author, user.name + '#' + user.discriminator, u=user.avatar_url)
+
+        author = ctx.author
+        userfull = user.name + '#' + user.discriminator
+        em = dmbd.newembed(author, userfull, u=user.avatar_url)
         em.set_image(url=user.avatar_url)
-        lvl, percent = self.getlevel(user.id)
-        em.add_field(name="Lv. " + str(lvl), value=str(int(percent * 100)) + "%")
-        await self.bot.say(embed=em)
-        self.bot.cogs['Wordcount'].cmdcount('profile')
+
+        em.add_field(name='Username', value=userfull)
+        em.add_field(name='UserID', value=user.id)
+        if user.bot:
+            em.add_field(name='Im a', value='bot keke')
+            await ctx.send(embed=em)
+            await self.bot.cogs['Wordcount'].cmdcount('profile')
+            return
+
+        koyomi_user = await self.get_koyomi_user(user)
+        percent = await koyomi_user.get_percent()
+
+        em.add_field(name="Lv. " + str(await koyomi_user.get_level()), value='{}%'.format(percent))
+        em.add_field(name="Bank", value='{} Aragis'.format(await koyomi_user.get_coins()))
+        em.add_field(name="Pokes Given", value=await koyomi_user.get_pokes_given())
+        em.add_field(name="Pokes Received", value=await koyomi_user.get_pokes_received())
+        await ctx.send(embed=em)
+        await self.bot.cogs['Wordcount'].cmdcount('profile')
+
+    @commands.command()
+    async def poke(self, ctx, *, name: str=None):
+        """ Poke your friend. You get XP, They get money! """
+        user = self.getuser(ctx, name)
+        if not user or user == ctx.author or user.bot:
+            return
+        to_koyomi_user = await self.get_koyomi_user(user)
+        koyomi_user = await self.get_koyomi_user(ctx.author)
+        if await koyomi_user.poke(to_koyomi_user):
+            await ctx.send('{} poked {}!'.format(ctx.author.mention, user.mention))
+            await self.bot.cogs['Wordcount'].cmdcount('poke')
+        else:
+            await ctx.send(
+                'You already used your poke! ({} seconds cooldown)'.format(
+                    3600 - await koyomi_user.remaining_cooldown('poke_cd')))
+
+    @commands.command()
+    async def waifu(self, ctx, *, arg=None):
+        """ Set your waifu lol..."""
+
+        koyomiuser = await self.get_koyomi_user(ctx.author)
+        if arg is None:
+            try:
+                await ctx.send(koyomiuser.waifu)
+            except AttributeError:
+                await koyomiuser.set_waifu('None')
+        else:
+            if len(arg) > 18:
+                await ctx.send('Waifu\'s name is too long.')
+            else:
+                await koyomiuser.set_waifu(arg)
+                await ctx.message.add_reaction('✅')
+
+                await self.bot.cogs['Wordcount'].cmdcount('waifu')
+
+    @commands.command(hidden=True)
+    async def testprofile(self, ctx, *, name: str=None):
+
+        user = self.getuser(ctx, name)
+        if not user:
+            return
+        koyomi_user = await self.get_koyomi_user(user)
+        async with self.bot.session.get(user.avatar_url) as r:
+            if r.status != 200:
+                return
+            user_avatar = await r.read()
+            final = await koyomi_user.get_profile(user_avatar, user)
+
+        picture = discord.File(final, filename=user.name + '.png')
+        await ctx.send(file=picture)
+
+    @commands.command()
+    async def assumemygender(self, ctx, name=None):
+        """ Usage: assumemygender [name]"""
+        if name is None:
+            name = ctx.author.name
+        url = 'https://api.genderize.io/?name=' + name
+        async with self.bot.session.get(url) as r:
+            if r.status != 200:
+                self.bot.logger.warning('genderize.io failed response')
+                return
+            response = await r.json(loads=rapidjson.loads)
+            if response['gender'] is None:
+                await ctx.send("I can't assume that name's gender. :thinking:")
+                return
+        gender = response['gender']
+        probability = response['probability'] * 100
+
+        await ctx.send('I am {}% sure that {} is a {}.'.format(probability, name, gender))
 
 
 def setup(bot):

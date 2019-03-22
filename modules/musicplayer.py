@@ -1,94 +1,92 @@
 
 import asyncio
+import logging
+
 import discord
 from discord.ext import commands
+import youtube_dl
+
 from utility import discordembed as dmbd
 
 
 class VoiceEntry:
-    def __init__(self, message, player):
+    def __init__(self, message, sauce, info, volume):
         self.requester = message.author
         self.channel = message.channel
-        self.player = player
+        self.sauce = sauce
+        self.volume = volume
+
+        # save memory and use only a portion of the info.
+        self.info = {
+            'duration': info['duration'],
+            'uploader': info['uploader'],
+            'title': info['title'],
+            'url': info['url'],
+            'id': info['id'],
+        }
 
     def __str__(self):
-        fmt = '**{0.title}** uploaded by {0.uploader} and requested by {1.display_name}'
-        duration = self.player.duration
+        fmt = '**{0}** uploaded by {1} and requested by {2}'
+        duration = self.info['duration']
         if duration:
             fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(duration, 60))
-        return fmt.format(self.player, self.requester)
+        return fmt.format(self.info['title'], self.info['uploader'], self.requester)
 
-    def getembed(self, title):
-        desc = str(self) + "\nVolume: {}%".format(int(self.player.volume * 100))
-        if 'https://' in self.player.url:
-            info_dict = self.player.yt.extract_info(self.player.url, download=False)
-            video_id = info_dict.get("id", None)
-            em = dmbd.newembed(self.requester, title, desc, self.player.url)
-            em.set_image(url='https://img.youtube.com/vi/' + video_id + '/maxresdefault.jpg')
+    def get_embed(self, title):
+        desc = str(self) + "\nVolume: {}%".format(int(self.volume * 200))
+        if 'https://' in self.info['url']:
+            em = dmbd.newembed(title, None, desc, self.info['url'])
+            em.set_image(url='https://img.youtube.com/vi/' + self.info['id'] + '/maxresdefault.jpg')
         else:
-            em = dmbd.newembed(self.requester, title, desc)
+            em = dmbd.newembed(title, None, desc)
 
         return em
 
+
 class VoiceState:
     def __init__(self, bot):
-        self.current = None
-        self.current_msg = None
-        self.voice = None
+        self.current = None  # Current Voice Entry
+        self.message = None  # Current Message used.
+        self.voice = None    # Current Voice_Client Used
         self.bot = bot
         self.play_next_song = asyncio.Event()
         self.songs = asyncio.Queue()
-        self.skip_votes = set()  # a set of user_ids that voted
+        self.skip_votes = set()
         self.audio_player = self.bot.loop.create_task(self.audio_player_task())
-
-    def is_playing(self):
-        if self.voice is None or self.current is None:
-            return False
-
-        player = self.current.player
-        return not player.is_done()
-
-    @property
-    def player(self):
-        return self.current.player
 
     def skip(self):
         self.skip_votes.clear()
-        if self.is_playing():
-            self.player.stop()
+        if self.voice.is_playing():
+            self.voice.stop()
 
-    def toggle_next(self):
+    def toggle_next(self, error):
+        logging.error(error)
         self.bot.loop.call_soon_threadsafe(self.play_next_song.set)
-
 
     async def audio_player_task(self):
         while True:
             self.play_next_song.clear()
             self.current = await self.songs.get()
-            self.current_msg = await self.bot.send_message(self.current.channel, embed=self.current.getembed('Now Playing '))
-            self.current.player.start()
+            self.message = await self.current.channel.send(embed=self.current.get_embed('Now Playing '))
+            self.voice.play(self.current.sauce, after=self.toggle_next)
             await self.play_next_song.wait()
 
 
 class Music:
-    """Voice related commands.
-    Works in multiple servers at once.
-    """
     def __init__(self, bot):
         self.bot = bot
         self.voice_states = {}
 
-    def get_voice_state(self, server):
-        state = self.voice_states.get(server.id)
+    def get_voice_state(self, guild):
+        state = self.voice_states.get(guild.id)
         if state is None:
             state = VoiceState(self.bot)
-            self.voice_states[server.id] = state
-
+            self.voice_states[guild.id] = state
         return state
 
     async def create_voice_client(self, channel):
-        voice = await self.bot.join_voice_channel(channel)
-        state = self.get_voice_state(channel.server)
+        voice = await channel.connect()
+        state = self.get_voice_state(channel.guild)
         state.voice = voice
 
     def __unload(self):
@@ -97,197 +95,160 @@ class Music:
                 state.audio_player.cancel()
                 if state.voice:
                     self.bot.loop.create_task(state.voice.disconnect())
-            except:
-                pass
+            except Exception as e:
+                logging.error(f"Exception raised: {e}")
 
-    async def refreshplayer(self, server, msg='Currently Playing'):
-        state = self.get_voice_state(server)
+    async def refreshplayer(self, guild, msg='Currently Playing', last=False):
+        state = self.get_voice_state(guild)
         if state.current is None:
             return
-        temp = await self.bot.send_message(state.current_msg.channel, embed=state.current.getembed(msg))
-        await self.bot.delete_message(state.current_msg)
-        state.current_msg = temp
 
-    async def delayed_delete(self, msg, time=10):
-        await asyncio.sleep(time)
-        await self.bot.delete_message(msg)
+        if state.message:
+            await state.message.delete()
+        state.message = await state.message.channel.send(embed=state.current.get_embed(msg))
+        if last:
+            state.message = None
 
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def join(self, ctx, *, channel: discord.Channel):
+    @commands.command()
+    async def join(self, ctx, *, channel: discord.VoiceChannel=None):
         """Joins a voice channel."""
+        if ctx.author.voice is None:
+            await ctx.send('You are not in a voice channel!')
+            return False
+        elif channel is None:
+            channel = ctx.author.voice.channel
         try:
             await self.create_voice_client(channel)
-        except discord.InvalidArgument:
-            x = await self.bot.say('```This is not a voice channel...```')
         except discord.ClientException:
-            x = await self.bot.say('```Already in a voice channel...```')
+            await self.get_voice_state(ctx.guild).voice.move_to(channel)
         else:
-            x = await self.bot.say('```Ready to play audio in ' + channel.name + '```')
-        self.bot.cogs['Wordcount'].cmdcount('join')
+            await ctx.send('Yay! I\'m in your channel ' + channel.name + ' ready to play anything and everything!')
+            return True
 
-    @commands.command(pass_context=True, no_pm=True)
-    async def summon(self, ctx):
-        """Summons the bot to join your voice channel."""
-        summoned_channel = ctx.message.author.voice_channel
-        if summoned_channel is None:
-            x = await self.bot.say('```You are not in a voice channel.```')
-            return False
-
-        state = self.get_voice_state(ctx.message.server)
-        if state.voice is None:
-            state.voice = await self.bot.join_voice_channel(summoned_channel)
-        else:
-            await state.voice.move_to(summoned_channel)
-
-        self.bot.cogs['Wordcount'].cmdcount('summon')
-        return True
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def play(self, ctx, *, song : str):
-        """Plays a song.
-        If there is a song currently in the queue, then it is
-        queued until the next song is done playing.
-        This command automatically searches as well from YouTube.
-        The list of supported sites can be found here:
-        https://rg3.github.io/youtube-dl/supportedsites.html
-        """
-        state = self.get_voice_state(ctx.message.server)
-        opts = {
-            'default-search': 'ytsearch',
-            'quiet': True,
-            'noplaylist': True,
-            'forceurl': True
-        }
-
-        if state.voice is None:
-            success = await ctx.invoke(self.summon)
+    @commands.command()
+    async def play(self, ctx, *, song: str):
+        state = self.get_voice_state(ctx.guild)
+        if not state.voice:
+            success = await ctx.invoke(self.join)
             if not success:
                 return
+        opts = {
+            'format': 'bestaudio/best',
+            'default-search': 'auto',
+            'quiet': True,
+            'noplaylist': True,
+            'forceurl': True,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        }
 
-        try:
-            player = await state.voice.create_ytdl_player(song, ytdl_options=opts, after=state.toggle_next)
-        except Exception as e:
-            fmt = 'An error occurred while processing this request: ```py\n{}: {}\n```'
-            await self.bot.send_message(ctx.message.channel, fmt.format(type(e).__name__, e))
-        else:
-            player.volume = 0.25
-            entry = VoiceEntry(ctx.message, player)
-            await self.bot.say('Enqueued ' + str(entry) + '')
-            await state.songs.put(entry)
-            await self.refreshplayer(ctx.message.server)
-            await self.bot.delete_message(ctx.message)
+        with youtube_dl.YoutubeDL(opts) as ydl:
+            song_info = ydl.extract_info(song, download=False)
+        bitrate = 0
+        url = ''
+        codec = ''
+        for x in song_info['formats']:
+            abr = x.get('abr', 0)
+            if 192 >= abr > bitrate:
+                url = x['url']
+                bitrate = abr
+                codec = x['acodec']
 
+        logging.info(url)
+        logging.info((codec, bitrate))
+        if not url:
+            logging.error(f'Could not find a suitable audio for {song}')
+            return
 
-        self.bot.cogs['Wordcount'].cmdcount('play')
+        sauce = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(url), volume=0.25)
+        logging.info(f'Hold on one moment... Processing this song request request. {bitrate}, {url}')
+        entry = VoiceEntry(ctx.message, sauce, song_info, 0.25)
+        await ctx.send('Enqueued ' + str(entry))
+        await state.songs.put(entry)
+        await self.refreshplayer(ctx.guild)
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command()
     async def volume(self, ctx, value: int):
-        """Sets the volume of the currently playing song."""
+        state = self.get_voice_state(ctx.guild)
+        if 0 < value <= 100 and state.voice.is_playing():
+            state.voice.source.volume = value / 200
+            state.current.volume = value / 200
+            await self.refreshplayer(ctx.guild, 'Set volume to {:.0%} by {req}'.format(value / 100, req=ctx.author))
 
-        state = self.get_voice_state(ctx.message.server)
-        if state.is_playing():
-            if value > 200 or value < 1:
-                await self.refreshplayer(ctx.message.server, 'Value too high! 1 - 200 only!')
-            else:
-                player = state.player
-                player.volume = value / 100
-                await self.refreshplayer(ctx.message.server, 'Set the volume to {:.0%}'.format(player.volume))
-        await self.bot.delete_message(ctx.message)
-        self.bot.cogs['Wordcount'].cmdcount('volume')
-
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command()
     async def pause(self, ctx):
-        """Pauses the currently played song."""
-        state = self.get_voice_state(ctx.message.server)
-        if state.is_playing():
-            player = state.player
-            player.pause()
-            await self.refreshplayer(ctx.message.server, 'Paused')
-        await self.bot.delete_message(ctx.message)
+        """ Pauses the current song."""
+        state = self.get_voice_state(ctx.guild)
+        if state.voice.is_playing():
+            state.voice.pause()
+            await self.refreshplayer(ctx.guild, 'Song has been paused by ' + str(ctx.author))
 
-        self.bot.cogs['Wordcount'].cmdcount('pause')
-
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command()
     async def resume(self, ctx):
-        """Resumes the currently played song."""
-        state = self.get_voice_state(ctx.message.server)
-        if state.is_playing():
-            player = state.player
-            player.resume()
-            await self.refreshplayer(ctx.message.server, 'Resumed')
-        await self.bot.delete_message(ctx.message)
-        self.bot.cogs['Wordcount'].cmdcount('resume')
+        state = self.get_voice_state(ctx.guild)
+        if state.voice.is_paused():
+            state.voice.resume()
+            await self.refreshplayer(ctx.guild, 'Song has been resumed by ' + str(ctx.author))
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(aliases=['leave'])
     async def stop(self, ctx):
-        """Stops playing audio and leaves the voice channel.
-        This also clears the queue. Permissions System will come soon.
-        """
-        server = ctx.message.server
-        state = self.get_voice_state(server)
-
-        if state.is_playing():
-            _ = await self.refreshplayer(ctx.message.server, 'Session ended')
-            player = state.player
-            player.stop()
+        state = self.get_voice_state(ctx.guild)
+        if state.voice.is_playing:
+            _ = await self.refreshplayer(ctx.guild, 'Session ended', last=True)
+            state.voice.stop()
 
         try:
             state.audio_player.cancel()
-            del self.voice_states[server.id]
+            del self.voice_states[ctx.guild.id]
             await state.voice.disconnect()
-        except:
+        except Exception:
             pass
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command()
+    async def playing(self, ctx):
+
+        state = self.get_voice_state(ctx.guild)
+        if state.current is None:
+            await ctx.send('No song is playing')
+        else:
+            skip_count = len(state.skip_votes)
+            msg = 'Now playing [skips: {}/3]'.format(skip_count)
+            await self.refreshplayer(ctx.guild, msg)
+            await ctx.message.delete()
+
+    @commands.command(no_pm=True)
     async def skip(self, ctx):
         """Vote to skip a song. The song requester can automatically skip.
         3 skip votes are needed for the song to be skipped.
         """
-        server = ctx.message.server
-        state = self.get_voice_state(server)
-        if not state.is_playing():
-            await self.bot.say('```Not playing any music right now...```')
+        guild = ctx.guild
+        state = self.get_voice_state(guild)
+        if not state.voice.is_playing():
             return
 
-        voter = ctx.message.author
+        voter = ctx.author
         if voter == state.current.requester:
             await self.refreshplayer(
-                server,
+                guild,
                 'Requester {' + state.current.requester.name +
                 '#' + state.current.requester.discriminator +
-                ' requested skipping song...'
+                ' skipped the following song...'
             )
             state.skip()
         elif voter.id not in state.skip_votes:
             state.skip_votes.add(voter.id)
             total_votes = len(state.skip_votes)
             if total_votes >= 3:
-                await self.refreshplayer(server, 'Skip vote passed, skipping song...')
+                await self.refreshplayer(guild, 'Skip vote passed, skipping song...')
                 state.skip()
             else:
-                await self.refreshplayer(server, 'Skip vote added, currently at [{}/3]'.format(total_votes))
+                await self.refreshplayer(guild, 'Skip vote added, currently at [{}/3]'.format(total_votes))
         else:
-            await self.bot.say('```You have already voted to skip this song.```')
+            await ctx.send('You have already voted to skip this song.')
 
-        await self.bot.delete_message(ctx.message)
-
-        self.bot.cogs['Wordcount'].cmdcount('skip')
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def playing(self, ctx):
-        """Shows info about the currently played song."""
-
-        state = self.get_voice_state(ctx.message.server)
-        if state.current is None:
-            await self.bot.say('No songs are playing!')
-        else:
-            skip_count = len(state.skip_votes)
-            msg = 'Now playing [skips: {}/3]'.format(skip_count)
-            await self.refreshplayer(ctx.message.server, msg)
-            await self.bot.delete_message(ctx.message)
-
-        self.bot.cogs['Wordcount'].cmdcount('playing')
 
 def setup(bot):
     bot.add_cog(Music(bot))

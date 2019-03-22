@@ -1,5 +1,4 @@
 
-# -*- coding: utf8 -*-
 import codecs
 from datetime import datetime
 import os
@@ -11,47 +10,56 @@ class Log:
     def __init__(self, bot):
         self.bot = bot
 
-    @staticmethod
-    def output(a, sysout=True):
-        """ Output the string 'a' """
-        a = a.encode('utf-8', 'replace').decode('utf-8', 'ignore')
-        p = a.encode('utf-8', 'replace').decode('ascii', 'ignore')
-        today = datetime.today()
-        filename = "log-{0}-{1}-{2}.log".format(str(today.month), str(today.day), str(today.year))
-        prefix = "[{0}:{1}:{2}]: ".format(str(today.hour), str(today.minute), str(today.second))
-        if sysout:
-            print(prefix + p)
-        if not os.path.exists('./logs'):
-            os.makedirs('./logs')
-        with codecs.open('./logs/' + filename, 'a', encoding='utf8') as f:
-            # OH YEAH AND DON'T USE NOTEPAD... USE A BETTER ONE LIKE NOTEPAD++
-            f.write(prefix + a + "\n")
-            f.close()
-
     # All them event overrides....
     async def on_message(self, msg):
-        if msg.content.startswith(self.bot.command_prefix):
-            cmdused = msg.author.name + " attempted to use the command: " + msg.content
-            self.output(cmdused)
-            modlog = find(lambda c: c.name == "modlog", msg.server.channels)
-            if modlog == None:
-                return
-            await self.bot.send_message(modlog, cmdused)
+        if await self.bot.check_blacklist(msg):
+            cmd_used = (
+                f"{msg.author.name}/{msg.author.id} used command in"
+                f"{msg.guild.name}/{msg.guild.id}: {msg.content}"
+            )
+            self.bot.logger.info(cmd_used)
+            if msg.guild:
+                mod_log = find(lambda c: c.name == "modlog", msg.guild.channels)
+                if mod_log is None:
+                    return
+                await mod_log.send(cmd_used)
 
     async def on_member_join(self, member):
-        self.output(member.name + " has joined the server at " + member.server.name, False)
+        if member.guild.id in [264445053596991498, 110373943822540800]:
+            # Hardcoding ignores for two discord bot servers.
+            # TODO: Needs a json list of servers to ignore.
+            return
+        try:
+            self.bot.logger.info(
+                f"{member.name}/{member.id} has joined the guild at {member.guild.name}/{member.guild.id}")
+        except UnicodeEncodeError:
+            self.bot.logger.info(
+                f"{member.name.encode('ascii', 'ignore').decode('ascii', 'ignore')} <@{member.id}>"
+                " has joined the guild at "
+                f"{member.guild.name.encode('ascii', 'ignore').decode('ascii', 'ignore')}/{member.guild.id}"
+
+            )
 
     async def on_member_remove(self, member):
-        self.output(member.name + " has left the server at " + member.server.name, False)
+        if member.guild.id in [264445053596991498, 110373943822540800]:
+            # Hardcoding ignores for two discord bot servers.
+            return
+        self.bot.logger.info(
+            f"{member.name.encode('utf-8', 'ignore').decode('utf-8', 'ignore')} <@{member.id}>"
+            " has left the guild at "
+            f"{member.guild.name.encode('utf-8', 'ignore').decode('utf-8', 'ignore')}/{member.guild.id}"
+        )
 
     async def on_message_delete(self, msg):
         if msg.author == self.bot.user:
             return
         result = '{0} deleted the following message: \n{1}'.format(msg.author.name, msg.content)
-        modlog = find(lambda c: c.name == "modlog", msg.server.channels)
-        if modlog is None:
-            return
-        await self.bot.send_message(modlog, result)
+
+        if msg.guild:
+            mod_log = find(lambda c: c.name == "modlog", msg.guild.channels)
+            if mod_log is None:
+                return
+            await mod_log.send(result)
 
     async def on_message_edit(self, before, after):
         if before.author == self.bot.user:
@@ -63,10 +71,12 @@ class Log:
             before.content,
             after.content
         )
-        modlog = find(lambda c: c.name == "modlog", before.server.channels)
-        if modlog is None:
-            return
-        await self.bot.send_message(modlog, msg)
+        if before.guild:
+            mod_log = find(lambda c: c.name == "modlog", before.guild.channels)
+            if mod_log is None:
+                return
+            await mod_log.send(msg)
+
 
 def setup(bot):
     """Setup Log.py"""

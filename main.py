@@ -1,40 +1,32 @@
 
-# Built-in Python Imports
+import logging
 import random
 import os
 
-# Required for disocrd.py
+from logging.handlers import TimedRotatingFileHandler
+
 import aiohttp
+import aiofiles
 import discord
+import rapidjson
+
 from discord.ext import commands
+from utility.redis import redis_pool, initialize_redis_pool
 
-# Databases
-import redis
-
-debug = False
-
-redis_db = redis.StrictRedis()
-essential_keys = {
-    'DiscordToken',
-}
-
-nonessential_keys = {
-    'Prefix',
-    'GoogleMapsAPI',
-    'DarkSkyAPI',
-    'CleverbotAPI',
-    'AnilistID',
-    'AnilistSecret',
-    'OsuAPI'
-}
 
 modules = {
     'modules.admin',
     'modules.anime',
     'modules.animehangman',
+    'modules.blackjack',
+    'modules.cleverbot',
     'modules.comics',
+    'modules.forex',
+    'modules.image',
     'modules.info',
+    'modules.interactions',
     'modules.log',
+    'modules.mail',
     'modules.musicplayer',
     'modules.osu',
     'modules.overwatch',
@@ -42,120 +34,182 @@ modules = {
     'modules.profile',
     'modules.random',
     'modules.search',
+    'modules.slots',
     'modules.tags',
+    'modules.todo',
     'modules.weather',
-    'modules.wordcount'
-
+    'modules.wordcount',
 }
-prefix = ''
-if debug:
-    prefix = '>>'
-else:
-    prefix = redis_db.get('Prefix')
-    if prefix is None:
-        prefix = '>'
-    else:
-        prefix = prefix.decode('utf-8')
 
-description = "Huge rewrite for Rin Bot. No Bullshit. Just fun stuff."
-bot = commands.Bot(command_prefix=prefix, description=description, pm_help=True)
-bot.redis_db = redis_db
-def checkkeys():
-    """ Returns 1 if all keys are satisfied
-        Returns 2 if Essential Keys are not given
-        Returns 0 if Essential Keys are given, but some keys are missing."""
-    # TODO: Host, port should be configurable.
-    print("Checking if Discord API Key Exists...")
-
-    for x in essential_keys:
-        if redis_db.get(x) is None:
-            return 2
-
-    for x in nonessential_keys:
-        if redis_db.get(x) is None:
-            return 0
-
-    return 1
-
-def changekeys():
-    print("Just press enter if you would like to keep that setting as is. ")
-
-    for x in essential_keys:
-        apikey = input(x + ": ")
-        if not apikey == "":
-            redis_db.set(x, str(apikey))
-
-    for x in nonessential_keys:
-        apikey = input(x + ": ")
-        if not apikey == "":
-            redis_db.set(x, str(apikey))
-
-@bot.event
-async def on_message(msg):
-    if msg.content.startswith(prefix + "guess"):
-        return
-    if msg.author.bot:
-        return
-    #if not checks.checkdev(message) and checks.checkignorelist(message, ignore):
-    #    return
-
-    # if message.content.startswith(bot.user.mention):
-    #     await bot.send_typing(message.channel)
-    #     try:
-    #         response = cw.say(message.content.split(' ', 1)[1])
-    #         await bot.send_message(message.channel,
-    #                                message.author.mention + ' ' + response)
-    #     except IndexError:
-    #         await bot.send_message(message.channel,
-    #                                message.author.mention + ' Don\'t give me '
-    #                                'the silent treatment.')
-    #     return
-    await bot.process_commands(msg)
+example_config = {
+    'DiscordToken': '',
+    'Prefix': '',
+    'GoogleMapsAPI': '',
+    'DarkSkyAPI': '',
+    'CleverbotAPI': '',
+    'AnilistID': '',
+    'AnilistSecret': '',
+    'OsuAPI': '',
+    'DiscordPW': '',
+    'DiscordBots': '',
+}
 
 
-@bot.event
-async def on_ready():
-    bot.session = aiohttp.ClientSession(loop=bot.loop)
-    bot.checkdev = lambda x: x == "82221891191844864"
-    bot.cogs['Log'].output('Logged in as')
-    bot.cogs['Log'].output("Username " + bot.user.name)
-    bot.cogs['Log'].output("ID: " + bot.user.id)
-    url = (
-        "https://discordapp.com/api/oauth2/authorize?client_id=" +
-        bot.user.id +
-        "&scope=bot&permissions=0"
-    )
-    bot.cogs['Log'].output("Invite Link: " + url)
-    try:
-        if not discord.opus.is_loaded() and os.name == 'nt':
-            discord.opus.load_opus("libopus0.x64.dll")
+class MyClient(commands.AutoShardedBot):
 
-        if not discord.opus.is_loaded() and os.name == 'posix':
-            discord.opus.load_opus("/usr/local/lib/libopus.so")
-        bot.cogs['Log'].output("Loaded Opus Library")
-    except:
-        bot.cogs['Log'].output("Opus library did not load. Voice may not work.")
+    def __init__(self, *args, **kwargs):
+
+        if not os.path.exists('logs'):
+            os.makedirs('logs')
+
+        self.logger = logging.getLogger('KoyomiBot')
+        self.logger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(filename)s:%(lineno)d - %(message)s')
+        fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
+        sh = logging.StreamHandler()
+        sh.setFormatter(formatter)
+        self.logger.addHandler(sh)
+
+        self.logger.info("Bot Started".center(30).replace(' ', '-'))
+
+        self.logger.info("Initializing Config File".center(30).replace(' ', '-'))
+        if not os.path.exists('config'):
+            os.makedirs('config')
+
+        if not os.path.exists('config/config.json'):
+            with open('config/config.json', 'w') as f:
+                f.write(rapidjson.dumps(example_config, indent=4))
+            self.logger.error('No Configuration Found.')
+            self.logger.error('Please edit the config file and reboot again.')
+            raise RuntimeError('No Config Found')
+        else:
+            with open('config/config.json', 'r') as f:
+                self.config = rapidjson.loads(f.read())
+
+        self.logger.info("Initialized Config File".center(30).replace(' ', '-'))
+
+        prefix = self.config['Prefix']
+        self.logger.info(f'Prefix is set: {prefix}')
+        super().__init__(*args, command_prefix=prefix, **kwargs)
+
+        self.logger.info("Initializing Redis Database".center(30).replace(' ', '-'))
+        initialize_redis_pool(self.loop)
+        self.logger.info('Initialized Redis Database'.center(30).replace(' ', '-'))
+        self.session = aiohttp.ClientSession(
+            loop=self.loop,
+            json_serialize=rapidjson.dumps,
+            headers={'User-Agent': 'Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)'}
+        )
+
+        self.load_all_modules()
+        self.add_check(discord.ext.commands.guild_only())
+        self.logger.info('Starting Bot'.center(30).replace(' ', '-'))
+        self.run(self.config['DiscordToken'])
+
+    async def refresh_config(self):
+        async with aiofiles.open('config/config.json', mode='r') as f:
+            self.config = rapidjson.loads(await f.read())
+            for key in example_config.keys():
+                if key not in self.config:
+                    self.config[key] = ''
+
+        async with aiofiles.open('config/config.json', mode='w') as f:
+            await f.write(rapidjson.dumps(self.config, indent=4))
+
+    async def ignore_user(self, user):
+        pass
+
+    async def ignore_guild(self, user):
+        pass
+
+    def load_all_modules(self):
+        self.logger.info('Loading all Modules'.center(30).replace(' ', '-'))
+        for mod in modules:
+            try:
+                self.load_extension(mod)
+                self.logger.info(f'Load Successful: {mod}')
+            except ImportError as e:
+                self.logger.warning(e)
+                self.logger.warning(f'[WARNING]: Module {mod} did not load')
+
+    async def check_blacklist(self, msg):
+        if msg.author.bot:
+            return False
+        if isinstance(msg.channel, discord.abc.PrivateChannel):
+            return False
+        if msg.author.id == 298492601756024835:
+            # hardcoding blacklist for "GIVEAWAY NETWORK BETA" which uses a userbot for some reason...
+            return False
+        if msg.content.startswith(self.command_prefix + 'guess'):
+            return False
+        if not msg.content.startswith(self.command_prefix):
+            return False
+        return True
+
+    async def on_message(self, msg):
+        if await self.check_blacklist(msg):
+            await self.process_commands(msg)
+
+    async def on_guild_join(self, guild):
+        data = {
+            'shard_id': self.shard_id,
+            'shard_count': self.shard_count,
+            'server_count': len(self.guilds)
+        }
+        self.logger.info(f'KoyomiBot joined a new guild! {guild}')
+        async with self.session.post(
+            f'https://discordbots.org/api/bots/{self.user.id}/stats',
+            headers={
+                'Authorization': self.config['DiscordBots'],
+                'Content-Type': 'application/json'
+            },
+            data=rapidjson.dumps(data)
+        ) as f:
+            if f.status != 200:
+                self.logger.error(f'Bad Bot Post Status: {f}')
+                self.logger.error(await f.json(loads=rapidjson.loads))
+            else:
+                self.logger.error('SUCCESS!')
+
+        async with self.session.post(
+            f'https://bots.discord.pw/api/bots/{self.user.id}/stats',
+            headers={
+                'Authorization': self.config['DiscordPW'],
+                'Content-Type': 'application/json'
+            },
+            data=rapidjson.dumps(data)
+        ) as f:
+            if f.status != 200:
+                self.logger.error(f'Bad Bot Post Status: {f}')
+                self.logger.error(await f.json(loads=rapidjson.loads))
+            else:
+                self.logger.error('SUCCESS!')
+
+    async def on_ready(self):
+        await self.refresh_config()
+        random.seed()
+        self.logger.info('Logged in as')
+        self.logger.info(f"Username {self.user.name}")
+        self.logger.info(f"ID: {self.user.id}")
+        url = f"https://discordapp.com/api/oauth2/authorize?client_id={self.user.id}&scope=bot&permissions=0"
+        self.logger.info(f"Invite Link: {url}")
+        try:
+            if not discord.opus.is_loaded() and os.name == 'nt':
+                discord.opus.load_opus("libopus0.x64.dll")
+
+            if not discord.opus.is_loaded() and os.name == 'posix':
+                discord.opus.load_opus("/usr/local/lib/libopus.so")
+            self.logger.info("Loaded Opus Library")
+        except Exception as e:
+            self.logger.error(e)
+            self.logger.warning("Opus library did not load. Voice may not work.")
+
 
 if __name__ == "__main__":
-    print("LAUNCHING BOT...")
-    chkey = checkkeys()
-    # if chkey == 1:
-    #     choice = input("Would you like to reset any of your APIkeys? (y/n)")
-    #     if choice.lower() == 'y':
-    #         changekeys()
-    if chkey == 0:
-        choice = input("You are missing some API Keys. Set APIKeys? (y/n)")
-        if choice.lower() == 'y':
-            changekeys()
-    if chkey == 2:
-        print("You are missing essential API Keys. Entering APIKeys Screen.")
-        changekeys()
-    random.seed()
-
-    for mod in modules:
-        try:
-            bot.load_extension(mod)
-        except ImportError as e:
-            print(e)
-            print('[WARNING]: Module ' + mod + ' did not load')
-    bot.run(redis_db.get('DiscordToken').decode('utf-8'))
+    description = 'KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.'
+    bot = MyClient(description=description, pm_help=True, setkeys=False,
+                   game=discord.Game(name='https://xninjakittyx.github.io/KoyomiBot/',
+                                     url='https://xninjakittyx.github.io/KoyomiBot/',
+                                     type=1))
