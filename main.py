@@ -85,12 +85,15 @@ class MyClient(commands.AutoShardedBot):
         log.info('Starting Bot'.center(30, '-'))
         self.loop.run_until_complete(self.db.initialize_redis())
         try:
-            super().run(self.key_config.DiscordToken)
+            self.start(self.key_config.DiscordToken)
         except KeyboardInterrupt:
             log.info('Detected KeyboardInterrupt')
-        self.loop.run_until_complete(self.close())
-        self.loop.run_until_complete(self.session.close())
-        self.loop.run_until_complete(self.db.close())
+            self.loop.run_until_complete(self.logout())
+        finally:
+            self.loop.run_until_complete(self.close())
+            self.loop.run_until_complete(self.session.close())
+            self.loop.run_until_complete(self.db.close())
+            self.loop.close()
 
     def load_all_modules(self) -> None:
         log.info('Loading all Modules'.center(30).replace(' ', '-'))
