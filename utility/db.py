@@ -91,7 +91,7 @@ class KoyomiDB:
 
         existing_guild_prefixes.append(prefix)
 
-        await self._guild_collection.update_one({'id': guild.id}, {'$set': {'prefix', existing_guild_prefixes}})
+        await self._guild_collection.update_one({'id': guild.id}, {'$push': {'prefix': prefix}})
         await self.redis.delete(f"{guild.id}_prefix")
         return True, f"Added Prefix {prefix}"
 
@@ -106,7 +106,7 @@ class KoyomiDB:
         except ValueError:
             return False
 
-        await self._guild_collection.replace_one({'id': guild.id}, {'prefix', existing_guild_prefixes})
+        await self._guild_collection.replace_one({'id': guild.id}, {'$pull': {'prefix': prefix}})
         await self.redis.delete(f"{guild.id}_prefix")
         return True
 
