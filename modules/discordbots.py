@@ -5,11 +5,13 @@ import dbl
 import discord
 import rapidjson
 
+from discord.ext import commands
+
 
 log = logging.getLogger(__name__)
 
 
-class DiscordBotUpdates:
+class DiscordBotUpdates(commands.Cog):
 
     def __init__(self, bot: discord.Client):
         self.bot = bot
