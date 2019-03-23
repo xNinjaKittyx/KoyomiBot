@@ -44,8 +44,8 @@ class KoyomiDB:
 
         # Set the Cache
         if result['prefix']:
-            self.redis.rpush(f"{guild.id}_prefix", *result['prefix'])
-        self.redis.set(f"{guild.id}_ignore", result['ignore'])
+            await self.redis.rpush(f"{guild.id}_prefix", *result['prefix'])
+        await self.redis.set(f"{guild.id}_ignore", result['ignore'])
 
         return result
 
