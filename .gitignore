@@ -109,3 +109,4 @@ lmfao.png
 
 /.vscode*
 .mypy_cache/
+config/

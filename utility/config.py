@@ -17,7 +17,8 @@ class Config:
             with open(self.filename_filepath, 'w') as f:
                 f.write(toml.dumps({
                     'DiscordToken': '',
-                    'DiscordAPIToken': '',
+                    'DiscordBotsGG': '',
+                    'DiscordBots': '',
                     # 'GoogleMapsAPI': '',
                     # 'DarkSkyAPI': '',
                     # 'CleverbotAPI': '',
