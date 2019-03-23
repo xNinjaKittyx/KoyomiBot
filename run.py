@@ -29,7 +29,7 @@ def log_setup():
 
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(filename)s:%(lineno)d - %(message)s')
+        formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(module)s:%(lineno)d - %(message)s')
         fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
         fh.setFormatter(formatter)
         logger.addHandler(fh)
