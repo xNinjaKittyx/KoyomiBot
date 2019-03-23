@@ -1,4 +1,5 @@
 
+import asyncio
 import logging
 import random
 import os
@@ -90,9 +91,11 @@ class MyClient(commands.AutoShardedBot):
             log.info('Detected KeyboardInterrupt')
             self.loop.run_until_complete(self.logout())
         finally:
-            self.loop.run_until_complete(self.close())
+            for task in asyncio.Task.all_tasks():
+                task.cancel()
             self.loop.run_until_complete(self.session.close())
             self.loop.run_until_complete(self.db.close())
+            self.loop.run_until_complete(self.close())
             self.loop.close()
 
     def load_all_modules(self) -> None:
