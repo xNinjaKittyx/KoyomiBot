@@ -106,7 +106,7 @@ class KoyomiDB:
         except ValueError:
             return False
 
-        await self._guild_collection.replace_one({'id': guild.id}, {'$pull': {'prefix': prefix}})
+        await self._guild_collection.update_one({'id': guild.id}, {'$pull': {'prefix': prefix}})
         await self.redis.delete(f"{guild.id}_prefix")
         return True
 
