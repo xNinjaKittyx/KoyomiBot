@@ -41,7 +41,7 @@ class Comics(commands.Cog):
     async def getxkcd(self, num: int) -> Optional[dict]:
         """ Num should be passed as an INT """
         with await self.bot.db.redis as redis:
-            result = redis.hget('xkcd', num)
+            result = await redis.hget('xkcd', num)
             if result is None:
                 async with self.bot.session.get(f"http://xkcd.com/{num}/info.0.json") as r:
                     if r.status != 200:

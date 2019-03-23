@@ -18,7 +18,7 @@ class KoyomiDB:
         await self.redis.wait_closed()
 
     async def initialize_redis(self) -> None:
-        self.redis = await aioredis.create_pool('redis://localhost')
+        self.redis = await aioredis.create_redis_pool('redis://localhost')
 
     async def get_guild_info(self, guild: discord.Guild) -> dict:
 
