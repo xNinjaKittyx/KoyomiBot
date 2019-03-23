@@ -1,11 +1,16 @@
 """ Discord Embed Default settings :D """
-from time import strftime
 import random
+
+from time import strftime
+from typing import Optional, Union
 
 import discord
 
 
-def newembed(a=None, t=None, d=None, u=None, c=None):
+def newembed(
+    a: Union[str, discord.User] = None, t: Optional[str] = None,
+    d: Optional[str] = None, u: Optional[str] = None, c: Optional[int] = None
+) -> discord.Embed:
     if c is None:
         c = random.randint(0, 16777215)
     em = discord.Embed(title=t, description=d, url=u, colour=c)
