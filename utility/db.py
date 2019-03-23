@@ -1,22 +1,23 @@
 
-import motor.motor_asyncio
+import aioredis
 import discord
+import motor.motor_asyncio
 
 
 class KoyomiDB:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://localhost:27017')
         self._db = self._client.koyomibot
         self._guild_collection = self._db.guild_collection
         self._user_collection = self._db.user_collection
 
-    async def close(self):
+    async def close(self) -> None:
         self.redis.close()
         self._client.close()
         await self.redis.wait_closed()
 
-    async def initialize_redis(self):
+    async def initialize_redis(self) -> None:
         self.redis = await aioredis.create_pool('redis://localhost')
 
     async def get_guild_info(self, guild: discord.Guild) -> dict:

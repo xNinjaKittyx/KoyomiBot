@@ -16,6 +16,7 @@ pymongo = "*"
 python-rapidjson = "*"
 psutil = "*"
 toml = "*"
+uvloop = {version = "*", os_name = "== 'linux'"}
 wikipedia = "*"
 xmltodict = "*"
 youtube_dl = "*"

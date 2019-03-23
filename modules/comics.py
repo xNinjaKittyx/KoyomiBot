@@ -1,4 +1,6 @@
 
+import asyncio
+import logging
 import random
 import re
 
@@ -8,123 +10,115 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 
 from utility import discordembed as dmbd
-from utility.redis import redis_pool
 
 
-class Comics:
-    def __init__(self, bot):
+log = logging.getLogger(__name__)
+
+
+class Comics(commands.Cog):
+
+    def __init__(self, bot: discord.Client):
         self.bot = bot
         self.bot.loop.create_task(self.refreshxkcd())
+        self.bot.loop.create_task(self.refreshcyanide())
+        self.dead_cyanide = []
 
     async def refreshxkcd(self):
         while True:
+            log.info('Refreshing XKCD Comics.')
             async with self.bot.session.get("http://xkcd.com/info.0.json") as r:
                 if r.status != 200:
-                    self.bot.logger.warning("XKCD is down")
-                    return False
-                j = await r.json(loads=rapidjson.loads)
+                    log.warning("XKCD is down. Trying again in 1 minute.")
+                    await asyncio.sleep(60)
+                    continue
+                j = await r.json()
                 self.highest_xkcd = j['num']
             await asyncio.sleep(3600)
 
-    async def getxkcd(self, num, url):
+    async def getxkcd(self, num: int) -> dict:
         """ Num should be passed as an INT """
-        num = int(num)
-        result = await redis_pool.hget('xkcd', num)
+        result = await self.bot.db.redis.hget('xkcd', num)
         if result is None:
-            async with self.bot.session.get(url + "/info.0.json") as r:
-                if not r.status == 200:
-                    self.bot.logger.warning("Unable to get XKCD #" + str(num))
+            async with self.bot.session.get(f"http://xkcd.com/{num}/info.0.json") as r:
+                if r.status != 200:
+                    log.error(f"Unable to get XKCD #{num)}")
                     return
-                j = await r.json(loads=rapidjson.loads)
-            await redis_pool.hmset_dict('xkcd', {num: rapidjson.dumps(j)})
+                j = await r.json()
+            await self.bot.db.redis.hmset_dict('xkcd', {num: rapidjson.dumps(j)})
             return j
         else:
-            j = result.decode('utf-8')
-            j = rapidjson.loads(j)
-            return j
+            return rapidjson.loads(result.decode('utf-8'))
 
     @commands.command()
     async def xkcd(self, ctx):
         """Gives a random XKCD Comic"""
-        chk = await self.refreshxkcd()
-        if not chk:
-            return
-        maxnum = int((await redis_pool.get('xkcdmax')).decode('utf-8'))
-        number = random.randint(1, maxnum)
-        url = "http://xkcd.com/" + str(number)
-        j = await self.getxkcd(number, url)
+        number = random.randint(1, self.highest_xkcd)
+        result = await self.getxkcd(number)
 
-        em = dmbd.newembed(ctx.author, j['safe_title'], u=url)
-        em.set_image(url=j['img'])
-        em.add_field(name=j['alt'], value="{0}/{1}/{2}".format(j['month'], j['day'], j['year']))
+        em = dmbd.newembed(ctx.author, result['safe_title'], u=url)
+        em.set_image(url=result['img'])
+        em.add_field(
+            name=j['alt'],
+            value="{month}/{day}/{year}".format.map(result))
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('xkcd')
 
-    async def refreshcyanide(self):
-        if await redis_pool.get('cyanidemax') is not None:
-            return True
-        async with self.bot.session.get("http://explosm.net/comics/latest") as r:
-            if r.status != 200:
-                self.bot.logger.warning("Cyanide&Happiness is down")
-                return False
-            soup = BeautifulSoup(await r.text(), 'html.parser')
-        current = int(re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
-        await redis_pool.set('cyanidemax', current, expire=86400)
-        return True
+    async def refreshcyanide(self) -> None:
+        while True:
+            log.info('Refreshing C&H Comics.')
+            async with self.bot.session.get("http://explosm.net/comics/latest") as r:
+                if r.status != 200:
+                    log.warning("Cyanide&Happiness is down")
+                    await asyncio.sleep(60)
+                    continue
+                soup = BeautifulSoup(await r.text(), 'html.parser')
+            self.cyanidemax = int(
+                re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
+            await asyncio.sleep(3600)
 
-    async def getcyanide(self, num, url):
-        num = int(num)
-        result = await redis_pool.hget('cyanide', num)
+    async def getcyanide(self, num: int):
+        result = await self.bot.db.redis.hget('cyanide', num)
         if result is None:
-            async with self.bot.session.get(url) as r:
-                if not r.status == 200:
-                    self.bot.logger.warning("Unable to get Cyanide #" + str(num))
+            async with self.bot.session.get(f'http://explosm.net/comics/{number}') as r:
+                if r.status != 200:
+                    log.warning(f"Unable to get Cyanide #{num}")
                     return
                 soup = BeautifulSoup(await r.text(), 'html.parser')
             if soup.prettify().startswith('Could not'):
-                await self.bot.send('Report this number as a dead comic: ' + str(num))
+                self.dead_cyanide.append(num)
                 return
-            img = 'http:' + str(soup.find(id="main-comic")['src'])
-            await redis_pool.hmset_dict('xkcd', {num: img})
+            img = f'http:{soup.find(id="main-comic")["src"]}'
+            await self.bot.db.redis.hmset_dict('xkcd', {num: img})
             return img
         else:
-            img = result.decode('utf-8')
-            return img
+            return result.decode('utf-8')
 
     @commands.command()
     async def cyanide(self, ctx):
         """ Gives a random Cyanide & Happiness Comic"""
-        chk = await self.refreshcyanide()
-        if not chk:
-            return
-
+        img = None
+        while img is None:
+            number = random.randint(39, int((await redis_pool.get('cyanidemax')).decode('utf-8')))
+            if number in self.dead_cyanide:
+                continue
+            img = await self.getcyanide(number)
         # whatever reason, comics 1 - 38 don't exist.
-        number = random.randint(39, int((await redis_pool.get('cyanidemax')).decode('utf-8')))
-        link = 'http://explosm.net/comics/' + str(number)
-
-        img = await self.getcyanide(number, link)
-        if img is None:
-            return
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness', str(number), u=link)
         em.set_image(url=img)
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('cyanide')
 
     @commands.command()
     async def cyanidercg(self, ctx):
         """ Gives a randomly generated Cyanide & Happiness Comic"""
-
         async with self.bot.session.get('http://explosm.net/rcg') as r:
-            if not r.status == 200:
-                self.bot.logger.warning("Unable to get RCG for Cyanide")
+            if r.status != 200:
+                log.warning("Unable to get RCG for Cyanide")
+                await ctx.send('Could not get you a random Cyanide&Happiness at this time.')
                 return
             soup = BeautifulSoup(await r.text(), 'html.parser')
-        img = 'http:' + str(soup.find(id='rcg-comic').img['src'])
-        self.bot.logger.info(img)
+        img = f"http:{soup.find(id='rcg-comic').img['src']}"
         em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img)
         em.set_image(url=img)
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('cyanidercg')
 
 
 def setup(bot):

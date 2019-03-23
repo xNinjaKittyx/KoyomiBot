@@ -110,7 +110,7 @@ class Music:
             state.message = None
 
     @commands.command()
-    async def join(self, ctx, *, channel: discord.VoiceChannel=None):
+    async def join(self, ctx, *, channel: discord.VoiceChannel = None):
         """Joins a voice channel."""
         if ctx.author.voice is None:
             await ctx.send('You are not in a voice channel!')

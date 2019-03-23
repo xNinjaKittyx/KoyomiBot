@@ -20,7 +20,8 @@ KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.
 """
 
 modules = {
-    'modules.discordbots'
+    'modules.comics',
+    'modules.discordbots',
     # 'modules.admin',
     # 'modules.anime',
     # 'modules.animehangman',
@@ -49,7 +50,7 @@ modules = {
 
 
 # Quick snippet from Danny's code.
-async def _get_prefix(bot, msg):
+async def _get_prefix(bot: discord.Client, msg: discord.Message) -> list:
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
 
@@ -80,17 +81,18 @@ class MyClient(commands.AutoShardedBot):
         self.key_config = Config('config.toml')
         self.load_all_modules()
 
-    def run(self):
+    def run(self) -> None:
         log.info('Starting Bot'.center(30, '-'))
-        loop.run_until_complete(self.db.initialize_redis())
+        self.loop.run_until_complete(self.db.initialize_redis())
         try:
             super().run(self.key_config.DiscordToken)
         except KeyboardInterrupt:
             log.info('Detected KeyboardInterrupt')
-        loop.run_until_complete(self.close())
-        loop.run_until_complete(self.session.close())
+        self.loop.run_until_complete(self.close())
+        self.loop.run_until_complete(self.session.close())
+        self.loop.run_until_complete(self.db.close())
 
-    def load_all_modules(self):
+    def load_all_modules(self) -> None:
         log.info('Loading all Modules'.center(30).replace(' ', '-'))
         for mod in modules:
             try:
@@ -100,21 +102,24 @@ class MyClient(commands.AutoShardedBot):
                 log.warning(e)
                 log.warning(f'[WARNING]: Module {mod} did not load')
 
-    async def check_blacklist(self, msg):
+    async def check_blacklist(self, msg: discord.Message) -> bool:
         if msg.author.bot:
             return False
         if msg.guild:
             return await self.db.check_guild_blacklist(msg.guild)
         return await self.db.check_user_blacklist(msg.author)
 
-    async def on_message(self, msg):
+    async def on_message(self, msg: discord.Message) -> None:
         if await self.check_blacklist(msg):
             await self.process_commands(msg)
 
-    async def on_guild_join(self, guild):
-        log.info(f'KoyomiBot joined a new guild! {guild}')
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        log.info(f'KoyomiBot joined a new guild! {guild.name}')
 
-    async def on_ready(self):
+    async def on_guild_remove(self, guild: discord.Guild) -> None:
+        log.info(f'KoyomiBot left a guild :( {guild.name}')
+
+    async def on_ready(self) -> None:
         random.seed()
         log.info('Logged in as')
         log.info(f"Username {self.user.name}")

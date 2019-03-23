@@ -1,4 +1,4 @@
-
+import asyncio
 import contextlib
 import logging
 import os
@@ -18,7 +18,7 @@ from main import MyClient
 
 
 @contextlib.contextmanager
-def log_setup():
+def log_setup() -> None:
     # Taken from Rapptz' RoboDanny
     try:
         try:
@@ -45,13 +45,14 @@ def log_setup():
             hdlr.close()
             logger.removeHandler(hdlr)
 
+
 @click.group()
-def cli():
+def cli() -> None:
     pass
 
 
 @cli.command()
-def run():
+def run() -> None:
     with log_setup():
         MyClient().run()
 
