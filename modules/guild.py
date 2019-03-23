@@ -33,3 +33,8 @@ class GuildCommands(commands.Cog):
     @commands.command()
     async def get_prefix(self, ctx: commands.Context, *, prefix: str) -> None:
         await ctx.send(", ".join(await self.bot.db.get_guild_prefixes(ctx.guild)))
+
+
+def setup(bot: MyClient) -> None:
+    """Setup admin.py"""
+    bot.add_cog(Admin(bot))
