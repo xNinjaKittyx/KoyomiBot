@@ -49,7 +49,7 @@ modules = {
 
 
 # Quick snippet from Danny's code.
-def _get_prefix(bot, msg):
+async def _get_prefix(bot, msg):
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
 
@@ -57,10 +57,8 @@ def _get_prefix(bot, msg):
         base.append('!>')
     else:
         base.append('>')
-    if msg.guild is None:
-        base.append('!')
-    else:
-        base.extend(bot.db.get_guild_prefixes(msg.guild))
+    if msg.guild is not None:
+        base.extend(await bot.db.get_guild_prefixes(msg.guild))
 
 
 class MyClient(commands.AutoShardedBot):
