@@ -37,7 +37,6 @@ class DiscordBotUpdates(commands.Cog):
             ) as f:
                 if f.status >= 300 or f.status < 200:
                     log.error(f'Failed to post server count discordbots.org: {f.text}')
-                    log.error(await f.json())
                 else:
                     log.error('SUCCESS!')
 
@@ -56,7 +55,6 @@ class DiscordBotUpdates(commands.Cog):
             ) as f:
                 if f.status >= 300 or f.status < 200:
                     log.error(f'Failed to post server count discord.bots.gg: {f.text}')
-                    log.error(await f.json())
                 else:
                     log.error('SUCCESS!')
             await asyncio.sleep(1800)
