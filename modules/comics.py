@@ -75,8 +75,7 @@ class Comics(commands.Cog):
                     await asyncio.sleep(60)
                     continue
                 soup = BeautifulSoup(await r.text(), 'html.parser')
-            self.cyanidemax = int(
-                re.findall(r'\d+', soup.find(id="permalink", type="text").get("value"))[0])
+            self.cyanidemax = int(soup.find(property='og:url').get('content').split('/')[-2])
             await asyncio.sleep(3600)
 
     async def getcyanide(self, num: int) -> Optional[str]:
