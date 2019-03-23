@@ -43,7 +43,8 @@ class KoyomiDB:
                 await self._guild_collection.replace_one({'id': guild.id}, {'name': guild.name})
 
         # Set the Cache
-        self.redis.rpush(f"{guild.id}_prefix", *result['prefix'])
+        if result['prefix']:
+            self.redis.rpush(f"{guild.id}_prefix", *result['prefix'])
         self.redis.set(f"{guild.id}_ignore", result['ignore'])
 
         return result

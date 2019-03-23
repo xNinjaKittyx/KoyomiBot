@@ -39,7 +39,7 @@ class DiscordBotUpdates(commands.Cog):
                 if f.status >= 300 or f.status < 200:
                     log.error(f'Failed to post server count discordbots.org: {f.text}')
                 else:
-                    log.error('SUCCESS!')
+                    log.info('SUCCESS!')
 
             # log.info('Posting Server Count to discord.bots.gg')
             # if self.bot.shard_id:
