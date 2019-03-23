@@ -26,7 +26,7 @@ class DiscordBotUpdates(commands.Cog):
             async with self.bot.session.post(
                 f'https://discordbots.org/api/bots/{self.bot.user.id}/stats',
                 headers={
-                    'Authorization': self.bot.key_config.DiscordBotsGG,
+                    'Authorization': self.bot.key_config.DiscordBots,
                     'Content-Type': 'application/json'
                 },
                 data=rapidjson.dumps({
