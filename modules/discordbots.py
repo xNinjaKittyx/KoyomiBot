@@ -43,7 +43,7 @@ class DiscordBotUpdates(commands.Cog):
 
             log.info('Posting Server Count to discord.bots.gg')
             async with self.bot.session.post(
-                f'https://discord.bots.gg/api/v1/{self.bot.user.id}/stats',
+                f'https://discord.bots.gg/api/v1/bots/{self.bot.user.id}/stats',
                 headers={
                     'Authorization': self.bot.key_config.DiscordBotsGG,
                     'Content-Type': 'application/json'
