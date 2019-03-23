@@ -24,6 +24,10 @@ youtube_dl = "*"
 [dev-packages]
 pylama = "*"
 mypy = "*"
+pylint = "*"
+mccabe = "*"
+pycodestyle = "*"
+pydocstyle = "*"
 
 [requires]
 python_version = "3.6"

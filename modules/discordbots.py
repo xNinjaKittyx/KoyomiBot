@@ -67,5 +67,5 @@ class DiscordBotUpdates(commands.Cog):
             await asyncio.sleep(1800)
 
 
-def setup(bot: discord.Client):
+def setup(bot: discord.Client) -> None:
     bot.add_cog(DiscordBotUpdates(bot))
