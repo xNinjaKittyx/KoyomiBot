@@ -85,7 +85,7 @@ class MyClient(commands.AutoShardedBot):
         log.info('Starting Bot'.center(30, '-'))
         self.loop.run_until_complete(self.db.initialize_redis())
         try:
-            self.start(self.key_config.DiscordToken)
+            self.loop.run_until_complete(self.start(self.key_config.DiscordToken))
         except KeyboardInterrupt:
             log.info('Detected KeyboardInterrupt')
             self.loop.run_until_complete(self.logout())
