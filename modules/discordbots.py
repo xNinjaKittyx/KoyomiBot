@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-import dbl
 import discord
 import rapidjson
 
@@ -22,13 +21,25 @@ class DiscordBotUpdates(commands.Cog):
 
         while True:
             log.info('Posting Server Count to DiscordBots.org')
-            try:
-                await self._dblclient.post_server_count()
-                log.info('Server Count Success to DiscordBots.org!')
-            except Exception as e:
-                log.exception('Failed to post server count\n{}: {}'.format(type(e).__name__, e))
-            await asyncio.sleep(1800)
+            async with self.bot.session.post(
+                f'https://discordbots.org/api/bots/{self.bot.user.id}/stats',
+                headers={
+                    'Authorization': self.bot.key_config.DiscordBotsGG,
+                    'Content-Type': 'application/json'
+                },
+                data=rapidjson.dumps({
+                    'shard_no': self.bot.shard_id,
+                    'shard_count': self.bot.shard_count,
+                    'server_count': len(self.bot.guilds)
+                })
+            ) as f:
+                if f.status >= 300 or f.status < 200:
+                    log.error(f'Failed to post server count bots.ondiscord.xyz: {f.text}')
+                    log.error(await f.json(loads=rapidjson.loads))
+                else:
+                    log.error('SUCCESS!')
 
+            log.info('Posting Server Count to discord.bots.gg')
             async with self.bot.session.post(
                 f'https://discord.bots.gg/api/v1/{self.bot.user.id}/guilds',
                 headers={
@@ -41,11 +52,12 @@ class DiscordBotUpdates(commands.Cog):
                     'server_count': len(self.bot.guilds)
                 })
             ) as f:
-                if f.status != 204:
+                if f.status >= 300 or f.status < 200:
                     log.error(f'Failed to post server count bots.ondiscord.xyz: {f.text}')
                     log.error(await f.json(loads=rapidjson.loads))
                 else:
                     log.error('SUCCESS!')
+            await asyncio.sleep(1800)
 
 
 def setup(bot: discord.Client):

@@ -98,8 +98,8 @@ class MyClient(commands.AutoShardedBot):
         if msg.author.bot:
             return False
         if msg.guild:
-            return self.db.check_guild_blacklist(msg.guild)
-        return self.db.check_user_blacklist(msg.author)
+            return await self.db.check_guild_blacklist(msg.guild)
+        return await self.db.check_user_blacklist(msg.author)
 
     async def on_message(self, msg):
         if await self.check_blacklist(msg):
