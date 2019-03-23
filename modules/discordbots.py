@@ -21,7 +21,7 @@ class DiscordBotUpdates(commands.Cog):
         while True:
             log.info('Posting Server Count to DiscordBots.org')
             async with self.bot.session.post(
-                f'https://discordbots.org/api/bots/{self.bot.id}/stats',
+                f'https://discordbots.org/api/bots/{self.bot.user.id}/stats',
                 headers={
                     'Authorization': self.bot.key_config.DiscordBotsGG,
                     'Content-Type': 'application/json'
@@ -40,7 +40,7 @@ class DiscordBotUpdates(commands.Cog):
 
             log.info('Posting Server Count to discord.bots.gg')
             async with self.bot.session.post(
-                f'https://discord.bots.gg/api/v1/{self.bot.id}/guilds',
+                f'https://discord.bots.gg/api/v1/{self.bot.user.id}/guilds',
                 headers={
                     'Authorization': self.bot.key_config.DiscordBotsGG,
                     'Content-Type': 'application/json'

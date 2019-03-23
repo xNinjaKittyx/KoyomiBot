@@ -4,7 +4,6 @@ import discord
 
 
 class KoyomiDB:
-    GUILD_KEYS = ['id', 'name', 'prefix', 'ignore']
 
     def __init__(self):
         self._client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://localhost:27017')
