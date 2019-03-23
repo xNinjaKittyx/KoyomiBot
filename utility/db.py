@@ -11,6 +11,14 @@ class KoyomiDB:
         self._guild_collection = self._db.guild_collection
         self._user_collection = self._db.user_collection
 
+    async def close(self):
+        self.redis.close()
+        self._client.close()
+        await self.redis.wait_closed()
+
+    async def initialize_redis(self):
+        self.redis = await aioredis.create_pool('redis://localhost')
+
     async def get_guild_info(self, guild: discord.Guild) -> dict:
 
         result = await self._guild_collection.find_one({'id': guild.id})

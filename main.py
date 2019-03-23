@@ -82,7 +82,13 @@ class MyClient(commands.AutoShardedBot):
 
     def run(self):
         log.info('Starting Bot'.center(30, '-'))
-        super().run(self.key_config.DiscordToken)
+        loop.run_until_complete(self.db.initialize_redis())
+        try:
+            super().run(self.key_config.DiscordToken)
+        except KeyboardInterrupt:
+            log.info('Detected KeyboardInterrupt')
+        loop.run_until_complete(self.close())
+        loop.run_until_complete(self.session.close())
 
     def load_all_modules(self):
         log.info('Loading all Modules'.center(30).replace(' ', '-'))

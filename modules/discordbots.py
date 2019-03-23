@@ -40,30 +40,30 @@ class DiscordBotUpdates(commands.Cog):
                 else:
                     log.error('SUCCESS!')
 
-            log.info('Posting Server Count to discord.bots.gg')
-            if self.bot.shard_id:
-                data = {
-                    'shardId': self.bot.shard_id,
-                    'shardCount': self.bot.shard_count,
-                    'guildCount': len(self.bot.guilds)
-                }
-            else:
-                data = {
-                    'guildCount': len(self.bot.guilds)
-                }
+            # log.info('Posting Server Count to discord.bots.gg')
+            # if self.bot.shard_id:
+            #     data = {
+            #         'shardId': self.bot.shard_id,
+            #         'shardCount': self.bot.shard_count,
+            #         'guildCount': len(self.bot.guilds)
+            #     }
+            # else:
+            #     data = {
+            #         'guildCount': len(self.bot.guilds)
+            #     }
 
-            async with self.bot.session.post(
-                f'https://discord.bots.gg/api/v1/bots/{self.bot.user.id}/stats',
-                headers={
-                    'Authorization': self.bot.key_config.DiscordBotsGG,
-                    'Content-Type': 'application/json'
-                },
-                data=rapidjson.dumps(data)
-            ) as f:
-                if f.status >= 300 or f.status < 200:
-                    log.error(f'Failed to post server count discord.bots.gg: {f.text}')
-                else:
-                    log.error('SUCCESS!')
+            # async with self.bot.session.post(
+            #     f'https://discord.bots.gg/api/v1/bots/{self.bot.user.id}/stats',
+            #     headers={
+            #         'Authorization': self.bot.key_config.DiscordBotsGG,
+            #         'Content-Type': 'application/json'
+            #     },
+            #     data=rapidjson.dumps(data)
+            # ) as f:
+            #     if f.status >= 300 or f.status < 200:
+            #         log.error(f'Failed to post server count discord.bots.gg: {f.text}')
+            #     else:
+            #         log.error('SUCCESS!')
             await asyncio.sleep(1800)
 
 

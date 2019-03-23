@@ -14,17 +14,17 @@ from utility.redis import redis_pool
 class Comics:
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(self.refreshxkcd())
 
     async def refreshxkcd(self):
-        if await redis_pool.get('xkcdmax') is not None:
-            return True
-        async with self.bot.session.get("http://xkcd.com/info.0.json") as r:
-            if r.status != 200:
-                self.bot.logger.warning("XKCD is down")
-                return False
-            j = await r.json(loads=rapidjson.loads)
-        await redis_pool.set('xkcdmax', j['num'], expire=86400)
-        return True
+        while True:
+            async with self.bot.session.get("http://xkcd.com/info.0.json") as r:
+                if r.status != 200:
+                    self.bot.logger.warning("XKCD is down")
+                    return False
+                j = await r.json(loads=rapidjson.loads)
+                self.highest_xkcd = j['num']
+            await asyncio.sleep(3600)
 
     async def getxkcd(self, num, url):
         """ Num should be passed as an INT """
