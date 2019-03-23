@@ -45,7 +45,7 @@ class KoyomiDB:
         # Set the Cache
         if result['prefix']:
             await self.redis.rpush(f"{guild.id}_prefix", *result['prefix'])
-        await self.redis.set(f"{guild.id}_ignore", result['ignore'])
+        await self.redis.set(f"{guild.id}_ignore", int(result['ignore']))
 
         return result
 
@@ -111,6 +111,10 @@ class KoyomiDB:
         return True
 
     async def check_guild_blacklist(self, guild: discord.Guild) -> bool:
+        cache = await self.redis.get(f"{guild.id}_ignore")
+        if cache is not None:
+            return not cache
+
         return not (await self.get_guild_info(guild))['ignore']
 
     async def check_user_blacklist(self, user: discord.User) -> bool:
