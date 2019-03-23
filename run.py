@@ -28,7 +28,7 @@ def log_setup():
         logging.getLogger('discord').setLevel(logging.INFO)
 
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(filename)s:%(lineno)d - %(message)s')
         fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
         fh.setFormatter(formatter)
