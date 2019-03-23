@@ -50,7 +50,7 @@ modules = {
 
 # Quick snippet from Danny's code.
 def _get_prefix(bot, msg):
-    user_id = bot.user_id
+    user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
 
     if bot.key_config.debug:
