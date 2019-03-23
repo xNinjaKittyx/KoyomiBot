@@ -75,7 +75,7 @@ class KoyomiDB:
         return result
 
     async def get_guild_prefixes(self, guild: discord.Guild) -> list:
-        cache = self.redis.lrange(f"{guild.id}_prefix", 0, 9)
+        cache = await self.redis.lrange(f"{guild.id}_prefix", 0, 9)
         return cache if cache else list((await self.get_guild_info(guild))['prefix'])
 
     async def set_guild_prefixes(self, guild: discord.Guild, prefix: str) -> Tuple[bool, str]:
@@ -108,7 +108,6 @@ class KoyomiDB:
         await self._guild_collection.replace_one({'id': guild.id}, {'prefix', existing_guild_prefixes})
         await self.redis.delete(f"{guild.id}_prefix")
         return True
-
 
     async def check_guild_blacklist(self, guild: discord.Guild) -> bool:
         return not (await self.get_guild_info(guild))['ignore']
