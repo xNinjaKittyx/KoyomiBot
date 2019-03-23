@@ -70,7 +70,7 @@ class MyClient(commands.AutoShardedBot):
             command_prefix=_get_prefix, description=description,
             pm_help=True, help_attrs=dict(hidden=True), fetch_offline_members=False
         )
-        self.db = KoyomiDB
+        self.db = KoyomiDB()
 
         self.session = aiohttp.ClientSession(
             loop=self.loop,
