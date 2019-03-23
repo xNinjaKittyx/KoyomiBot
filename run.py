@@ -6,11 +6,12 @@ from logging.handlers import TimedRotatingFileHandler
 
 import click
 
-from .main import MyClient
+from main import MyClient
 
 
 @click.group()
-def cli()
+def cli():
+    pass
 
 
 @cli.command()
