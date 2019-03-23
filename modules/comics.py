@@ -40,15 +40,16 @@ class Comics(commands.Cog):
 
     async def getxkcd(self, num: int) -> Optional[dict]:
         """ Num should be passed as an INT """
-        result = await self.bot.db.redis.hget('xkcd', num)
-        if result is None:
-            async with self.bot.session.get(f"http://xkcd.com/{num}/info.0.json") as r:
-                if r.status != 200:
-                    log.error(f"Unable to get XKCD #{num}")
-                    return {}
-                j = await r.json()
-            await self.bot.db.redis.hmset_dict('xkcd', {num: rapidjson.dumps(j)})
-            return j
+        with await self.bot.db.redis as redis:
+            result = redis.hget('xkcd', num)
+            if result is None:
+                async with self.bot.session.get(f"http://xkcd.com/{num}/info.0.json") as r:
+                    if r.status != 200:
+                        log.error(f"Unable to get XKCD #{num}")
+                        return {}
+                    j = await r.json()
+                await redis.hmset_dict('xkcd', {num: rapidjson.dumps(j)})
+                return j
         return rapidjson.loads(result.decode('utf-8'))
 
     @commands.command()
@@ -79,28 +80,29 @@ class Comics(commands.Cog):
             await asyncio.sleep(3600)
 
     async def getcyanide(self, num: int) -> Optional[str]:
-        result = await self.bot.db.redis.hget('cyanide', num)
-        if result is None:
-            async with self.bot.session.get(f'http://explosm.net/comics/{num}') as r:
-                if r.status != 200:
-                    log.warning(f"Unable to get Cyanide #{num}")
+        with await self.bot.db.redis as redis:
+            result = await redis.hget('cyanide', num)
+            if result is None:
+                async with self.bot.session.get(f'http://explosm.net/comics/{num}') as r:
+                    if r.status != 200:
+                        log.warning(f"Unable to get Cyanide #{num}")
+                        return None
+                    soup = BeautifulSoup(await r.text(), 'html.parser')
+                if soup.prettify().startswith('Could not'):
+                    self.dead_cyanide.append(num)
                     return None
-                soup = BeautifulSoup(await r.text(), 'html.parser')
-            if soup.prettify().startswith('Could not'):
-                self.dead_cyanide.append(num)
-                return None
-            img = f'http:{soup.find(id="main-comic")["src"]}'
-            await self.bot.db.redis.hmset_dict('xkcd', {num: img})
-            return img
-        else:
-            return result.decode('utf-8')
+                img = f'http:{soup.find(id="main-comic")["src"]}'
+                await redis.hmset_dict('xkcd', {num: img})
+                return img
+
+        return result.decode('utf-8')
 
     @commands.command()
     async def cyanide(self, ctx: discord.ext.commands.Context) -> None:
         """ Gives a random Cyanide & Happiness Comic"""
         img = None
         while img is None:
-            number = random.randint(39, int((await self.bot.db.redis.get('cyanidemax')).decode('utf-8')))
+            number = random.randint(39, self.cyanidemax)
             if number in self.dead_cyanide:
                 continue
             img = await self.getcyanide(number)
