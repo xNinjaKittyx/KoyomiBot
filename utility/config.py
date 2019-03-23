@@ -35,7 +35,7 @@ class Config:
 
     def __getattr__(self, value):
         try:
-            self._f[value]
+            return self._f[value]
         except KeyError:
             raise AttributeError(f"{value} not a valid attribute of Config")
 
