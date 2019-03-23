@@ -82,7 +82,7 @@ class MyClient(commands.AutoShardedBot):
 
     def run(self):
         log.info('Starting Bot'.center(30, '-'))
-        super().run(self.config['DiscordToken'])
+        super().run(self.key_config.DiscordToken)
 
     def load_all_modules(self):
         log.info('Loading all Modules'.center(30).replace(' ', '-'))
