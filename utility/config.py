@@ -3,7 +3,7 @@ import os
 import toml
 
 
-config_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config')
+config_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'config'))
 
 
 class Config:
@@ -17,7 +17,6 @@ class Config:
             with open(self.filename_filepath, 'w') as f:
                 f.write(toml.dumps({
                     'DiscordToken': '',
-                    'Prefix': '',
                     'GoogleMapsAPI': '',
                     'DarkSkyAPI': '',
                     'CleverbotAPI': '',
