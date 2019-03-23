@@ -14,7 +14,6 @@ class DiscordBotUpdates(commands.Cog):
 
     def __init__(self, bot: discord.Client):
         self.bot = bot
-        self._dblclient = dbl.Client(self.bot, self.bot.key_config.DiscordBots)
         self.bot.loop.create_task(self.update_stats())
 
     async def update_stats(self) -> None:
