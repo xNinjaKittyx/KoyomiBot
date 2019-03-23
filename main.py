@@ -60,6 +60,8 @@ async def _get_prefix(bot, msg):
     if msg.guild is not None:
         base.extend(await bot.db.get_guild_prefixes(msg.guild))
 
+    return base
+
 
 class MyClient(commands.AutoShardedBot):
 
