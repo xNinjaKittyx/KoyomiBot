@@ -30,7 +30,7 @@ class DiscordBotUpdates(commands.Cog):
                     'Content-Type': 'application/json'
                 },
                 data=rapidjson.dumps({
-                    'shard_no': self.bot.shard_id,
+                    'shard_id': self.bot.shard_id,
                     'shard_count': self.bot.shard_count,
                     'server_count': len(self.bot.guilds)
                 })
@@ -43,15 +43,15 @@ class DiscordBotUpdates(commands.Cog):
 
             log.info('Posting Server Count to discord.bots.gg')
             async with self.bot.session.post(
-                f'https://discord.bots.gg/api/v1/{self.bot.user.id}/guilds',
+                f'https://discord.bots.gg/api/v1/{self.bot.user.id}/stats',
                 headers={
                     'Authorization': self.bot.key_config.DiscordBotsGG,
                     'Content-Type': 'application/json'
                 },
                 data=rapidjson.dumps({
-                    'shard_id': self.bot.shard_id,
-                    'shard_count': self.bot.shard_count,
-                    'server_count': len(self.bot.guilds)
+                    'shardId': self.bot.shard_id,
+                    'shardCount': self.bot.shard_count,
+                    'guildCount': len(self.bot.guilds)
                 })
             ) as f:
                 if f.status >= 300 or f.status < 200:
