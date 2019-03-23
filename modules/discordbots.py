@@ -1,10 +1,11 @@
 import asyncio
 import logging
 
-import discord
 import rapidjson
 
 from discord.ext import commands
+
+from main import MyClient
 
 
 log = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class DiscordBotUpdates(commands.Cog):
 
-    def __init__(self, bot: discord.Client):
+    def __init__(self, bot: MyClient):
         self.bot = bot
         self.bot.loop.create_task(self.update_stats())
 
@@ -67,5 +68,5 @@ class DiscordBotUpdates(commands.Cog):
             await asyncio.sleep(1800)
 
 
-def setup(bot: discord.Client) -> None:
+def setup(bot: MyClient) -> None:
     bot.add_cog(DiscordBotUpdates(bot))

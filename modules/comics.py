@@ -2,17 +2,16 @@
 import asyncio
 import logging
 import random
-import re
 
 from typing import List, Optional
 
-import discord
 import rapidjson
 
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
 from utility import discordembed as dmbd
+from main import MyClient
 
 
 log = logging.getLogger(__name__)
@@ -20,7 +19,7 @@ log = logging.getLogger(__name__)
 
 class Comics(commands.Cog):
 
-    def __init__(self, bot: discord.Client):
+    def __init__(self, bot: MyClient):
         self.bot = bot
         self.bot.loop.create_task(self.refreshxkcd())
         self.bot.loop.create_task(self.refreshcyanide())
@@ -53,7 +52,7 @@ class Comics(commands.Cog):
         return rapidjson.loads(result.decode('utf-8'))
 
     @commands.command()
-    async def xkcd(self, ctx: discord.ext.commands.Context) -> None:
+    async def xkcd(self, ctx: commands.Context) -> None:
         """Gives a random XKCD Comic"""
         number = random.randint(1, self.highest_xkcd)
         result = await self.getxkcd(number)
@@ -98,7 +97,7 @@ class Comics(commands.Cog):
         return result.decode('utf-8')
 
     @commands.command()
-    async def cyanide(self, ctx: discord.ext.commands.Context) -> None:
+    async def cyanide(self, ctx: commands.Context) -> None:
         """ Gives a random Cyanide & Happiness Comic"""
         img = None
         while img is None:
@@ -112,7 +111,7 @@ class Comics(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command()
-    async def cyanidercg(self, ctx: discord.ext.commands.Context) -> None:
+    async def cyanidercg(self, ctx: commands.Context) -> None:
         """ Gives a randomly generated Cyanide & Happiness Comic"""
         async with self.bot.session.get('http://explosm.net/rcg') as r:
             if r.status != 200:
@@ -126,5 +125,5 @@ class Comics(commands.Cog):
         await ctx.send(embed=em)
 
 
-def setup(bot: discord.Client) -> None:
+def setup(bot: MyClient) -> None:
     bot.add_cog(Comics(bot))

@@ -1,57 +1,41 @@
 
 import asyncio
-import time
-import sys
+
+from typing import Callable
 
 import discord
 from discord.ext import commands
 
+from main import MyClient
 
-class Admin:
-    def __init__(self, bot):
+
+def is_owner() -> Callable:
+    async def predicate(ctx: commands.Context) -> bool:
+        return ctx.author.id == 82221891191844864
+    return commands.check(predicate)
+
+
+class Admin(commands.Cog):
+
+    def __init__(self, bot: MyClient):
         self.bot = bot
 
-    async def __local_check(self, ctx):
-        try:
-            await ctx.bot.is_owner(ctx.author)
-            return True
-        except discord.ext.commands.errors.CheckFailure:
-
-            self.bot.logger.warning(ctx.author.name + ' tried to use an Admin command!')
-            return False
-
     @commands.command(hidden=True)
-    async def refresh_config(self, ctx):
-        await self.bot.refresh_config()
-
-    @commands.command(hidden=True)
-    async def test(self, ctx, *, code: str):
-        """ Tests something :o """
-        if code.startswith("```Python\n"):
-            code = code[10:-3]
-            start_time = time.time()
-            try:
-                exec(code)
-                await ctx.send("```Code Executed```")
-            except (TypeError, SyntaxError):
-                await ctx.send(f"```\n{sys.exc_info()}```")
-                self.bot.logger.warning("Syntax Error")
-            total_time = time.time() - start_time
-            await ctx.send("This took *" + str(total_time) + "* seconds")
-
-    @commands.command(hidden=True)
-    async def kys(self, ctx):
+    @is_owner()
+    async def kys(self, ctx: commands.Context) -> None:
         """ Bot kills itself """
         await ctx.send("Bot is *kill*")
         await asyncio.sleep(3)
         await self.bot.close()
 
     @commands.command(hidden=True)
-    async def status(self, ctx, *, s: str):
+    @is_owner()
+    async def status(self, ctx: commands.Context, *, s: str) -> None:
         await self.bot.change_presence(game=discord.Game(name=s))
 
     @commands.command(hidden=True)
-    async def changeavatar(self, ctx, *, url: str):
+    @is_owner()
+    async def changeavatar(self, ctx: commands.Context, *, url: str) -> None:
         """ Changes the Avatar"""
         async with self.bot.session.get(url) as r:
             if r.status == 200:
@@ -63,18 +47,12 @@ class Admin:
                     await ctx.send("Wrong image format was passed.")
 
     @commands.command(hidden=True)
-    async def changeusername(self, ctx, *, s: str):
+    @is_owner()
+    async def changeusername(self, ctx: commands.Context, *, s: str) -> None:
         """ Changes the Username """
         await self.bot.user.edit(username=s)
 
-    @commands.command(hidden=True)
-    async def serverlist(self, ctx):
-        result = []
-        for x in self.bot.guilds:
-            result.append(x.name)
-        await ctx.send("\n".join(result))
 
-
-def setup(bot):
+def setup(bot: MyClient) -> None:
     """Setup admin.py"""
     bot.add_cog(Admin(bot))

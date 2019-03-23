@@ -21,9 +21,10 @@ KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.
 """
 
 modules = {
+    'modules.admin',
     'modules.comics',
     'modules.discordbots',
-    # 'modules.admin',
+    'modules.guild',
     # 'modules.anime',
     # 'modules.animehangman',
     # 'modules.blackjack',
@@ -108,18 +109,29 @@ class MyClient(commands.AutoShardedBot):
                 log.warning(e)
                 log.warning(f'[WARNING]: Module {mod} did not load')
 
-    async def check_blacklist(self, msg: discord.Message) -> bool:
-        if msg.author.bot:
+    async def check_blacklist(self, ctx: discord.ext.commands.Context) -> bool:
+        if ctx.author.bot:
             return False
-        if msg.guild:
-            return await self.db.check_guild_blacklist(msg.guild)
-        return await self.db.check_user_blacklist(msg.author)
+        return await self.db.check_user_blacklist(ctx.author)
+
+    async def process_commands(self, msg: discord.Message) -> None:
+        ctx = await self.get_context(msg)
+
+        if ctx.command is None:
+            return
+
+        if await self.check_blacklist(ctx):
+            await self.invoke(ctx)
 
     async def on_message(self, msg: discord.Message) -> None:
-        if await self.check_blacklist(msg):
-            await self.process_commands(msg)
+        if msg.author.bot:
+            return
+        await self.process_commands(msg)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
+        if not await self.db.check_guild_blacklist(guild):
+            await guild.leave()
+            return
         log.info(f'KoyomiBot joined a new guild! {guild.name}')
 
     async def on_guild_remove(self, guild: discord.Guild) -> None:

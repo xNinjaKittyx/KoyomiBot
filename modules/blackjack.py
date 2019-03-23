@@ -5,9 +5,10 @@ from discord.ext import commands
 
 
 class Card:
-    def __init__(self, value, color):
+    def __init__(self, value: int, color: str):
         self.value = value
         self.color = color
+        self._values = [None, "A", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"]
 
     def __eq__(self, other):
         if self.value == other.value and self.color == other.color:
@@ -15,17 +16,7 @@ class Card:
         return False
 
     def __str__(self):
-        if self.value == 13:
-            value = "K"
-        elif self.value == 12:
-            value = "Q"
-        elif self.value == 11:
-            value = "J"
-        elif self.value == 1:
-            value = "A"
-        else:
-            value = self.value
-        return "{} of {}".format(value, self.color)
+        return "{} of {}".format(self._values(self.value), self.color)
 
 
 class Deck:
