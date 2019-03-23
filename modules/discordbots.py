@@ -13,7 +13,7 @@ class DiscordBotUpdates:
 
     def __init__(self, bot: discord.Client):
         self.bot = bot
-        self._token = self.bot.key_config.DiscordBots
+        self._token = self.bot.key_config.DiscordAPIToken
         self._dblclient = dbl.Client(self.bot, self._token)
         self.bot.loop.create_task(self.update_stats())
 
@@ -31,7 +31,7 @@ class DiscordBotUpdates:
             async with self.bot.session.post(
                 f'https://discord.bots.gg/api/v1/{self.bot.user.id}/guilds',
                 headers={
-                    'Authorization': self.bot.key_config['DiscordPW'],
+                    'Authorization': self.bot.key_config.DiscordAPIToken,
                     'Content-Type': 'application/json'
                 },
                 data=rapidjson.dumps({

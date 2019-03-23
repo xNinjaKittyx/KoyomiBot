@@ -17,14 +17,15 @@ class Config:
             with open(self.filename_filepath, 'w') as f:
                 f.write(toml.dumps({
                     'DiscordToken': '',
-                    'GoogleMapsAPI': '',
-                    'DarkSkyAPI': '',
-                    'CleverbotAPI': '',
-                    'AnilistID': '',
-                    'AnilistSecret': '',
-                    'OsuAPI': '',
-                    'DiscordPW': '',
-                    'DiscordBots': '',
+                    'DiscordAPIToken': '',
+                    # 'GoogleMapsAPI': '',
+                    # 'DarkSkyAPI': '',
+                    # 'CleverbotAPI': '',
+                    # 'AnilistID': '',
+                    # 'AnilistSecret': '',
+                    # 'OsuAPI': '',
+                    # 'DiscordBotsGG': '',
+                    # 'DiscordBotsPW': '',
                     'debug': True,
                 }))
             raise FileNotFoundError(f"Filename {filename} not found. Created one for you.")
