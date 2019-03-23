@@ -3,7 +3,7 @@ import os
 import toml
 
 
-config_folder = os.path.join(os.path.abspath(__file__), '..', 'config')
+config_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config')
 
 
 class Config:
