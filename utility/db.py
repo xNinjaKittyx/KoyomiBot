@@ -57,7 +57,7 @@ class KoyomiDB:
         return result
 
     async def get_guild_prefixes(self, guild: discord.Guild) -> list:
-        return (await self.get_guild_info(guild))['prefix']
+        return list((await self.get_guild_info(guild))['prefix'])
 
     async def check_guild_blacklist(self, guild: discord.Guild) -> bool:
         return not (await self.get_guild_info(guild))['ignore']
