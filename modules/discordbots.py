@@ -19,6 +19,9 @@ class DiscordBotUpdates(commands.Cog):
     async def update_stats(self) -> None:
 
         while True:
+            while self.bot.user is None:
+                await asyncio.sleep(1)
+
             log.info('Posting Server Count to DiscordBots.org')
             async with self.bot.session.post(
                 f'https://discordbots.org/api/bots/{self.bot.user.id}/stats',
