@@ -37,4 +37,4 @@ class GuildCommands(commands.Cog):
 
 def setup(bot: MyClient) -> None:
     """Setup admin.py"""
-    bot.add_cog(Admin(bot))
+    bot.add_cog(GuildCommands(bot))
