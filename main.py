@@ -23,6 +23,7 @@ KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.
 modules = {
     'modules.admin',
     'modules.animals',
+    'modules.anime',
     'modules.comics',
     'modules.discordbots',
     'modules.guild',
