@@ -69,8 +69,11 @@ class Anime(commands.Cog):
         if len(anime_search) < 3:
             return
         result = await self.get_anime(anime_search)
+        if result is None:
+            return
+
         trailer_url = result.get('trailer_url')
-        if result is None or not trailer_url:
+        if not trailer_url:
             return
 
         em = dmbd.newembed(
