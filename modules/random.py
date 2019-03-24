@@ -6,6 +6,7 @@ import random
 
 import rapidjson
 
+from bs4 import BeautifulSoup
 from discord.ext import commands
 
 import utility.discordembed as dmbd
@@ -58,10 +59,12 @@ class Random(commands.Cog):
             sprite = 'front_default'
 
         if gender:
-            sprite += '_female'
+            sprite_link = pokeman['sprites'].get(sprite + '_female', pokeman['sprites'][sprite])
+        else:
+            sprite_link = pokeman['sprites'][sprite]
 
-        em.set_image(url=pokeman['sprites'][sprite])
-        await ctx.send(embed=em)
+        em.set_image(url=sprite_link)
+        await ctx.send(embed=em, footer="PokeAPI")
 
     @commands.command()
     async def roll(self, ctx: commands.Context, dice: str = '1d6') -> None:
@@ -125,7 +128,7 @@ class Random(commands.Cog):
                 return
             request = await r.json(loads=rapidjson.loads)
         em = dmbd.newembed(a=request['quoteAuthor'], d=request['quoteText'], u=request['quoteLink'])
-        await ctx.send(embed=em)
+        await ctx.send(embed=em, footer="forismatic")
 
     @commands.command()
     async def dadjoke(self, ctx: commands.Context) -> None:
@@ -136,7 +139,7 @@ class Random(commands.Cog):
                 return
             request = await r.json(loads=rapidjson.loads)
         em = dmbd.newembed(a='Dad Joke... Why?', d=request['joke'])
-        await ctx.send(embed=em)
+        await ctx.send(embed=em, footer="ICanHazDadJoke")
 
     @commands.command()
     async def quotesondesign(self, ctx: commands.Context) -> None:
@@ -154,9 +157,9 @@ class Random(commands.Cog):
             source = ''
         em = dmbd.newembed(
             a=request['title'],
-            d=request['content'] + '\n' + 'Source: ' + source,
+            d=BeautifulSoup(request['content'], 'html.parser').get_text().strip() + '\n' + 'Source: ' + source,
             u=request['link'])
-        await ctx.send(embed=em)
+        await ctx.send(embed=em, footer="QuotesOnDesign")
 
 
 def setup(bot: MyClient) -> None:
