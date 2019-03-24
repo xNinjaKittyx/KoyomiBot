@@ -1,16 +1,15 @@
 
-from datetime import datetime
 import time
 
 from discord.ext import commands
-import rapidjson
 import psutil
 import utility.discordembed as dmbd
+from main import MyClient
 
 
 class Info:
 
-    def __init__(self, bot):
+    def __init__(self, bot: MyClient):
         self.bot = bot
         self.initialtime = time.time()
 
@@ -30,7 +29,7 @@ class Info:
             minutes = int(seconds/60)
             seconds = seconds % 60
 
-        return "{d}d {h}h {m}m {s}s".format(d=days, h=hours, m=minutes, s=seconds)
+        return f"{days}d {hours}h {minutes}m {seconds}s"
 
     @staticmethod
     def getcpuusage():
@@ -48,27 +47,10 @@ class Info:
                 total += psutil.Process().memory_info().rss / (1024 ** 2)
         return total
 
-    def gettotalusers(self):
-        totalmembers = set({})
-        for x in self.bot.guilds:
-            for y in x.members:
-                totalmembers.add(y.id)
-        return len(totalmembers)
-
     @commands.command()
     async def ping(self, ctx):
-        pingpong = datetime.now() - ctx.message.created_at
-        pingpong = pingpong.microseconds / 1000
-        second = await ctx.send('*headtilt*')
-        heartbeat = second.created_at - ctx.message.created_at
-        heartbeat = heartbeat.microseconds / 1000
-        description = (
-            ':ping_pong: `' + str(pingpong) + ' ms`\n' +
-            ':blue_heart: `' + str(heartbeat) + ' ms`'
-        )
-        em = dmbd.newembed(ctx.author, d=description)
-        await second.edit(new_content='', embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('ping')
+        em = dmbd.newembed(ctx.author, d=self.bot.latency)
+        await ctx.send(embed=em)
 
     @commands.command()
     async def stats(self, ctx):
@@ -76,7 +58,6 @@ class Info:
         title = 'Stats for ' + self.bot.user.name
         desc = 'Don\'t..t..t... look at my stats... Baka!'
         url = "https://github.com/xNinjaKittyx/"
-        # trello = "Add Later"
         inviteurl = (
             "https://discordapp.com/api/oauth2/authorize?client_id=" +
             str(self.bot.user.id) +
@@ -86,24 +67,22 @@ class Info:
         supporturl = "https://discord.gg/Fzz344U"
 
         em = dmbd.newembed(author, title, desc, url)
-        em.add_field(name='Total Users', value=self.gettotalusers())
+        em.add_field(name='Total Users', value=len(self.bot.users))
         em.add_field(name='Total Guilds', value=len(self.bot.guilds))
         em.add_field(name='Current Guild Users', value=len(ctx.guild.members))
         em.add_field(name='Uptime', value=self.getuptime())
-        em.add_field(name='CPU', value="{0:.2f}%".format(self.getcpuusage()))
-        em.add_field(name='Memory', value="{0:.2f} MB".format(self.getmemusage()))
-        # em.add_field(name='Trello', value='[Trello Page]({})'.format(trello))
-        em.add_field(name='Invite', value='[Click Me :)]({})'.format(inviteurl))
-        em.add_field(name='Support', value='[Discord Link]({})'.format(supporturl))
+        if author == 82221891191844864:
+            em.add_field(name='CPU', value=f"{self.getcpuusage():.2f}%")
+            em.add_field(name='Memory', value=f"{self.getmemusage():.2f} MB")
+        em.add_field(name='Invite', value=f'[Click Me :)]({inviteurl})')
+        em.add_field(name='Support', value=f'[Discord Link]({supporturl})')
 
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('stats')
 
     @commands.command()
     async def uptime(self, ctx):
         await ctx.send("```" + self.getuptime() + "```")
-        await self.bot.cogs['Wordcount'].cmdcount('uptime')
 
 
-def setup(bot):
+def setup(bot: MyClient) -> None:
     bot.add_cog(Info(bot))
