@@ -1,9 +1,14 @@
 
+import logging
+
 from typing import Callable
 
 from discord.ext import commands
 
 from main import MyClient
+
+
+log = logging.getLogger(__name__)
 
 
 def is_guild_owner() -> Callable:
@@ -31,7 +36,7 @@ class GuildCommands(commands.Cog):
             await ctx.send(f"Removed Prefix {prefix}")
 
     @commands.command(name="getprefix")
-    async def get_prefix(self, ctx: commands.Context, *, prefix: str) -> None:
+    async def get_prefix(self, ctx: commands.Context) -> None:
         await ctx.send(", ".join(await self.bot.db.get_guild_prefixes(ctx.guild)))
 
 

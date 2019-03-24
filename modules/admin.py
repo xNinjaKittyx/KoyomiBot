@@ -1,5 +1,6 @@
 
 import asyncio
+import logging
 
 from typing import Callable
 
@@ -7,6 +8,9 @@ import discord
 from discord.ext import commands
 
 from main import MyClient
+
+
+log = logging.getLogger(__name__)
 
 
 def is_owner() -> Callable:

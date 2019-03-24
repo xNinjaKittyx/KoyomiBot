@@ -93,7 +93,7 @@ class Comics(commands.Cog):
                 img = f'http:{soup.find(id="main-comic")["src"]}'
                 await redis.hmset_dict('xkcd', {num: img})
                 return img
-
+    
         return result.decode('utf-8')
 
     @commands.command()
