@@ -71,7 +71,7 @@ class Info(commands.Cog):
         em.add_field(name='Total Guilds', value=len(self.bot.guilds))
         em.add_field(name='Current Guild Users', value=len(ctx.guild.members))
         em.add_field(name='Uptime', value=self.getuptime())
-        if author == 559250795527143431:
+        if author.id == 82221891191844864:
             em.add_field(name='CPU', value=f"{self.getcpuusage():.2f}%")
             em.add_field(name='Memory', value=f"{self.getmemusage():.2f} MB")
         em.add_field(name='Invite', value=f'[Click Me :)]({inviteurl})')
