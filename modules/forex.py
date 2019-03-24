@@ -17,8 +17,7 @@ class Forex(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def forex(self, ctx: commands.Context, *, values: str) -> None:
-        args = values.split(' ')
+    async def forex(self, ctx: commands.Context, *args: str) -> None:
         num_of_args = len(args)
         if num_of_args == 1:
             base = 'USD'

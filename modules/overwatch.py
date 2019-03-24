@@ -1,90 +1,84 @@
 """ Overwatch API usage"""
-
+import asyncio
+import logging
 import random
 
-from discord.ext import commands
+from typing import List
+
 import rapidjson
+import discord
+from discord.ext import commands
+
 from utility import discordembed as dmbd
+from main import MyClient
 
 
-class Overwatch:
-    def __init__(self, bot):
+log = logging.getLogger(__name__)
+
+
+class Overwatch(commands.Cog):
+    def __init__(self, bot: MyClient):
         self.bot = bot
+        self.heroes: List[str] = []
 
-        self.heroes = ['Genji', 'McCree', 'Pharrah', 'Reaper', 'Soldier 76',
-                       'Tracer', 'Bastion', 'Hanzo', 'Junkrat', 'Mei',
-                       'Torbjorn', 'Widowmaker', 'D.va', 'Reinhardt', 'Roadhog',
-                       'Winston', 'Zarya', 'Lucio', 'Mercy',
-                       'Symmetra', 'Zenyatta', 'Sombra', 'Orisa']
+    async def gather_heroes(self) -> None:
+        while True:
+            async with self.bot.session.get('https://overwatch-api.net/api/v1/hero') as r:
+                if r.status != 200:
+                    log.error('Could not get heroes from https://overwatch-api.net/api/v1/hero')
+                    await asyncio.sleep(3600)
+                result = await r.json()
+            self.heroes = [hero['name'] for hero in result['data']]
+            log.info('Refreshed Overwatch Heroes')
+            await asyncio.sleep(3600 * 24)
 
     @staticmethod
-    def display(author, player, qp, comp):
+    def display(author: discord.User, player: str, profile: dict) -> discord.Embed:
         em = dmbd.newembed(
-            author, player.replace('-', '#'), "Please let me know if you'd like to see more different stats.")
-        em.set_thumbnail(url=qp['overall_stats']['avatar'])
-        level = qp['overall_stats']['prestige'] * 100 + qp['overall_stats']['level']
-        cmpwinrate = (
-            str(comp['overall_stats']['win_rate']) + "(" +
-            str(comp['overall_stats']['wins']) + "/" +
-            str(comp['overall_stats']['games']) + ")"
-        )
-        em.add_field(name='Level', value=level)
-        em.add_field(
-            name='Competitive Rank',
-            value=comp['overall_stats']['comprank']
-        )
-        em.add_field(name='Competitive Win Rate', value=cmpwinrate)
-        em.add_field(name='Quickplay Wins', value=qp['overall_stats']['wins'])
-        timeplayed = qp['game_stats']['time_played'] + comp['game_stats']['time_played']
-        em.add_field(name='Total Playtime', value=str(int(timeplayed)) + " hours")
+            author, player.replace('-', '#'))
+        em.set_thumbnail(url=profile.get('ratingIcon', profile['icon']))
+        em.add_field(name='Prestige/Level', value="{prestige}/{level}".format_map(profile))
+        em.add_field(name='Comp Rating', value=profile['rating'])
+        if profile['competitiveStats']:
+            em.add_field(name='Elimination Avg', value=profile['competitiveStats']['eliminationsAvg'])
+            em.add_field(name='Death Avg', value=profile['competitiveStats']['deathsAvg'])
+            em.add_field(name='Winrate', value=profile['competitiveStats']['games']['won'] / profile['competitiveStats']['games']['played'])
+        if profile['quickPlayStats']:
+            em.add_field(name='Elimination Avg', value=profile['quickPlayStats']['eliminationsAvg'])
+            em.add_field(name='Death Avg', value=profile['quickPlayStats']['deathsAvg'])
+            em.add_field(name='Winrate', value=profile['quickPlayStats']['games']['won'] / profile['quickPlayStats']['games']['played'])
 
         return em
 
     @commands.command()
-    async def owstats(self, ctx, *, tag: str):
-        """ Usage: owstats [region] [battletag]\nRegions: kr, eu, us"""
-        splitstr = tag.split(sep=' ')
-        print(splitstr)
-        if len(splitstr) != 2:
-            await ctx.send("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
-            return
-        region = splitstr[0].lower()
+    async def owstats(self, ctx: commands.Context, region: str, battletag: str) -> None:
         if len(region) != 2:
-            await ctx.send("```Usage: owstats [region] [battletag]\nRegions: kr, eu, us```")
             return
-        tag = splitstr[1]
-        if '#' in tag:
-            tag = tag.replace('#', '-')
+        if '#' not in battletag:
+            return
+        battletag = battletag.replace('#', '-')
 
-        async with self.bot.session.get('https://owapi.net/api/v3/u/' + tag + '/stats') as r:
+        async with self.bot.session.get(f'https://ow-api.com/v1/stats/pc/{region}/{battletag}/profile/') as r:
             if r.status != 200:
-                self.bot.logger.warning('OWApi.net failed to connect.')
+                self.bot.logger.error(f'ow-api.com failed to return {r.status}')
                 return
-            profile = await r.json(loads=rapidjson.loads)
-            profile = profile[region]['stats']
-            quick = profile['quickplay']
-            comp = profile['competitive']
-            await ctx.send(embed=self.display(ctx.author, tag, quick, comp))
-            await self.bot.cogs['Wordcount'].cmdcount('owstats')
+            profile = await r.json()
+        await ctx.send(embed=self.display(ctx.author, battletag, profile))
 
     @commands.command()
-    async def owrng(self, ctx):
+    async def owrng(self, ctx: commands.Context) -> None:
         """ RNG OVERWATCH """
         await ctx.send("Play {}!".format(random.choice(self.heroes)))
-        await self.bot.cogs['Wordcount'].cmdcount('owrng')
 
     @commands.command()
-    async def owteam(self, ctx, num: int = 6):
-        """ Get a random OW Team \nUsage: owteam [Optional: Teamsize]"""
+    async def owteam(self, ctx: commands.Context, num: int = 6) -> None:
         random.shuffle(self.heroes)
         result = self.heroes[:num]
         await ctx.send(
-            "Here's your teamcomp! Good luck!\n" +
-            "{}".format(", ".join(result))
+            f"Here's your teamcomp! Good luck!\n{', '.join(result)}"
         )
-        await self.bot.cogs['Wordcount'].cmdcount('owteam')
 
 
-def setup(bot):
+def setup(bot: MyClient) -> None:
     """ Setup OW Module"""
     bot.add_cog(Overwatch(bot))
