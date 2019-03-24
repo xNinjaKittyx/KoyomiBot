@@ -59,7 +59,7 @@ class Comics(commands.Cog):
         if not result:
             return
 
-        em = dmbd.newembed(ctx.author, result['safe_title'], u=f"http://xkcd.com/{number}")
+        em = dmbd.newembed(ctx.author, result['safe_title'], u=f"http://xkcd.com/{number}", footer="XKCD")
         em.set_image(url=result['img'])
         em.add_field(
             name=result['alt'],
@@ -93,7 +93,7 @@ class Comics(commands.Cog):
                 img = f'http:{soup.find(id="main-comic")["src"]}'
                 await redis.hmset_dict('xkcd', {num: img})
                 return img
-    
+
         return result.decode('utf-8')
 
     @commands.command()
@@ -106,7 +106,8 @@ class Comics(commands.Cog):
                 continue
             img = await self.getcyanide(number)
         # whatever reason, comics 1 - 38 don't exist.
-        em = dmbd.newembed(ctx.author, 'Cyanide and Happiness', str(number), u=f'http://explosm.net/comics/{number}')
+        em = dmbd.newembed(
+            ctx.author, 'Cyanide and Happiness', str(number), u=f'http://explosm.net/comics/{number}', footer="Explosm")
         em.set_image(url=img)
         await ctx.send(embed=em)
 
@@ -120,7 +121,7 @@ class Comics(commands.Cog):
                 return
             soup = BeautifulSoup(await r.text(), 'html.parser')
         img = f"http:{soup.find(id='rcg-comic').img['src']}"
-        em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img)
+        em = dmbd.newembed(ctx.author, 'Cyanide and Happiness RCG', u=img, footer="Explosm")
         em.set_image(url=img)
         await ctx.send(embed=em)
 

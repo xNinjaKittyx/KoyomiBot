@@ -36,7 +36,7 @@ class Overwatch(commands.Cog):
     @staticmethod
     def display(author: discord.User, player: str, profile: dict) -> discord.Embed:
         em = dmbd.newembed(
-            author, player.replace('-', '#'))
+            author, player.replace('-', '#'), footer="OW-API")
         em.set_thumbnail(url=profile.get('ratingIcon', profile['icon']))
         em.add_field(name='Prestige/Level', value="{prestige}/{level}".format_map(profile))
         em.add_field(name='Comp Rating', value=profile['rating'])
