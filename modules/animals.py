@@ -54,6 +54,9 @@ class Animals(commands.Cog):
                 log.error('Could not get info from random.dog')
                 return
             result = await r.json()
+            if result['url'].endswith('.mp4'):
+                log.error('MP4 link detected, exiting out...')
+                return
         em = dmbd.newembed(ctx.author, "Random Dog")
         em.set_image(url=result['url'])
 
