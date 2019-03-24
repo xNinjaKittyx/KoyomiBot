@@ -1,25 +1,31 @@
 
+import logging
+
 import rapidjson
 from discord.ext import commands
 
 import utility.discordembed as dmbd
+from main import MyClient
 
 
-class Forex:
+log = logging.getLogger(__name__)
 
-    def __init__(self, bot):
+
+class Forex(commands.Cog):
+
+    def __init__(self, bot: MyClient):
         self.bot = bot
 
     @commands.command()
-    async def forex(self, ctx, *, args):
-        args = args.split(' ')
-
-        if len(args) == 1:
+    async def forex(self, ctx: commands.Context, *, values: str) -> None:
+        args = values.split(' ')
+        num_of_args = len(args)
+        if num_of_args == 1:
             base = 'USD'
             if len(args[0]) != 3:
                 return
             conversion = args[0].upper()
-        elif len(args) == 2:
+        elif num_of_args == 2:
             if len(args[0]) != 3 or len(args[1]) != 3:
                 return
             base = args[0].upper()
@@ -27,19 +33,24 @@ class Forex:
         else:
             return
 
-        async with self.bot.session.get('https://api.fixer.io/latest?base=' + base + '&symbols=' + conversion) as r:
-            if r.status != 200:
-                self.bot.logger.warning('Could not get info from fixer.io')
-                return
-            results = await r.json(loads=rapidjson.loads)
-            desc = base + ' to ' + conversion + ' conversion.'
-            em = dmbd.newembed(ctx.author, 'Foreign Exchange', desc, 'http://fixer.io/')
-            em.set_thumbnail(url='http://fixer.io/img/money.png')
-            em.add_field(name='1 ' + base, value=str(results['rates'][conversion]) + ' ' + conversion)
-            await ctx.send(embed=em)
-            await self.bot.cogs['Wordcount'].cmdcount('forex')
+        cache = await self.bot.db.redis.get(f'exchangerateapi:{base}')
+        if cache is None:
+            url = f'https://api.exchangeratesapi.io/latest?base={base}'
+            async with self.bot.session.get(url) as r:
+                if r.status != 200:
+                    log.error('Could not get info from ExchangeRagesAPI')
+                    return
+                result = await r.json()
+            await self.bot.db.redis.set(f'exchangerateapi:{base}', rapidjson.dumps(result))
+        else:
+            result = rapidjson.loads(cache)
+
+        desc = f"{base} to {conversion} conversion"
+        em = dmbd.newembed(ctx.author, 'Foreign Exchange', desc, 'https://exchangeratesapi.io/')
+        em.add_field(name=f'1 {base}', value=f"{result['rates'][conversion]}  {conversion}")
+        await ctx.send(embed=em)
 
 
-def setup(bot):
+def setup(bot: MyClient) -> None:
     """ Setup Forex Module"""
     bot.add_cog(Forex(bot))

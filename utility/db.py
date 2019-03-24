@@ -119,5 +119,3 @@ class KoyomiDB:
 
     async def check_user_blacklist(self, user: discord.User) -> bool:
         return not (await self.get_user_info(user))['ignore']
-
-

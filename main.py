@@ -26,6 +26,7 @@ modules = {
     'modules.anime',
     'modules.comics',
     'modules.discordbots',
+    'modules.forex',
     'modules.guild',
     'modules.info',
     # 'modules.anime',
@@ -33,7 +34,6 @@ modules = {
     # 'modules.blackjack',
     # 'modules.cleverbot',
     # 'modules.comics',
-    # 'modules.forex',
     # 'modules.image',
     # 'modules.interactions',
     # 'modules.log',
@@ -107,7 +107,7 @@ class MyClient(commands.AutoShardedBot):
             try:
                 self.load_extension(mod)
                 log.info(f'Load Successful: {mod}')
-            except ImportError as e:
+            except discord.ext.commands.errors.ExtensionFailed as e:
                 log.warning(e)
                 log.warning(f'[WARNING]: Module {mod} did not load')
 
