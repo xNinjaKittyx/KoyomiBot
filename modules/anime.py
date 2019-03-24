@@ -65,6 +65,24 @@ class Anime(commands.Cog):
         return mal_details
 
     @commands.command()
+    async def animetrailer(self, ctx: commands.Context, *, anime_search: str) -> None:
+        if len(anime_search) < 3:
+            return
+        result = await self.get_anime(anime_search)
+        trailer_url = result.get('trailer_url')
+        if result is None or not trailer_url:
+            return
+
+        em = dmbd.newembed(
+            a=ctx.author, t=result['title'], d=result['title_japanese'],
+            u=result['url'], footer="Jikan & MAL"
+        )
+        em.add_field(name="Synopsis", value=result['synopsis'])
+        em.set_image(url=trailer_url)
+        await ctx.send(embed=em)
+
+
+    @commands.command()
     async def anime(self, ctx: commands.Context, *, anime_search: str) -> None:
         if len(anime_search) < 3:
             return
