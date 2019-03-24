@@ -20,13 +20,14 @@ class Overwatch(commands.Cog):
     def __init__(self, bot: MyClient):
         self.bot = bot
         self.heroes: List[str] = []
+        self.bot.loop.create_task(self.gather_heroes())
 
     async def gather_heroes(self) -> None:
         while True:
             async with self.bot.session.get('https://overwatch-api.net/api/v1/hero') as r:
                 if r.status != 200:
                     log.error('Could not get heroes from https://overwatch-api.net/api/v1/hero')
-                    await asyncio.sleep(3600)
+                    await asyncio.sleep(60)
                 result = await r.json()
             self.heroes = [hero['name'] for hero in result['data']]
             log.info('Refreshed Overwatch Heroes')
@@ -42,11 +43,15 @@ class Overwatch(commands.Cog):
         if profile['competitiveStats']:
             em.add_field(name='Elimination Avg', value=profile['competitiveStats']['eliminationsAvg'])
             em.add_field(name='Death Avg', value=profile['competitiveStats']['deathsAvg'])
-            em.add_field(name='Winrate', value=profile['competitiveStats']['games']['won'] / profile['competitiveStats']['games']['played'])
+            em.add_field(
+                name='Winrate',
+                value=profile['competitiveStats']['games']['won'] / profile['competitiveStats']['games']['played'])
         if profile['quickPlayStats']:
             em.add_field(name='Elimination Avg', value=profile['quickPlayStats']['eliminationsAvg'])
             em.add_field(name='Death Avg', value=profile['quickPlayStats']['deathsAvg'])
-            em.add_field(name='Winrate', value=profile['quickPlayStats']['games']['won'] / profile['quickPlayStats']['games']['played'])
+            em.add_field(
+                name='Winrate',
+                value=profile['quickPlayStats']['games']['won'] / profile['quickPlayStats']['games']['played'])
 
         return em
 
