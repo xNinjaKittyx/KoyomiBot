@@ -22,9 +22,9 @@ class Animals(commands.Cog):
                 log.error('Could not get info from Shibe.online')
                 return
             result = await r.json()
-            em = dmbd.newembed(ctx.author, "Shibes")
-            em.set_image(url=result[0])
-            await ctx.send(embed=em)
+        em = dmbd.newembed(ctx.author, "Shibes")
+        em.set_image(url=result[0])
+        await ctx.send(embed=em)
 
     @commands.command()
     async def catfact(self, ctx: commands.Context) -> None:
@@ -33,8 +33,8 @@ class Animals(commands.Cog):
                 log.error('Could not get info from cat-fact.com')
                 return
             result = await r.json()
-            em = dmbd.newembed(ctx.author, "Random Cat Fact", d=result['text'])
-            await ctx.send(embed=em)
+        em = dmbd.newembed(ctx.author, "Random Cat Fact", d=result['text'])
+        await ctx.send(embed=em)
 
     @commands.command()
     async def meow(self, ctx: commands.Context) -> None:
@@ -43,9 +43,9 @@ class Animals(commands.Cog):
                 log.error('Could not get info from random.cat')
                 return
             result = await r.json()
-            em = dmbd.newembed(ctx.author, "Random Cat")
-            em.set_image(url=result['file'])
-            await ctx.send(embed=em)
+        em = dmbd.newembed(ctx.author, "Random Cat")
+        em.set_image(url=result['file'])
+        await ctx.send(embed=em)
 
     @commands.command()
     async def woof(self, ctx: commands.Context) -> None:
@@ -54,8 +54,8 @@ class Animals(commands.Cog):
                 log.error('Could not get info from random.dog')
                 return
             result = await r.json()
-            em = dmbd.newembed(ctx.author, "Random Dog")
-            em.set_image(url=result['url'])
+        em = dmbd.newembed(ctx.author, "Random Dog")
+        em.set_image(url=result['url'])
 
     @commands.command()
     async def floof(self, ctx: commands.Context) -> None:
@@ -64,9 +64,9 @@ class Animals(commands.Cog):
                 log.error('Could not get info from randomfox.ca')
                 return
             result = await r.json()
-            em = dmbd.newembed(ctx.author, "Random Dog", u=result['link'])
-            em.set_image(url=result['image'])
+        em = dmbd.newembed(ctx.author, "Random Dog", u=result['link'])
+        em.set_image(url=result['image'])
 
 
-def setup(bot: MyClient):
+def setup(bot: MyClient) -> None:
     bot.add_cog(Animals(bot))
