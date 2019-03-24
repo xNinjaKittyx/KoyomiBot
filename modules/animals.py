@@ -22,7 +22,7 @@ class Animals(commands.Cog):
                 log.error('Could not get info from Shibe.online')
                 return
             result = await r.json()
-        em = dmbd.newembed(ctx.author, "Shibes")
+        em = dmbd.newembed(ctx.author, "Shibes", footer="shibe.online")
         em.set_image(url=result[0])
         await ctx.send(embed=em)
 
@@ -33,7 +33,7 @@ class Animals(commands.Cog):
                 log.error('Could not get info from cat-fact.com')
                 return
             result = await r.json()
-        em = dmbd.newembed(ctx.author, "Random Cat Fact", d=result['text'])
+        em = dmbd.newembed(ctx.author, "Random Cat Fact", d=result['text'], footer="cat-fact")
         await ctx.send(embed=em)
 
     @commands.command()
@@ -43,7 +43,7 @@ class Animals(commands.Cog):
                 log.error('Could not get info from random.cat')
                 return
             result = await r.json()
-        em = dmbd.newembed(ctx.author, "Random Cat")
+        em = dmbd.newembed(ctx.author, "Random Cat", footer="random.cat")
         em.set_image(url=result['file'])
         await ctx.send(embed=em)
 
@@ -57,7 +57,7 @@ class Animals(commands.Cog):
             if result['url'].endswith('.mp4'):
                 log.error('MP4 link detected, exiting out...')
                 return
-        em = dmbd.newembed(ctx.author, "Random Dog")
+        em = dmbd.newembed(ctx.author, "Random Dog", footer="random.dog")
         em.set_image(url=result['url'])
 
     @commands.command()
@@ -67,7 +67,7 @@ class Animals(commands.Cog):
                 log.error('Could not get info from randomfox.ca')
                 return
             result = await r.json()
-        em = dmbd.newembed(ctx.author, "Random Dog", u=result['link'])
+        em = dmbd.newembed(ctx.author, "Random Dog", u=result['link'], footer="randomfox.ca")
         em.set_image(url=result['image'])
 
 

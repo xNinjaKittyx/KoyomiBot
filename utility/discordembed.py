@@ -9,7 +9,8 @@ import discord
 
 def newembed(
     a: Union[str, discord.User] = None, t: Optional[str] = None,
-    d: Optional[str] = None, u: Optional[str] = None, c: Optional[int] = None
+    d: Optional[str] = None, u: Optional[str] = None, c: Optional[int] = None,
+    footer: Optional[str] = "NinjaKitty"
 ) -> discord.Embed:
     if c is None:
         c = random.randint(0, 16777215)
@@ -21,8 +22,7 @@ def newembed(
         else:
             em.set_author(name=a)
     em.set_footer(
-        text="Powered by NinjaKitty | " +
-        strftime('%a %b %d, %Y at %I:%M %p'),
+        text=f"Powered by {footer} | {strftime('%a %b %d, %Y at %I:%M %p')}",
         icon_url="https://my.mixtape.moe/yaoznj.png"
     )
 

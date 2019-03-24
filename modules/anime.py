@@ -1,11 +1,14 @@
 """ To Get an Anime or Manga from MyAnimeList"""
 import logging
 from datetime import datetime
+from typing import Optional
 
+import rapidjson
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
 import utility.discordembed as dmbd
+from main import MyClient
 
 
 log = logging.getLogger(__name__)
@@ -18,36 +21,68 @@ class Anime(commands.Cog):
     get_jikan = "https://api.jikan.moe/v3/{}/{}"
     priority_types = ('TV', 'Movie')
 
-    def __init__(self, bot):
+    def __init__(self, bot: MyClient):
         self.bot = bot
+
+    async def get_anime(self, string: str) -> Optional[dict]:
+        cache_string = f"animesearch:{string}"
+        mal_id = await self.bot.db.redis.get(cache_string)
+        if mal_id is None:
+            url = self.search_jikan.format('anime', string)
+            async with self.bot.session.get(url) as r:
+                if r.status != 200:
+                    log.error(f'Status: {r.status}. Did not get INFO from {url}')
+                    return None
+                results = await r.json()
+            if not results['results']:
+                return {}
+            # Iterate through the list to find the first "TV" or "MOVIE"
+            for ani in results['results']:
+                if ani['type'] in self.priority_types:
+                    result = ani
+                    break
+            else:
+                result = results['results'][0]
+            mal_id = result['mal_id']
+            await self.bot.db.redis.set(cache_string, int(mal_id))
+
+        # Now get the actual anime details:
+        cache_string = f"anime:{mal_id}"
+        mal_details = await self.bot.db.redis.get(cache_string)
+        if mal_details is None:
+            url = self.get_jikan.format('anime', mal_id)
+            async with self.bot.session.get(url) as r:
+                if r.status != 200:
+                    log.error(f'Status: {r.status}. Did not get INFO from {url}')
+                    return None
+                mal_details = await r.json()
+                await self.bot.db.redis.set(cache_string, rapidjson.dumps(mal_details))
+        else:
+            mal_details = rapidjson.loads(mal_details)
+
+        return mal_details
 
     @commands.command()
     async def anime(self, ctx: commands.Context, *, anime_search: str) -> None:
         if len(anime_search) < 3:
             return
-        url = self.search_jikan.format('anime', anime_search)
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                log.error(f'Status: {r.status}. Did not get INFO from {url}')
-                return
+        result = await self.get_anime(anime_search)
+        if result is None:
+            return
 
-            results = await r.json()
-        if not results['results']:
-            await ctx.send('Could not find an anime for that.')
-        # Iterate through the list to find the first "TV" or "MOVIE"
-        for ani in results['results']:
-            if ani['type'] in self.priority_types:
-                result = ani
-                break
-        else:
-            result = results['results'][0]
-
-        em = dmbd.newembed(a=ctx.author, t=result['title'], d=f"MAL ID: {result['mal_id']}", u=result['url'])
+        em = dmbd.newembed(
+            a=ctx.author, t=result['title'], d=result['title_japanese'],
+            u=result['url'], footer="Jikan & MAL"
+        )
         em.set_image(url=result['image_url'])
+        em.add_field(name="Rank", value=result['rank'])
+        em.add_field(name="Popularity", value=result['popularity'])
         em.add_field(name="Type", value=result['type'])
+        em.add_field(name="Season", value=result['premiered'])
         em.add_field(name="Episodes", value=result['episodes'])
-        em.add_field(name="Ongoing", value=("Yes" if result['airing'] else "No"))
+        em.add_field(name="Status", value=result['status'])
         em.add_field(name="Score", value=result['score'])
+        em.add_field(name="Synopsis", value=result['synopsis'])
         await ctx.send(embed=em)
 
     # @commands.command(name="animedetail")
