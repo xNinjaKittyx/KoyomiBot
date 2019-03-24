@@ -46,7 +46,7 @@ class Random(commands.Cog):
                 log.error(f'Could not get pokemon ID: {numid}')
                 return
             pokeman = await r.json()
-        em = dmbd.newembed(ctx.author, pokeman['name'].title())
+        em = dmbd.newembed(ctx.author, pokeman['name'].title(), footer="PokeAPI")
         shiny = (random.randint(1, 65536) < int(65535/(8200 - self.shinychance * 200)))
         gender = random.randint(0, 1)
         if shiny:
@@ -64,7 +64,7 @@ class Random(commands.Cog):
             sprite_link = pokeman['sprites'][sprite]
 
         em.set_image(url=sprite_link)
-        await ctx.send(embed=em, footer="PokeAPI")
+        await ctx.send(embed=em)
 
     @commands.command()
     async def roll(self, ctx: commands.Context, dice: str = '1d6') -> None:
@@ -127,8 +127,10 @@ class Random(commands.Cog):
                 self.bot.logger.warning('Forimsatic GET Failed')
                 return
             request = await r.json(loads=rapidjson.loads)
-        em = dmbd.newembed(a=request['quoteAuthor'], d=request['quoteText'], u=request['quoteLink'])
-        await ctx.send(embed=em, footer="forismatic")
+        em = dmbd.newembed(
+            a=request['quoteAuthor'], d=request['quoteText'],
+            u=request['quoteLink'], footer="forismatic")
+        await ctx.send(embed=em)
 
     @commands.command()
     async def dadjoke(self, ctx: commands.Context) -> None:
@@ -138,8 +140,8 @@ class Random(commands.Cog):
                 self.bot.logger.warning('https://icanhazdadjoke.com/api request failed')
                 return
             request = await r.json(loads=rapidjson.loads)
-        em = dmbd.newembed(a='Dad Joke... Why?', d=request['joke'])
-        await ctx.send(embed=em, footer="ICanHazDadJoke")
+        em = dmbd.newembed(a='Dad Joke... Why?', d=request['joke'], footer="ICanHazDadJoke")
+        await ctx.send(embed=em)
 
     @commands.command()
     async def quotesondesign(self, ctx: commands.Context) -> None:
@@ -158,8 +160,8 @@ class Random(commands.Cog):
         em = dmbd.newembed(
             a=request['title'],
             d=BeautifulSoup(request['content'], 'html.parser').get_text().strip() + '\n' + 'Source: ' + source,
-            u=request['link'])
-        await ctx.send(embed=em, footer="QuotesOnDesign")
+            u=request['link'], footer="QuotesOnDesign")
+        await ctx.send(embed=em)
 
 
 def setup(bot: MyClient) -> None:
