@@ -68,5 +68,5 @@ class Animals(commands.Cog):
             em.set_image(url=result['image'])
 
 
-def setup(bot: Myclient):
+def setup(bot: MyClient):
     bot.add_cog(Animals(bot))
