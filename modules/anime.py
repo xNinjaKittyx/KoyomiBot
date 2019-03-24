@@ -75,14 +75,7 @@ class Anime(commands.Cog):
         trailer_url = result.get('trailer_url')
         if not trailer_url:
             return
-
-        em = dmbd.newembed(
-            a=ctx.author, t=result['title'], d=result['title_japanese'],
-            u=result['url'], footer="Jikan & MAL"
-        )
-        em.add_field(name="Synopsis", value=result['synopsis'])
-        em.set_image(url=trailer_url)
-        await ctx.send(embed=em)
+        await ctx.send(trailer_url)
 
 
     @commands.command()
