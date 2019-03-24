@@ -7,7 +7,7 @@ import utility.discordembed as dmbd
 from main import MyClient
 
 
-class Info:
+class Info(commands.Cog):
 
     def __init__(self, bot: MyClient):
         self.bot = bot
