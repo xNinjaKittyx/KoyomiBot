@@ -15,7 +15,7 @@ from main import MyClient
 log = logging.getLogger(__name__)
 
 
-class Random:
+class Random(commands.Cog):
     """ Commands that are RANDOM"""
 
     def __init__(self, bot: MyClient):
