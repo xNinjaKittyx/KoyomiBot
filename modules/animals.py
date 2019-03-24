@@ -66,3 +66,7 @@ class Animals(commands.Cog):
             result = await r.json()
             em = dmbd.newembed(ctx.author, "Random Dog", u=result['link'])
             em.set_image(url=result['image'])
+
+
+def setup(bot: Myclient):
+    bot.add_cog(Animals(bot))
