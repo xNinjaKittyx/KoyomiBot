@@ -45,6 +45,8 @@ class Anime(commands.Cog):
                 result = results['results'][0]
             mal_id = result['mal_id']
             await self.bot.db.redis.set(cache_string, int(mal_id))
+        else:
+            mal_id = mal_id.decode('utf-8')
 
         # Now get the actual anime details:
         cache_string = f"anime:{mal_id}"
@@ -75,41 +77,71 @@ class Anime(commands.Cog):
             u=result['url'], footer="Jikan & MAL"
         )
         em.set_image(url=result['image_url'])
+        em.add_field(name="Score", value=result['score'])
         em.add_field(name="Rank", value=result['rank'])
         em.add_field(name="Popularity", value=result['popularity'])
         em.add_field(name="Type", value=result['type'])
-        em.add_field(name="Season", value=result['premiered'])
         em.add_field(name="Episodes", value=result['episodes'])
         em.add_field(name="Status", value=result['status'])
-        em.add_field(name="Score", value=result['score'])
+        em.add_field(name="Genre", value="".join(res['name'] for res in result['genres']))
         em.add_field(name="Synopsis", value=result['synopsis'])
         await ctx.send(embed=em)
 
-    # @commands.command(name="animedetail")
-    # async def anime_detailed(self, ctx: commands.Context, *, anime_id: int) -> None:
+    async def get_manga(self, string: str) -> Optional[dict]:
+        cache_string = f"mangasearch:{string}"
+        mal_id = await self.bot.db.redis.get(cache_string)
+        if mal_id is None:
+            url = self.search_jikan.format('manga', string)
+            async with self.bot.session.get(url) as r:
+                if r.status != 200:
+                    log.error(f'Status: {r.status}. Did not get INFO from {url}')
+                    return None
+                results = await r.json()
+            if not results['results']:
+                return {}
+            result = results['results'][0]
+            mal_id = result['mal_id']
+            await self.bot.db.redis.set(cache_string, int(mal_id))
+        else:
+            mal_id = mal_id.decode('utf-8')
+
+        # Now get the actual manga details:
+        cache_string = f"manga:{mal_id}"
+        mal_details = await self.bot.db.redis.get(cache_string)
+        if mal_details is None:
+            url = self.get_jikan.format('manga', mal_id)
+            async with self.bot.session.get(url) as r:
+                if r.status != 200:
+                    log.error(f'Status: {r.status}. Did not get INFO from {url}')
+                    return None
+                mal_details = await r.json()
+                await self.bot.db.redis.set(cache_string, rapidjson.dumps(mal_details))
+        else:
+            mal_details = rapidjson.loads(mal_details)
+
+        return mal_details
+
 
     @commands.command()
     async def manga(self, ctx: commands.Context, *, manga_search: str) -> None:
         if len(manga_search) < 3:
             return
-        url = self.search_jikan.format('manga', manga_search)
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                log.error(f'Status: {r.status}. Did not get INFO from {url}')
-                return
+        result = await self.get_manga(manga_search)
+        if result is None:
+            return
 
-            results = await r.json()
-        if not results['results']:
-            await ctx.send('Could not find a manga for that.')
-        # Iterate through the list to find the first "TV" or "MOVIE"
-        result = results['results'][0]
-
-        em = dmbd.newembed(a=ctx.author, t=result['title'], d=f"MAL ID: {result['mal_id']}", u=result['url'])
+        em = dmbd.newembed(
+            a=ctx.author, t=result['title'], d=f"MAL ID: {result['mal_id']}",
+            u=result['url'], footer="Jikan & MAL")
         em.set_image(url=result['image_url'])
+        em.add_field(name="Score", value=result['score'])
+        em.add_field(name="Rank", value=result['rank'])
+        em.add_field(name="Popularity", value=result['popularity'])
         em.add_field(name="Type", value=result['type'])
         em.add_field(name="Volumes/Chapters", value=f"{result['volumes']}/{result['chapters']}")
-        em.add_field(name="Ongoing", value=("Yes" if result['publishing'] else "No"))
-        em.add_field(name="Score", value=result['score'])
+        em.add_field(name="Status", value=result['status'])
+        em.add_field(name="Genre", value="".join(res['name'] for res in result['genres']))
+        em.add_field(name="Synopsis", value=result['synopsis'])
         await ctx.send(embed=em)
 
     # @commands.command(name="mangadetail")
