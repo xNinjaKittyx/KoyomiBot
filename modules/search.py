@@ -31,6 +31,32 @@ class Search(commands.Cog):
     def __init__(self, bot: MyClient):
         self.bot = bot
 
+    async def get_page(self, check: Callable, msg: discord.Message, page: int, max_page: int) -> int:
+        try:
+            res, user = await self.bot.wait_for(
+                'reaction_add',
+                check=check,
+                timeout=300,
+            )
+        except TimeoutError:
+            await msg.clear_reactions()
+            return -1
+        if res is None:
+            await msg.clear_reactions()
+            return -1
+        elif res.emoji == '❌':
+            await msg.clear_reactions()
+            return -1
+        elif res.emoji == '◀':
+            await msg.remove_reaction(res.emoji, user)
+            if page > 0:
+                return page - 1
+        elif res.emoji == '▶':
+            await msg.remove_reaction(res.emoji, user)
+            if page < max_page:
+                return page + 1
+        return page
+
     @commands.command()
     async def safebooru(self, ctx: commands.Context, *, search: str) -> None:
         """Searches Safebooru"""
@@ -43,26 +69,27 @@ class Search(commands.Cog):
             weeblist = xmltodict.parse(await r.text())
             weeblist = weeblist['posts']['post']
 
-        results = len(weeblist)
+        size = len(weeblist)
+        page = 0
+        max_page = size - 1
 
         title = f'Safebooru: {search}'
         sample_url = 'https:{0[@sample_url]}'
         file_url = 'https:{0[@file_url]}'
-        desc = '{0} / ' + str(results)
+        desc = '{0} / ' + str(size)
         source = '[Here]({0[@source]})'
         em = dmbd.newembed(ctx.author, title)
-        if results == 0:
+        if size == 0:
             em.description = f"No Results Found For {search}"
             await ctx.send(embed=em)
             return
-        elif results == 1:
+        elif size == 1:
             em.set_image(url=sample_url.format(weeblist))
             em.url = file_url.format(weeblist)
-            em.description = desc.format(1)
+            em.description = desc.format(page + 1)
             em.add_field(name='Source', value=source.format(weeblist))
             em.add_field(name='Tags', value=weeblist['@tags'])
             await ctx.send(embed=em)
-            return
         else:
             em.set_image(url=sample_url.format(weeblist[0]))
             em.url = file_url.format(weeblist[0])
@@ -73,34 +100,13 @@ class Search(commands.Cog):
             await msg.add_reaction('◀')
             await msg.add_reaction('▶')
             await msg.add_reaction('❌')
-            page = 0
 
             check = get_check(msg)
 
             while True:
-                try:
-                    res, user = await self.bot.wait_for(
-                        'reaction_add',
-                        check=check,
-                        timeout=300,
-                    )
-                except TimeoutError:
-                    await msg.clear_reactions()
+                page = await self.get_page(check, msg, page, max_page)
+                if page == -1:
                     return
-                if res is None:
-                    await msg.clear_reactions()
-                    return
-                elif res.emoji == '❌':
-                    await msg.clear_reactions()
-                    return
-                elif res.emoji == '◀':
-                    await msg.remove_reaction(res.emoji, user)
-                    if page > 0:
-                        page -= 1
-                elif res.emoji == '▶':
-                    await msg.remove_reaction(res.emoji, user)
-                    if page < results - 1:
-                        page += 1
 
                 em.set_image(url=sample_url.format(weeblist[page]))
                 em.url = file_url.format(weeblist[page])
@@ -122,70 +128,44 @@ class Search(commands.Cog):
                 return
             weeblist = await r.json()
 
-        results = len(weeblist)
+        size = len(weeblist)
+        max_page = size - 1
 
         title = 'Konachan: ' + search
-        desc = '{0} / ' + str(results)
+        desc = '{0} / ' + str(size)
         source = '[Here]({0[source]})'
+        page = 0
         em = dmbd.newembed(ctx.author, title)
-        if results == 0:
+        if size == 0:
             em.description = "No Results Found For " + search
             await ctx.send(embed=em)
             return
-        elif results == 1:
-            em.set_image(url='https:' + weeblist[0]['sample_url'])
-            em.url = 'http:' + weeblist[0]['file_url']
-            em.description = desc.format(1)
-            em.add_field(name='Source', value=source.format(weeblist[0]))
-            em.add_field(name='Tags', value=weeblist[0]['tags'])
-            await ctx.send(embed=em)
-            return
-        else:
-            em.set_image(url='https:' + weeblist[0]['sample_url'])
-            em.url = 'http:' + weeblist[0]['file_url']
-            em.description = desc.format(1)
-            em.add_field(name='Source', value=source.format(weeblist[0]))
-            em.add_field(name='Tags', value=weeblist[0]['tags'])
+        elif size > 0:
+            em.set_image(url='https:' + weeblist[page]['sample_url'])
+            em.url = 'http:' + weeblist[page]['file_url']
+            em.description = desc.format(page + 1)
+            em.add_field(name='Source', value=source.format(weeblist[page]))
+            em.add_field(name='Tags', value=weeblist[page]['tags'])
             msg = await ctx.send(embed=em)
-            await msg.add_reaction('◀')
-            await msg.add_reaction('▶')
-            await msg.add_reaction('❌')
-            page = 0
+            if size > 1:
+                await msg.add_reaction('◀')
+                await msg.add_reaction('▶')
+                await msg.add_reaction('❌')
 
-            check = get_check(msg)
+                check = get_check(msg)
 
-            while True:
-                try:
-                    res, user = await self.bot.wait_for(
-                        'reaction_add',
-                        check=check,
-                        timeout=300,
-                    )
-                except TimeoutError:
-                    await msg.clear_reactions()
-                    return
-                if res is None:
-                    await msg.clear_reactions()
-                    return
-                elif res.emoji == '❌':
-                    await msg.clear_reactions()
-                    return
-                elif res.emoji == '◀':
-                    await msg.remove_reaction(res.emoji, user)
-                    if page > 0:
-                        page -= 1
-                elif res.emoji == '▶':
-                    await msg.remove_reaction(res.emoji, user)
-                    if page < results - 1:
-                        page += 1
+                while True:
+                    page = await self.get_page(check, msg, page, max_page)
+                    if page == -1:
+                        return
 
-                em.set_image(url='https:' + weeblist[page]['sample_url'])
-                em.url = 'http:' + weeblist[page]['file_url']
-                em.description = desc.format(page+1)
-                em.clear_fields()
-                em.add_field(name='Source', value=source.format(weeblist[page]))
-                em.add_field(name='Tags', value=weeblist[page]['tags'])
-                await msg.edit(embed=em)
+                    em.set_image(url=f"https:{weeblist[page]['sample_url']}")
+                    em.url = f"http:{weeblist[page]['file_url']}"
+                    em.description = desc.format(page + 1)
+                    em.clear_fields()
+                    em.add_field(name='Source', value=source.format(weeblist[page]))
+                    em.add_field(name='Tags', value=weeblist[page]['tags'])
+                    await msg.edit(embed=em)
 
     async def parse_urban_def(self, ctx: commands.Context, definition: dict) -> discord.Embed:
         title = definition['word']
@@ -225,29 +205,9 @@ class Search(commands.Cog):
                 check = get_check(msg)
 
                 while True:
-                    try:
-                        res, user = await self.bot.wait_for(
-                            'reaction_add',
-                            check=check,
-                            timeout=300,
-                        )
-                    except TimeoutError:
-                        await msg.clear_reactions()
+                    page = await self.get_page(check, msg, page, max_page)
+                    if page == -1:
                         return
-                    if res is None:
-                        await msg.clear_reactions()
-                        return
-                    elif res.emoji == '❌':
-                        await msg.clear_reactions()
-                        return
-                    elif res.emoji == '◀':
-                        await msg.remove_reaction(res.emoji, user)
-                        if page > 0:
-                            page -= 1
-                    elif res.emoji == '▶':
-                        await msg.remove_reaction(res.emoji, user)
-                        if page < max_page:
-                            page += 1
 
                     definition = results['list'][page]
                     em = await self.parse_urban_def(ctx, definition)
