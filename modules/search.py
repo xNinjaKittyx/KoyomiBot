@@ -9,71 +9,39 @@ import rapidjson
 import wikipedia
 
 import utility.discordembed as dmbd
+from main import MyClient
 
 
-class Search:
+log = logging.getLogger(__name__)
 
-    def __init__(self, bot):
+
+class Search(commands.Cog):
+
+    def __init__(self, bot: MyClient):
         self.bot = bot
 
-    async def gfylink(self, keyword, count, author):
-        link = "https://api.gfycat.com/v1/gfycats/search?search_text=" + str(keyword) + "&count=" + str(count)
-
-        async with self.bot.session.get(link) as r:
-            if r.status != 200:
-                logging.error('Gyfcat returned ' + r.status)
-                return
-            giflist = await r.json(loads=rapidjson.loads)
-            num = random.randint(0, count-1)
-            gif = giflist["gfycats"][num]
-            title = gif["gfyName"]
-            desc = gif["title"]
-            if gif["tags"] is not None:
-                desc += " #" + " #".join([x for x in gif["tags"]])
-
-            url = "https://gfycat.com/" + title
-            return dmbd.newembed(author, title, desc, url)
-
     @commands.command()
-    async def owgif(self, ctx):
-        """Random Overwatch Gyfcat"""
-        em = await self.gfylink("overwatch", 100, ctx.author)
-        await ctx.send(embed=em)
-        await ctx.send(em.url)
-        await self.bot.cogs['Wordcount'].cmdcount('owgif')
-
-    @commands.command()
-    async def gfy(self, ctx, *, keyword: str):
-        """Does a search on gyfcat"""
-        em = await self.gfylink(keyword, 50, ctx.author)
-        await ctx.send(embed=em)
-        await ctx.send(em.url)
-        await self.bot.cogs['Wordcount'].cmdcount('gfy')
-
-    @commands.command()
-    async def safebooru(self, ctx, *, search: str):
+    async def safebooru(self, ctx: commands.Context, *, search: str) -> None:
         """Searches Safebooru"""
-
-        await self.bot.cogs['Wordcount'].cmdcount('safebooru')
-        link = ("https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=20&tags=" +
-                search.replace(' ', '_'))
+        link = f"https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=20&tags={search.replace(' ', '_')}"
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('[WARNING]: Safebooru Search Failed')
+                log.error('Safebooru search failed')
+                return
             weeblist = xmltodict.parse(await r.text())
             weeblist = weeblist['posts']['post']
 
         results = len(weeblist)
 
-        title = 'Safebooru: ' + search
+        title = f'Safebooru: {search}'
         sample_url = 'https:{0[@sample_url]}'
         file_url = 'https:{0[@file_url]}'
         desc = '{0} / ' + str(results)
         source = '[Here]({0[@source]})'
         em = dmbd.newembed(ctx.author, title)
         if results == 0:
-            em.description = "No Results Found For " + search
+            em.description = f"No Results Found For {search}"
             await ctx.send(embed=em)
             return
         elif results == 1:
@@ -135,16 +103,16 @@ class Search:
                 await msg.edit(embed=em)
 
     @commands.command()
-    async def konachan(self, ctx, *, search: str):
+    async def konachan(self, ctx: commands.Context, *, search: str) -> None:
         """Searches Konachan (rating:safe)"""
-        await self.bot.cogs['Wordcount'].cmdcount('konachan')
         link = ("https://konachan.com/post.json?limit=20&tags=rating:safe%20" +
                 search.replace('rating:questionable', '').replace('rating:explicit', ''))
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('[WARNING]: Konachan Search Failed')
-            weeblist = await r.json(loads=rapidjson.loads)
+                log.error('Konachan request failed')
+                return
+            weeblist = await r.json()
 
         results = len(weeblist)
 
@@ -215,12 +183,13 @@ class Search:
                 await msg.edit(embed=em)
 
     @commands.command()
-    async def urban(self, ctx, *, search: str):
+    async def urban(self, ctx: commands.Context, *, search: str) -> None:
         """ Searches Urban Dictionary. """
-        async with self.bot.session.get('https://api.urbandictionary.com/v0/define?term=' + search) as r:
+        async with self.bot.session.get(f'https://api.urbandictionary.com/v0/define?term={search}') as r:
             if r.status != 200:
-                self.bot.cogs['Log'].output('Urban Dictionary is Down')
-            results = await r.json(loads=rapidjson.loads)
+                log.error(f"Urbandictionary Failed: {r.text}")
+                return
+            results = await r.json()
 
         if results['result_type'] != 'exact':
             em = dmbd.newembed(ctx.author, 'Urban Dictionary', 'No Results Found For' + search)
@@ -240,7 +209,7 @@ class Search:
         await ctx.send(embed=em)
 
     @commands.command()
-    async def wiki(self, ctx, *, search: str):
+    async def wiki(self, ctx: commands.Context, *, search: str) -> None:
         """ Grabs Wikipedia Article """
         searchlist = wikipedia.search(search)
         if len(searchlist) < 1:
@@ -262,11 +231,6 @@ class Search:
                     "Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
             await self.bot.cogs['Wordcount'].cmdcount('wiki')
             await ctx.send(embed=em)
-
-    @commands.command()
-    async def sauce(self, ctx, *, search: str):
-        """ In Progress... Will return sauce of any linked photo. """
-        pass
 
 
 def setup(bot):

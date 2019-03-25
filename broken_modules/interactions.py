@@ -107,58 +107,6 @@ class Interactions:
         await ctx.send(embed=em)
         await self.bot.cogs['Wordcount'].cmdcount('hug')
 
-    @commands.command()
-    async def kiss(self, ctx, target):
-        target = self.get_user(ctx, target)
-        if target is None:
-            return
-
-        em = await self.get_phrase(ctx.author, 'kiss', target, True)
-        await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('kiss')
-
-    @commands.command()
-    async def cuddle(self, ctx, target):
-        target = self.get_user(ctx, target)
-        if target is None:
-            return
-
-        em = await self.get_phrase(ctx.author, 'cuddle', target, True)
-
-        await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('cuddle')
-
-    @commands.command()
-    async def punch(self, ctx, target):
-        target = self.get_user(ctx, target)
-        if target is None:
-            return
-
-        em = await self.get_phrase(ctx.author, 'punch', target, False)
-
-        await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('punch')
-
-    @commands.command()
-    async def slap(self, ctx, target):
-        target = self.get_user(ctx, target)
-        if target is None:
-            return
-
-        em = await self.get_phrase(ctx.author, 'slap', target, False)
-
-        await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('slap')
-
-    @commands.command()
-    async def kanashi(self, ctx):
-
-        em = await self.get_phrase(ctx.author, 'cry', ctx.author, False)
-
-        em.description = f"{ctx.author.display_name} is so sad. Cheer up :("
-        await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('kanashi')
-
 
 def setup(bot):
     """ Setup Interactions Module"""
