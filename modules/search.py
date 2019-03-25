@@ -159,7 +159,7 @@ class Search(commands.Cog):
                     if page == -1:
                         return
 
-                    em.set_image(url={weeblist[page]['sample_url']})
+                    em.set_image(url=weeblist[page]['sample_url'])
                     em.url = weeblist[page]['file_url']
                     em.description = desc.format(page + 1)
                     em.clear_fields()
