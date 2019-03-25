@@ -36,7 +36,7 @@ class Gfycat(commands.Cog):
 
         url = f"https://gfycat.com/{title}"
         em = dmbd.newembed(author, title, desc, url, footer='gfycat')
-        em.set_image(url=gif['content_urls']['largeGif'])
+        em.set_image(url=gif['content_urls']['largeGif']['url'])
         return em
 
     async def get_user(self, ctx: commands.Context, target: str) -> Optional[discord.User]:

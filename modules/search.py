@@ -4,9 +4,10 @@ import logging
 import random
 import xmltodict
 
-from discord.ext import commands
+import discord
 import rapidjson
 import wikipedia
+from discord.ext import commands
 
 import utility.discordembed as dmbd
 from main import MyClient
@@ -182,6 +183,19 @@ class Search(commands.Cog):
                 em.add_field(name='Tags', value=weeblist[page]['tags'])
                 await msg.edit(embed=em)
 
+    async def parse_urban_def(self, ctx: commands.Context, definition: dict) -> discord.Embed:
+        title = definition['word']
+        url = definition['permalink']
+        define = definition['definition']
+        thumbs_up = definition['thumbs_up']
+        thumbs_down = definition['thumbs_down']
+        example = definition['example']
+        author = definition['author']
+        desc = f'Defined by: {author}\n{define}\n\nExample: {example}\n\n👍{thumbs_up}\t👎{thumbs_down}'
+        return dmbd.newembed(ctx.author, t=title, d=desc, u=url, footer="urbandictionary")
+
+
+
     @commands.command()
     async def urban(self, ctx: commands.Context, *, search: str) -> None:
         """ Searches Urban Dictionary. """
@@ -191,22 +205,54 @@ class Search(commands.Cog):
                 return
             results = await r.json()
 
-        if results['result_type'] != 'exact':
-            em = dmbd.newembed(ctx.author, 'Urban Dictionary', 'No Results Found For' + search)
-            await ctx.send(embed=em)
-            return
         size = len(results['list'])
-        definition = results['list'][random.randint(0, size-1)]
-        title = definition['word']
-        url = definition['permalink']
-        define = definition['definition']
-        thumbs_up = definition['thumbs_up']
-        thumbs_down = definition['thumbs_down']
-        example = definition['example']
-        author = definition['author']
-        desc = f'Defined by: {author}\n{define}\n\nExample: {example}\n\n👍{thumbs_up}\t👎{thumbs_down}'
-        em = dmbd.newembed(ctx.author, t=title, d=desc, u=url)
-        await ctx.send(embed=em)
+        if size == 0:
+            return
+        elif size > 0:
+            page = 0
+            definition = results['list'][page]
+            em = await self.parse_urban_def(ctx, definition)
+            msg = await ctx.send(embed=em)
+
+            if size > 1:
+                await msg.add_reaction('◀')
+                await msg.add_reaction('▶')
+                await msg.add_reaction('❌')
+
+                def check(reaction, user):
+                    if user.bot:
+                        return False
+                    return str(reaction.emoji) in ['◀', '▶', '❌'] and reaction.message.id == msg.id
+
+                while True:
+                    try:
+                        res, user = await self.bot.wait_for(
+                            'reaction_add',
+                            check=check,
+                            timeout=300,
+                        )
+                    except TimeoutError:
+                        await msg.clear_reactions()
+                        return
+                    if res is None:
+                        await msg.clear_reactions()
+                        return
+                    elif res.emoji == '❌':
+                        await msg.clear_reactions()
+                        return
+                    elif res.emoji == '◀':
+                        await msg.remove_reaction(res.emoji, user)
+                        if page > 0:
+                            page -= 1
+                    elif res.emoji == '▶':
+                        await msg.remove_reaction(res.emoji, user)
+                        if page < results - 1:
+                            page += 1
+
+                    definition = results['list'][page]
+                    em = await self.parse_urban_def(ctx, definition)
+                    await msg.edit(embed=em)
+
 
     @commands.command()
     async def wiki(self, ctx: commands.Context, *, search: str) -> None:
@@ -229,7 +275,6 @@ class Search(commands.Cog):
             em.set_thumbnail(
                 url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/" +
                     "Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
-            await self.bot.cogs['Wordcount'].cmdcount('wiki')
             await ctx.send(embed=em)
 
 
