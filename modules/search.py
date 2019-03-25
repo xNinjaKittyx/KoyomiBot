@@ -194,8 +194,6 @@ class Search(commands.Cog):
         desc = f'Defined by: {author}\n{define}\n\nExample: {example}\n\n👍{thumbs_up}\t👎{thumbs_down}'
         return dmbd.newembed(ctx.author, t=title, d=desc, u=url, footer="urbandictionary")
 
-
-
     @commands.command()
     async def urban(self, ctx: commands.Context, *, search: str) -> None:
         """ Searches Urban Dictionary. """
@@ -210,6 +208,7 @@ class Search(commands.Cog):
             return
         elif size > 0:
             page = 0
+            max_page = size - 1
             definition = results['list'][page]
             em = await self.parse_urban_def(ctx, definition)
             msg = await ctx.send(embed=em)
@@ -246,7 +245,7 @@ class Search(commands.Cog):
                             page -= 1
                     elif res.emoji == '▶':
                         await msg.remove_reaction(res.emoji, user)
-                        if page < results - 1:
+                        if page < max_page:
                             page += 1
 
                     definition = results['list'][page]
@@ -271,7 +270,7 @@ class Search(commands.Cog):
             url = page.url
             em = dmbd.newembed(ctx.author, title, desc, url)
 
-            em.set_image(url=page.images[0])
+            em.set_image(url=page.images[0], footer="Wikipedia")
             em.set_thumbnail(
                 url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/" +
                     "Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png")
