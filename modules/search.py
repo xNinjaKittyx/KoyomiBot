@@ -141,8 +141,8 @@ class Search(commands.Cog):
             await ctx.send(embed=em)
             return
         elif size > 0:
-            em.set_image(url='https:' + weeblist[page]['sample_url'])
-            em.url = 'http:' + weeblist[page]['file_url']
+            em.set_image(url=weeblist[page]['sample_url'])
+            em.url = weeblist[page]['file_url']
             em.description = desc.format(page + 1)
             em.add_field(name='Source', value=source.format(weeblist[page]))
             em.add_field(name='Tags', value=weeblist[page]['tags'])
