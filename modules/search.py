@@ -190,7 +190,7 @@ class Search(commands.Cog):
     async def parse_urban_def(self, ctx: commands.Context, definition: dict) -> discord.Embed:
         title = definition['word']
         url = definition['permalink']
-        define = definition['definition']
+        define = definition['definition'][:2048]
         thumbs_up = definition['thumbs_up']
         thumbs_down = definition['thumbs_down']
         example = definition['example']
