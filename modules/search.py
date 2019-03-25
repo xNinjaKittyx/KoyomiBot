@@ -2,11 +2,13 @@
 # -*- coding: utf8 -*-
 import logging
 import random
-import xmltodict
+
+from typing import Callable
 
 import discord
 import rapidjson
 import wikipedia
+import xmltodict
 from discord.ext import commands
 
 import utility.discordembed as dmbd
@@ -14,6 +16,14 @@ from main import MyClient
 
 
 log = logging.getLogger(__name__)
+
+
+def get_check(msg: discord.Message) -> Callable:
+    def check(reaction: discord.Reaction, user: discord.User) -> bool:
+        if user.bot:
+            return False
+        return str(reaction.emoji) in ['◀', '▶', '❌'] and reaction.message.id == msg.id
+    return check
 
 
 class Search(commands.Cog):
@@ -65,10 +75,7 @@ class Search(commands.Cog):
             await msg.add_reaction('❌')
             page = 0
 
-            def check(reaction, user):
-                if user.bot:
-                    return False
-                return str(reaction.emoji) in ['◀', '▶', '❌'] and reaction.message.id == msg.id
+            check = get_check(msg)
 
             while True:
                 try:
@@ -145,10 +152,7 @@ class Search(commands.Cog):
             await msg.add_reaction('❌')
             page = 0
 
-            def check(reaction, user):
-                if user.bot:
-                    return False
-                return str(reaction.emoji) in ['◀', '▶', '❌'] and reaction.message.id == msg.id
+            check = get_check(msg)
 
             while True:
                 try:
@@ -218,10 +222,7 @@ class Search(commands.Cog):
                 await msg.add_reaction('▶')
                 await msg.add_reaction('❌')
 
-                def check(reaction, user):
-                    if user.bot:
-                        return False
-                    return str(reaction.emoji) in ['◀', '▶', '❌'] and reaction.message.id == msg.id
+                check = get_check(msg)
 
                 while True:
                     try:
