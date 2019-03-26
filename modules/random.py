@@ -4,8 +4,6 @@ import asyncio
 import logging
 import random
 
-import rapidjson
-
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
@@ -26,10 +24,11 @@ class Random(commands.Cog):
         self.bot.loop.create_task(self.get_max_pokemon())
 
     async def get_max_pokemon(self) -> None:
+        url = 'https://pokeapi.co/api/v2/pokemon?limit=1'
         while True:
-            async with self.bot.session.get('https://pokeapi.co/api/v2/pokemon?limit=1') as r:
+            async with self.bot.session.get(url) as r:
                 if r.status != 200:
-                    log.error('Could not get pokemon from https://pokeapi.co/api/v2/pokemon')
+                    log.warning(f'{url} returned {r.text}')
                     await asyncio.sleep(60)
                 result = await r.json()
             self.max_pokemon = result['count']
@@ -41,9 +40,10 @@ class Random(commands.Cog):
         """ Get a random pokemon! """
         if numid is None:
             numid = random.randint(1, self.max_pokemon)
-        async with self.bot.session.get(f'https://pokeapi.co/api/v2/pokemon/{numid}') as r:
+        url = f'https://pokeapi.co/api/v2/pokemon/{numid}'
+        async with self.bot.session.get(url) as r:
             if r.status != 200:
-                log.error(f'Could not get pokemon ID: {numid}')
+                log.warning(f'{url} returned {r.text}')
                 return
             pokeman = await r.json()
         em = dmbd.newembed(ctx.author, pokeman['name'].title(), footer="PokeAPI")
@@ -112,35 +112,38 @@ class Random(commands.Cog):
     @commands.command()
     async def trump(self, ctx: commands.Context) -> None:
         """ Returns a Trump Quote. """
-        async with self.bot.session.get('https://api.tronalddump.io/random/quote') as r:
+        url = 'https://api.tronalddump.io/random/quote'
+        async with self.bot.session.get(url) as r:
             if r.status != 200:
-                self.bot.logger.warning('tronalddump.io request failed')
+                log.warning(f'{url} returned {r.text}')
                 return
-            request = await r.json(loads=rapidjson.loads, content_type='application/hal+json')
-        await ctx.send(request['value'])
+            result = await r.json(content_type='application/hal+json')
+        await ctx.send(result['value'])
 
     @commands.command()
     async def forismatic(self, ctx: commands.Context) -> None:
         """ Get random quote from Forismatic """
-        async with self.bot.session.get('http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en') as r:
+        url = 'http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en'
+        async with self.bot.session.get(url) as r:
             if r.status != 200:
-                self.bot.logger.warning('Forimsatic GET Failed')
+                log.warning(f'{url} returned {r.text}')
                 return
-            request = await r.json(loads=rapidjson.loads)
+            result = await r.json()
         em = dmbd.newembed(
-            a=request['quoteAuthor'], d=request['quoteText'],
-            u=request['quoteLink'], footer="forismatic")
+            a=result['quoteAuthor'], d=result['quoteText'],
+            u=result['quoteLink'], footer="forismatic")
         await ctx.send(embed=em)
 
     @commands.command()
     async def dadjoke(self, ctx: commands.Context) -> None:
         """ Random Dad Joke """
-        async with self.bot.session.get('http://icanhazdadjoke.com/', headers={'Accept': 'application/json'}) as r:
+        url = 'http://icanhazdadjoke.com/'
+        async with self.bot.session.get(url) as r:
             if r.status != 200:
-                self.bot.logger.warning('https://icanhazdadjoke.com/api request failed')
+                log.warning(f'{url} returned {r.text}')
                 return
-            request = await r.json(loads=rapidjson.loads)
-        em = dmbd.newembed(a='Dad Joke... Why?', d=request['joke'], footer="ICanHazDadJoke")
+            result = await r.json()
+        em = dmbd.newembed(a='Dad Joke... Why?', d=result['joke'], footer="ICanHazDadJoke")
         await ctx.send(embed=em)
 
     @commands.command()
@@ -149,18 +152,43 @@ class Random(commands.Cog):
         url = 'http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1'
         async with self.bot.session.get(url) as r:
             if r.status != 200:
-                self.bot.logger.warning('Quotes on Design request failed')
+                log.warning(f'{url} returned {r.text}')
                 return
-            request = (await r.json(loads=rapidjson.loads))[0]
-        source = request.get('custom_meta', None)
+            result = (await r.json())[0]
+        source = result.get('custom_meta', None)
         if source:
-            source = request.get('Source', '')
+            source = result.get('Source', '')
         else:
             source = ''
         em = dmbd.newembed(
-            a=request['title'],
-            d=BeautifulSoup(request['content'], 'html.parser').get_text().strip() + '\n' + 'Source: ' + source,
-            u=request['link'], footer="QuotesOnDesign")
+            a=result['title'],
+            d=BeautifulSoup(result['content'], 'html.parser').get_text().strip() + '\n' + 'Source: ' + source,
+            u=result['link'], footer="QuotesOnDesign")
+        await ctx.send(embed=em)
+
+    @commands.command()
+    async def givemeadvice(self, ctx: commands.Context) -> None:
+        url = "https://api.adviceslip.com/advice"
+        async with self.bot.session.get(url) as r:
+            if r.status != 200:
+                log.warning(f'{url} returned {r.text}')
+                return
+            result = await r.json()
+
+        em = dmbd.newembed(a="Here's some advice", d=result['slip']['advice'], footer="AdviceSlip")
+        await ctx.send(embed=em)
+
+    @commands.command(aliases=['norris'])
+    async def chuck(self, ctx: commands.Context) -> None:
+        url = "https://api.chucknorris.io/jokes/random"
+        async with self.bot.session.get(url) as r:
+            if r.status != 200:
+                log.warning(f'{url} returned {r.text}')
+                return
+            result = await r.json()
+
+        em = dmbd.newembed(a="Chuck Norris", d=result['value'], u=result['url'], footer="ChuckNorris.io")
+        em.set_thumbnail(url=result['icon_url'])
         await ctx.send(embed=em)
 
 

@@ -1,7 +1,5 @@
 
-# -*- coding: utf8 -*-
 import logging
-import random
 
 from typing import Callable
 
@@ -115,57 +113,6 @@ class Search(commands.Cog):
                 em.add_field(name='Source', value=source.format(weeblist[page]))
                 em.add_field(name='Tags', value=weeblist[page]['@tags'])
                 await msg.edit(embed=em)
-
-    @commands.command()
-    async def konachan(self, ctx: commands.Context, *, search: str) -> None:
-        """Searches Konachan (rating:safe)"""
-        link = ("https://konachan.com/post.json?limit=20&tags=rating:safe%20" +
-                search.replace('rating:questionable', '').replace('rating:explicit', ''))
-
-        async with self.bot.session.get(link) as r:
-            if r.status != 200:
-                log.error('Konachan request failed')
-                return
-            weeblist = await r.json()
-
-        size = len(weeblist)
-        max_page = size - 1
-
-        title = 'Konachan: ' + search
-        desc = '{0} / ' + str(size)
-        source = '[Here]({0[source]})'
-        page = 0
-        em = dmbd.newembed(ctx.author, title)
-        if size == 0:
-            em.description = "No Results Found For " + search
-            await ctx.send(embed=em)
-            return
-        elif size > 0:
-            em.set_image(url=weeblist[page]['sample_url'])
-            em.url = weeblist[page]['file_url']
-            em.description = desc.format(page + 1)
-            em.add_field(name='Source', value=source.format(weeblist[page]))
-            em.add_field(name='Tags', value=weeblist[page]['tags'])
-            msg = await ctx.send(embed=em)
-            if size > 1:
-                await msg.add_reaction('◀')
-                await msg.add_reaction('▶')
-                await msg.add_reaction('❌')
-
-                check = get_check(msg)
-
-                while True:
-                    page = await self.get_page(check, msg, page, max_page)
-                    if page == -1:
-                        return
-
-                    em.set_image(url=weeblist[page]['sample_url'])
-                    em.url = weeblist[page]['file_url']
-                    em.description = desc.format(page + 1)
-                    em.clear_fields()
-                    em.add_field(name='Source', value=source.format(weeblist[page]))
-                    em.add_field(name='Tags', value=weeblist[page]['tags'])
-                    await msg.edit(embed=em)
 
     async def parse_urban_def(self, ctx: commands.Context, definition: dict) -> discord.Embed:
         title = definition['word']
