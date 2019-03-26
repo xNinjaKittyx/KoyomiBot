@@ -173,7 +173,7 @@ class Random(commands.Cog):
             if r.status != 200:
                 log.warning(f'{url} returned {r.text}')
                 return
-            result = await r.json()
+            result = await r.json(content_type="text/html")
 
         em = dmbd.newembed(a="Here's some advice", d=result['slip']['advice'], footer="AdviceSlip")
         await ctx.send(embed=em)
