@@ -75,6 +75,7 @@ class Anime(commands.Cog):
         trailer_url = result.get('trailer_url')
         if not trailer_url:
             return
+        trailer_url = f"https://youtu.be/{trailer_url.split('/')[-1].split('?')[0]}"
         await ctx.send(trailer_url)
 
 
