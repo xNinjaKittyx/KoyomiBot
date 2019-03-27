@@ -45,7 +45,9 @@ class Admin(commands.Cog):
         info = await self.bot.db.redis.info()
         em.add_field(name="Version", value=info['server']['redis_version'])
         em.add_field(name="Uptime", value=info['server']['uptime_in_seconds'])
-        em.add_field(name="Memory Usage", value=f"{info['memory']['used_memory'] / info['memory']['total_system_memory']}%")
+        em.add_field(
+            name="Memory Usage",
+            value=f"{int(info['memory']['used_memory']) / int(info['memory']['total_system_memory']):.2f}%")
         em.add_field(name="Memory Usage Human", value=info['memory']['used_memory_human'])
         em.add_field(name="Peak Memory Usage", value=info['memory']['used_memory_peak_human'])
         await ctx.send(embed=em)

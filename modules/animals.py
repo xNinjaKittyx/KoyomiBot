@@ -53,7 +53,7 @@ class Animals(commands.Cog):
         if text:
             em.set_image(url=f"https://cataas.com/cat/{text}")
         else:
-            em.set_image(url=f"https://cataas.com/cat/")
+            em.set_image(url=f"https://cataas.com/cat")
         await ctx.send(embed=em)
 
     @commands.command()
@@ -62,7 +62,7 @@ class Animals(commands.Cog):
         if text:
             em.set_image(url=f"https://cataas.com/cat/gif/{text}")
         else:
-            em.set_image(url=f"https://cataas.com/cat/gif/")
+            em.set_image(url=f"https://cataas.com/cat/gif")
         await ctx.send(embed=em)
 
     @commands.command()
