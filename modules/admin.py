@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 
 from main import MyClient
+from utility import discordembed as dmbd
 
 
 log = logging.getLogger(__name__)
@@ -36,6 +37,19 @@ class Admin(commands.Cog):
     @is_owner()
     async def status(self, ctx: commands.Context, *, s: str) -> None:
         await self.bot.change_presence(game=discord.Game(name=s))
+
+    @commands.command(hidden=True)
+    @is_owner()
+    async def redisinfo(self, ctx: commands.Context) -> None:
+        em = dmbd.newembed(ctx.author, "Redis Info")
+        info = await self.bot.db.redis.info()
+        em.add_field(name="Version", value=info['server']['redis_version'])
+        em.add_field(name="Uptime", value=info['server']['uptime_in_seconds'])
+        em.add_field(name="Memory Usage", value=f"{info['memory']['used_memory'] / info['memory']['total_system_memory']}%")
+        em.add_field(name="Memory Usage Human", value=info['memory']['used_memory_human'])
+        em.add_field(name="Peak Memory Usage", value=info['memory']['used_memory_peak_human'])
+        em.add_field(name="Peak Memory Usage", value=info['memory']['used_memory_human'])
+        await ctx.send(embed=em)
 
     @commands.command(hidden=True)
     @is_owner()

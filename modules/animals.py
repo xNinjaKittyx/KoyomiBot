@@ -48,14 +48,21 @@ class Animals(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command()
-    async def meow2(self, ctx: commands.Context) -> None:
-        # async with self.bot.session.get('https://aws.random.cat/meow') as r:
-        #     if r.status != 200:
-        #         log.error('Could not get info from random.cat')
-        #         return
-        #     result = await r.json()
+    async def meow2(self, ctx: commands.Context, text: str = '') -> None:
         em = dmbd.newembed(ctx.author, "Random Cat", footer="cataas")
-        em.set_image(url="https://cataas.com/cat")
+        if text:
+            em.set_image(url=f"https://cataas.com/cat/{text}")
+        else:
+            em.set_image(url=f"https://cataas.com/cat/")
+        await ctx.send(embed=em)
+
+    @commands.command()
+    async def meowgif(self, ctx: commands.Context, text: str = '') -> None:
+        em = dmbd.newembed(ctx.author, "Random Cat", footer="cataas")
+        if text:
+            em.set_image(url=f"https://cataas.com/cat/gif/{text}")
+        else:
+            em.set_image(url=f"https://cataas.com/cat/gif/")
         await ctx.send(embed=em)
 
     @commands.command()
