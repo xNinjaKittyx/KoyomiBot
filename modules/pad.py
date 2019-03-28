@@ -119,9 +119,18 @@ class PAD(commands.Cog):
         # First check if str is too short...
         for (n, m) in enumerate(self.monsters):
 
-            fuzzy_value = max(fuzzy.get(m['name']), fuzzy.get(m['name_jp']))
-            if fuzzy_value is not None:
+            fuzzy_value = fuzzy.get(m['name'])
+            fuzzy_value_jp = fuzzy.get(['name_jp'])
+
+            if fuzzy_value is not None and fuzzy_value_jp is not None:
+                if fuzzy_value[0][0] > fuzzy_value_jp[0][0]:
+                    results.append((n, fuzzy_value[0][0]))
+                else:
+                    results.append((n, fuzzy_value_jp[0][0]))
+            elif fuzzy_value is not None:
                 results.append((n, fuzzy_value[0][0]))
+            elif fuzzy_value_jp is not None:
+                results.append((n, fuzzy_value_jp[0][0]))
 
         sorted_results = sorted(results, key=itemgetter(1), reverse=True)
 
