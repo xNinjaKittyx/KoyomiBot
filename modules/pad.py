@@ -16,7 +16,7 @@ from main import MyClient
 log = logging.getLogger(__name__)
 
 
-class PAD:
+class PAD(commands.Cog):
     def __init__(self, bot: MyClient):
         self.bot = bot
 
