@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 class PAD(commands.Cog):
     def __init__(self, bot: MyClient):
         self.bot = bot
+        self.bot.loop.create_task(self.refresh())
 
     async def refresh(self):
         one_day = 24 * 60 * 60
