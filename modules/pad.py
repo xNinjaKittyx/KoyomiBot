@@ -79,7 +79,7 @@ class PAD(commands.Cog):
         em = dmbd.newembed(author, title, description, url)
         em.set_thumbnail(url='https://www.padherder.com' + mon['image60_href'])
         em.add_field(name='Type', value=self.gettype(mon['type'], mon['type2'], mon['type3']))
-        em.add_field(name='Cost', value=mon['team_cost'])
+        em.add_field(name='Team Cost', value=mon['team_cost'])
         em.add_field(name='MaxLv', value="{} ({}xp)".format(mon['max_level'], mon['xp_curve']))
         em.add_field(name='HP', value="[{}][{}]".format(mon['hp_min'], mon['hp_max']))
         em.add_field(name='ATK', value="[{}][{}]".format(mon['atk_min'], mon['atk_max']))
@@ -119,7 +119,7 @@ class PAD(commands.Cog):
         # First check if str is too short...
         for (n, m) in enumerate(self.monsters):
 
-            fuzzy_value = fuzzy.get(m['name'])
+            fuzzy_value = max(fuzzy.get(m['name']), fuzzy.get(m['name_jp']))
             if fuzzy_value is not None:
                 results.append((n, fuzzy_value[0][0]))
 
