@@ -120,24 +120,24 @@ class PAD(commands.Cog):
         for (n, m) in enumerate(self.monsters):
 
             fuzzy_value = fuzzy.get(m['name'])
-            fuzzy_value_jp = fuzzy.get(['name_jp'])
+            fuzzy_value_jp = fuzzy.get(m['name_jp'])
 
             if fuzzy_value is not None and fuzzy_value_jp is not None:
                 if fuzzy_value[0][0] > fuzzy_value_jp[0][0]:
-                    results.append((n, fuzzy_value[0][0]))
+                    results.append((n, fuzzy_value[0][0], 'name'))
                 else:
-                    results.append((n, fuzzy_value_jp[0][0]))
+                    results.append((n, fuzzy_value_jp[0][0], 'name_jp'))
             elif fuzzy_value is not None:
-                results.append((n, fuzzy_value[0][0]))
+                results.append((n, fuzzy_value[0][0], 'name'))
             elif fuzzy_value_jp is not None:
-                results.append((n, fuzzy_value_jp[0][0]))
+                results.append((n, fuzzy_value_jp[0][0], 'name_jp'))
 
         sorted_results = sorted(results, key=itemgetter(1), reverse=True)
 
         if len(sorted_results) > 1:
             possible_results = [
-                "{}: {}  {}".format(index, self.monsters[index]['name'], fuzzy)
-                for i, (index, fuzzy) in zip(range(20), sorted_results)]
+                "{}: {}  {}".format(index, self.monsters[index][name_type], fuzzy)
+                for i, (index, fuzzy, name_type) in zip(range(20), sorted_results)]
             confused = await ctx.send('Which one did you mean? Respond with number.\n' + "\n".join(possible_results))
 
             def check(msg):
