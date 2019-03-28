@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"discord.py" = {git = "https://github.com/Rapptz/discord.py", ref = "rewrite", extras = ["voice"]}
+"discord.py" = {git = "https://github.com/Rapptz/discord.py",ref = "rewrite",extras = ["voice"]}
 aiofiles = "*"
 aiohttp = "*"
 aioredis = "*"
@@ -16,10 +16,11 @@ pymongo = "*"
 python-rapidjson = "*"
 psutil = "*"
 toml = "*"
-uvloop = {version = "*", os_name = "== 'linux'"}
+uvloop = {version = "*",os_name = "== 'linux'"}
 wikipedia = "*"
 xmltodict = "*"
 youtube_dl = "*"
+fuzzyset = "*"
 
 [dev-packages]
 pylama = "*"

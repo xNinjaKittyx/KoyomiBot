@@ -48,7 +48,7 @@ class Admin(commands.Cog):
         em.add_field(
             name="Memory Usage",
             value=f"{int(info['memory']['used_memory']) / int(info['memory']['total_system_memory']):.6f}%")
-        em.add_field(name="Memory Usage Human", value=info['memory']['used_memory_human'])
+        em.add_field(name="Memory Usage", value=info['memory']['used_memory_human'])
         em.add_field(name="Peak Memory Usage", value=info['memory']['used_memory_peak_human'])
         await ctx.send(embed=em)
 

@@ -33,6 +33,7 @@ modules = {
     'modules.guild',
     'modules.info',
     'modules.overwatch',
+    'modules.pad',
     'modules.random',
     'modules.search',
     # 'modules.animehangman',
@@ -124,7 +125,7 @@ class MyClient(commands.AutoShardedBot):
         if ctx.command is None:
             return
 
-        log.info(f'User: {ctx.author} attempted to use command {ctx.command}')
+        log.info(f'User: {ctx.author} attempted to use command {msg}')
 
         if await self.check_blacklist(ctx):
             await self.invoke(ctx)
@@ -144,10 +145,10 @@ class MyClient(commands.AutoShardedBot):
         log.info(f'KoyomiBot left a guild :( {guild.name}')
 
     async def on_member_join(self, member: discord.Member) -> None:
-        log.info(f"{member.name}/{member.id} has joined the guild {member.guild.name}/{member.guild.id}")
+        log.debug(f"{member.name}/{member.id} has joined the guild {member.guild.name}/{member.guild.id}")
 
     async def on_member_remove(self, member: discord.Member) -> None:
-        log.info(f"{member.name}/{member.id} has left the guild {member.guild.name}/{member.guild.id}")
+        log.debug(f"{member.name}/{member.id} has left the guild {member.guild.name}/{member.guild.id}")
 
     async def on_message_delete(self, msg: discord.Message) -> None:
         if msg.author.bot:

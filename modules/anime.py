@@ -45,8 +45,6 @@ class Anime(commands.Cog):
                 result = results['results'][0]
             mal_id = result['mal_id']
             await self.bot.db.redis.set(cache_string, int(mal_id))
-        else:
-            mal_id = mal_id.decode('utf-8')
 
         # Now get the actual anime details:
         cache_string = f"anime:{mal_id}"
@@ -104,7 +102,7 @@ class Anime(commands.Cog):
 
     async def get_manga(self, string: str) -> Optional[dict]:
         cache_string = f"mangasearch:{string}"
-        mal_id = await self.bot.db.redis.get(cache_string)
+        mal_id = await self.bot.db.redis.get(cache_string, encoding='utf-8')
         if mal_id is None:
             url = self.search_jikan.format('manga', string)
             async with self.bot.session.get(url) as r:
@@ -117,8 +115,6 @@ class Anime(commands.Cog):
             result = results['results'][0]
             mal_id = result['mal_id']
             await self.bot.db.redis.set(cache_string, int(mal_id))
-        else:
-            mal_id = mal_id.decode('utf-8')
 
         # Now get the actual manga details:
         cache_string = f"manga:{mal_id}"

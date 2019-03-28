@@ -20,7 +20,7 @@ class KoyomiDB:
         await self.redis.wait_closed()
 
     async def initialize_redis(self) -> None:
-        self.redis = await aioredis.create_redis_pool('redis://localhost')
+        self.redis = await aioredis.create_redis_pool('redis://localhost', encoding='utf-8')
 
     async def _reset_guild_cache(self, guild_id: int) -> None:
         self.redis.delete(f"{guild_id}_prefix", f"{guild_id}_ignore")

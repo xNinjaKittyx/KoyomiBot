@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8b726a59fe9b3651f61f2265d2a08a410834ab059d33a5242baf470e28104ea5"
+            "sha256": "d41e636a615542c10d6c9f5f443e63fbec8fe9cace5ee7cf4e214d12ca09aa8e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -117,7 +117,7 @@
                 "voice"
             ],
             "git": "https://github.com/Rapptz/discord.py",
-            "ref": "b41a29a8897c5936d022a741e923353c0a26e9e8"
+            "ref": "43b44751af647ecfcfb17868962972d543eb69a9"
         },
         "discord.py": {
             "extras": [
@@ -125,6 +125,13 @@
             ],
             "git": "https://github.com/Rapptz/discord.py",
             "ref": "rewrite"
+        },
+        "fuzzyset": {
+            "hashes": [
+                "sha256:2bf5a3de20f107124a4842d875e5005ee523719f97ab731caf4121e86ec8ccbc"
+            ],
+            "index": "pypi",
+            "version": "==0.0.19"
         },
         "hiredis": {
             "hashes": [
@@ -270,6 +277,12 @@
             "index": "pypi",
             "version": "==3.7.2"
         },
+        "python-levenshtein": {
+            "hashes": [
+                "sha256:033a11de5e3d19ea25c9302d11224e1a1898fe5abd23c61c7c360c25195e3eb1"
+            ],
+            "version": "==0.12.0"
+        },
         "python-rapidjson": {
             "hashes": [
                 "sha256:0643d0350a02db7d292ecb62ec9e71d9ae9d591ee3023a0a1a076e0b8596f372",
@@ -306,10 +319,16 @@
         },
         "soupsieve": {
             "hashes": [
-                "sha256:afa56bf14907bb09403e5d15fbed6275caa4174d36b975226e3b67a3bb6e2c4b",
-                "sha256:eaed742b48b1f3e2d45ba6f79401b2ed5dc33b2123dfe216adb90d4bfa0ade26"
+                "sha256:3aef141566afd07201b525c17bfaadd07580a8066f82b57f7c9417f26adbd0a3",
+                "sha256:e41a65e99bd125972d84221022beb1e4b5cfc68fa12c170c39834ce32d1b294c"
             ],
-            "version": "==1.8"
+            "version": "==1.9"
+        },
+        "texttable": {
+            "hashes": [
+                "sha256:2b60a5304ccfbeac80ffae7350d7c2f5d7a24e9aab5036d0f82489746419d9b2"
+            ],
+            "version": "==1.6.1"
         },
         "toml": {
             "hashes": [
@@ -410,10 +429,10 @@
         },
         "isort": {
             "hashes": [
-                "sha256:18c796c2cd35eb1a1d3f012a214a542790a1aed95e29768bdcb9f2197eccbd0b",
-                "sha256:96151fca2c6e736503981896495d344781b60d18bfda78dc11b290c6125ebdb6"
+                "sha256:08f8e3f0f0b7249e9fad7e5c41e2113aba44969798a26452ee790c06f155d4ec",
+                "sha256:4e9e9c4bd1acd66cf6c36973f29b031ec752cbfd991c69695e4e259f9a756927"
             ],
-            "version": "==4.3.15"
+            "version": "==4.3.16"
         },
         "lazy-object-proxy": {
             "hashes": [
