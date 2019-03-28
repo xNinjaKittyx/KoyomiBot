@@ -32,7 +32,7 @@ class PAD(commands.Cog):
                     else:
                         self.monsters = await r.json()
                         await self.bot.db.redis.set('pad:monsters', rapidjson.dumps(self.monsters), expire=one_day)
-
+            log.info('Refreshed PAD Monsters')
             self.awakenings = await self.bot.db.redis.get('pad:awakenings')
             if not self.awakenings:
                 async with self.bot.session.get('https://www.padherder.com/api/awakenings/') as r:
@@ -41,6 +41,7 @@ class PAD(commands.Cog):
                     else:
                         self.awakenings = await r.json()
                         await self.bot.db.redis.set('pad:awakenings', rapidjson.dumps(self.awakenings), expire=one_day)
+            log.info('Refreshed PAD Awakenings')
             await asyncio.sleep(3600)
 
     async def getawaken(self, skills: list) -> str:
@@ -139,5 +140,5 @@ class PAD(commands.Cog):
             await ctx.send('No Monster Found')
 
 
-def setup(bot):
+def setup(bot: MyClient) -> None:
     bot.add_cog(PAD(bot))
