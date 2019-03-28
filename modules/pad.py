@@ -108,14 +108,14 @@ class PAD(commands.Cog):
         results = []
         # First check if str is too short...
         for (n, m) in enumerate(self.monsters):
-            fuzzy_value: tuple = fuzzy.get(m['name'])
+            fuzzy_value = fuzzy.get(m['name'])
             if fuzzy_value is not None:
                 results.append((n, fuzzy_value[0][0]))
 
         sorted_results = sorted(results, key=itemgetter(1), reverse=True)
 
         if len(sorted_results) > 1:
-            possible_results = ["{}: {}".format(n, m[0]['name']) for (n, m) in enumerate(sorted_results)]
+            possible_results = ["{}: {}".format(n, m['name']) for n, m in sorted_results]
             confused = await ctx.send('Which one did you mean? Respond with number.\n' + "\n".join(possible_results))
 
             def check(msg):
