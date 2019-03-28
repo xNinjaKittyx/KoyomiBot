@@ -126,7 +126,9 @@ class PAD(commands.Cog):
         sorted_results = sorted(results, key=itemgetter(1), reverse=True)
 
         if len(sorted_results) > 1:
-            possible_results = ["{}: {}  {}".format(index, self.monsters[index]['name'], fuzzy) for index, fuzzy in sorted_results]
+            possible_results = [
+                "{}: {}  {}".format(index, self.monsters[index]['name'], fuzzy)
+                for i, (index, fuzzy) in zip(range(20), sorted_results)]
             confused = await ctx.send('Which one did you mean? Respond with number.\n' + "\n".join(possible_results))
 
             def check(msg):
