@@ -1,15 +1,23 @@
 
+import logging
+
+from typing import Optional
 from urllib import parse
 
+import discord
 import rapidjson
-import utility.discordembed as dmbd
-
 from discord.ext import commands
+
+import utility.discordembed as dmbd
+from main import MyClient
+
+
+log = logging.getLogger(__name__)
 
 
 class OsuPlayer:
 
-    def __init__(self, player):
+    def __init__(self, player: dict):
         self.id = player["user_id"]
         self.username = player["username"]
         self.c300 = player["count300"]
@@ -28,7 +36,7 @@ class OsuPlayer:
         self.country = player["country"]
         self.pp_country_rank = player["pp_country_rank"]
 
-    def display(self, author):
+    def display(self, author: str) -> discord.Embed:
         title = self.username
         desc = self.country.upper()
         url = 'https://osu.ppy.sh/u/' + self.username
@@ -46,59 +54,71 @@ class OsuPlayer:
         return em
 
 
-class Osu:
+class Osu(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: MyClient):
         self.bot = bot
 
-    async def getlink(self, mode, playername):
-        cookiezi = self.bot.config['OsuAPI']
+    async def getlink(self, mode: int, playername: str) -> Optional[dict]:
+        cookiezi = self.bot.key_config.OsuAPI
         link = f'http://osu.ppy.sh/api/get_user?k={cookiezi}&u={playername}&m={mode}'
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.logger.warning('Peppy Failed')
-                return
-            j = await r.json(loads=rapidjson.loads)
-            return j[0]
+                self.bot.logger.warning(f'{link} failed with r.status')
+                return None
+            j = await r.json()
+            if j:
+                return j[0]
+            else:
+                log.error(j)
+                return None
 
     @commands.command()
-    async def osu(self, ctx, *, name: str):
+    async def osu(self, ctx: commands.Context, *, name: str) -> None:
         name = parse.quote(name)
-        player = OsuPlayer(await self.getlink(0, name))
+        result = await self.getlink(0, name)
+        if result is None:
+            return
+        player = OsuPlayer(result)
         em = player.display(ctx.author)
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=0")
 
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('osu')
 
     @commands.command()
-    async def taiko(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(1, name))
+    async def taiko(self, ctx: commands.Context, *, name: str) -> None:
+        result = await self.getlink(1, name)
+        if result is None:
+            return
+        player = OsuPlayer(result)
         em = player.display(ctx.author)
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=1")
 
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('taiko')
 
     @commands.command()
-    async def ctb(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(2, name))
+    async def ctb(self, ctx: commands.Context, *, name: str) -> None:
+        result = await self.getlink(2, name)
+        if result is None:
+            return
+        player = OsuPlayer(result)
         em = player.display(ctx.author)
         em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=2")
 
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('ctb')
 
     @commands.command()
-    async def mania(self, ctx, *, name: str):
-        player = OsuPlayer(await self.getlink(3, name))
+    async def mania(self, ctx: commands.Context, *, name: str) -> None:
+        result = await self.getlink(3, name)
+        if result is None:
+            return
+        player = OsuPlayer(result)
         em = player.display(ctx.author)
         em.set_image(
             url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=3")
 
         await ctx.send(embed=em)
-        await self.bot.cogs['Wordcount'].cmdcount('mania')
 
 
 def setup(bot):
