@@ -101,7 +101,8 @@ class PAD(commands.Cog):
             await ctx.send("ID is not valid.")
             return
 
-        fuzzy = fuzzyset.add(arg)
+        fuzzy = fuzzyset.Fuzzyset()
+        fuzzy.add(arg)
         results = []
         # First check if str is too short...
         for (n, m) in enumerate(self.monsters):
