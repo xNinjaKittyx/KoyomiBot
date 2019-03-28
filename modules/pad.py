@@ -146,7 +146,7 @@ class PAD(commands.Cog):
             if determine is None:
                 return
             else:
-                await ctx.send(embed=await self.monster_embed(results[int(determine.content)], author))
+                await ctx.send(embed=await self.monster_embed(self.monsters[int(determine.content)], author))
         elif len(results) == 1:
             await ctx.send(embed=await self.monster_embed(sorted_results[0], author))
         else:
