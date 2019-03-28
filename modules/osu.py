@@ -82,7 +82,8 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(result)
         em = player.display(ctx.author)
-        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=0")
+        em.set_image(
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex")
 
         await ctx.send(embed=em)
 
@@ -93,7 +94,9 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(result)
         em = player.display(ctx.author)
-        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=1")
+        em.set_image(
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=1&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
+        )
 
         await ctx.send(embed=em)
 
@@ -104,7 +107,9 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(result)
         em = player.display(ctx.author)
-        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=2")
+        em.set_image(
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=2&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
+        )
 
         await ctx.send(embed=em)
 
@@ -116,7 +121,7 @@ class Osu(commands.Cog):
         player = OsuPlayer(result)
         em = player.display(ctx.author)
         em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex66ccff&uname={name}&mode=3")
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex")
 
         await ctx.send(embed=em)
 
