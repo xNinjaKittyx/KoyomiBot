@@ -125,7 +125,7 @@ class MyClient(commands.AutoShardedBot):
         if ctx.command is None:
             return
 
-        log.info(f'User: {ctx.author} attempted to use command {msg}')
+        log.info(f'User: {ctx.author} attempted to use command {msg.content}')
 
         if await self.check_blacklist(ctx):
             await self.invoke(ctx)
