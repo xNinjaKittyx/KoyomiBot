@@ -101,7 +101,7 @@ class PAD(commands.Cog):
             await ctx.send("ID is not valid.")
             return
 
-        fuzzy = fuzzyset.Fuzzyset()
+        fuzzy = fuzzyset.FuzzySet()
         fuzzy.add(arg)
         results = []
         # First check if str is too short...
