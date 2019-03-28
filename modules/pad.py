@@ -24,23 +24,30 @@ class PAD(commands.Cog):
     async def refresh(self) -> None:
         one_day = 24 * 60 * 60
         while True:
-            self.monsters = await self.bot.db.redis.get('pad:monsters')
-            if not self.monsters:
+            mons = await self.bot.db.redis.get('pad:monsters')
+            if not mons:
                 async with self.bot.session.get('https://www.padherder.com/api/monsters/') as r:
                     if r.status != 200:
                         log.warning('/api/monsters/ is down')
+                        self.monsters = []
                     else:
                         self.monsters = await r.json()
                         await self.bot.db.redis.set('pad:monsters', rapidjson.dumps(self.monsters), expire=one_day)
+            else:
+                self.monsters = rapidjson.loads(mons)
+
             log.info('Refreshed PAD Monsters')
-            self.awakenings = await self.bot.db.redis.get('pad:awakenings')
-            if not self.awakenings:
+            awake = await self.bot.db.redis.get('pad:awakenings')
+            if not awake:
                 async with self.bot.session.get('https://www.padherder.com/api/awakenings/') as r:
                     if r.status != 200:
                         log.warning('/api/awakenings/ is down')
+                        self.awakenings = []
                     else:
                         self.awakenings = await r.json()
                         await self.bot.db.redis.set('pad:awakenings', rapidjson.dumps(self.awakenings), expire=one_day)
+            else:
+                self.monsters = rapidjson.loads(awake)
             log.info('Refreshed PAD Awakenings')
             await asyncio.sleep(3600)
 
@@ -87,6 +94,9 @@ class PAD(commands.Cog):
     @commands.command()
     async def pad(self, ctx: commands.Context, *, arg: str) -> None:
         """ Searches a PAD monster"""
+        if not self.awakenings or not self.monsters:
+            log.error('PAD awakenings/monsters not exist.')
+            return
         author = ctx.author
         try:
             # If Arg is a number.
@@ -115,7 +125,7 @@ class PAD(commands.Cog):
         sorted_results = sorted(results, key=itemgetter(1), reverse=True)
 
         if len(sorted_results) > 1:
-            possible_results = ["{}: {}".format(n, m['name']) for n, m in sorted_results]
+            possible_results = ["{}: {}".format(n, m[0]['name']) for (n, m) in enumerate(sorted_results)]
             confused = await ctx.send('Which one did you mean? Respond with number.\n' + "\n".join(possible_results))
 
             def check(msg):
