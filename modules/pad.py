@@ -77,7 +77,7 @@ class PAD(commands.Cog):
         description = mon["name_jp"] + "\n" + "*" * mon["rarity"]
         url = 'http://puzzledragonx.com/en/monster.asp?n=' + str(mon['id'])
         em = dmbd.newembed(author, title, description, url)
-        em.set_image(url='https://www.padherder.com' + mon['image60_href'])
+        em.set_thumbnail(url='https://www.padherder.com' + mon['image60_href'])
         em.add_field(name='Type', value=self.gettype(mon['type'], mon['type2'], mon['type3']))
         em.add_field(name='Cost', value=mon['team_cost'])
         em.add_field(name='MaxLv', value="{} ({}xp)".format(mon['max_level'], mon['xp_curve']))
@@ -134,21 +134,23 @@ class PAD(commands.Cog):
             def check(msg):
                 if msg.content.isdigit():
                     return (msg.author == ctx.author and msg.channel == ctx.channel
-                            and 0 <= int(msg.content) < len(results))
-
-            determine = await self.bot.wait_for(
-                'message',
-                check=check,
-                timeout=10
-            )
-
-            await confused.delete()
+                            and 0 <= int(msg.content) < len(self.monsters))
+            try:
+                determine = await self.bot.wait_for(
+                    'message',
+                    check=check,
+                    timeout=10
+                )
+            except TimeoutError:
+                return
+            finally:
+                await confused.delete()
             if determine is None:
                 return
             else:
                 await ctx.send(embed=await self.monster_embed(self.monsters[int(determine.content)], author))
         elif len(results) == 1:
-            await ctx.send(embed=await self.monster_embed(sorted_results[0], author))
+            await ctx.send(embed=await self.monster_embed(self.monsters[sorted_results[0][0]], author))
         else:
             await ctx.send('No Monster Found')
 
