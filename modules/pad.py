@@ -47,7 +47,7 @@ class PAD(commands.Cog):
                         self.awakenings = await r.json()
                         await self.bot.db.redis.set('pad:awakenings', rapidjson.dumps(self.awakenings), expire=one_day)
             else:
-                self.monsters = rapidjson.loads(awake)
+                self.awakenings = rapidjson.loads(awake)
             log.info('Refreshed PAD Awakenings')
             await asyncio.sleep(3600)
 
@@ -100,8 +100,8 @@ class PAD(commands.Cog):
         author = ctx.author
         try:
             # If Arg is a number.
-            arg = int(arg)
-            monster = self.monsters[arg]
+            index = int(arg)
+            monster = self.monsters[index]
             await ctx.send(embed=await self.monster_embed(monster, author))
             return
         except ValueError:
@@ -118,6 +118,7 @@ class PAD(commands.Cog):
         results = []
         # First check if str is too short...
         for (n, m) in enumerate(self.monsters):
+
             fuzzy_value = fuzzy.get(m['name'])
             if fuzzy_value is not None:
                 results.append((n, fuzzy_value[0][0]))
@@ -125,7 +126,7 @@ class PAD(commands.Cog):
         sorted_results = sorted(results, key=itemgetter(1), reverse=True)
 
         if len(sorted_results) > 1:
-            possible_results = ["{}: {}".format(n, m[0]['name']) for (n, m) in enumerate(sorted_results)]
+            possible_results = ["{}: {}  {}".format(index, self.monsters[index]['name'], fuzzy) for index, fuzzy in sorted_results]
             confused = await ctx.send('Which one did you mean? Respond with number.\n' + "\n".join(possible_results))
 
             def check(msg):
