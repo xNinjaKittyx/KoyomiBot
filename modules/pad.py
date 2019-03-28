@@ -21,7 +21,7 @@ class PAD(commands.Cog):
         self.bot = bot
         self.bot.loop.create_task(self.refresh())
 
-    async def refresh(self):
+    async def refresh(self) -> None:
         one_day = 24 * 60 * 60
         while True:
             self.monsters = await self.bot.db.redis.get('pad:monsters')
@@ -43,16 +43,16 @@ class PAD(commands.Cog):
                         await self.bot.db.redis.set('pad:awakenings', rapidjson.dumps(self.awakenings), expire=one_day)
             await asyncio.sleep(3600)
 
-    async def getawaken(self, skills: list) -> None:
+    async def getawaken(self, skills: list) -> str:
         result = []
         if not skills:
             return 'None'
         for x in skills:
-            result += self.awakenings[x+1]['name'] + "\n"
-        return result
+            result.append(self.awakenings[x+1]['name'])
+        return "\n".join(result)
 
     @staticmethod
-    def gettype(type1, type2=None, type3=None):
+    def gettype(type1: int, type2: int = None, type3: int = None) -> str:
         types = [
             "Evo Material", "Balanced", "Physical", "Healer", "Dragon", "God",
             "Attacker", "Devil", "Machine", "", "", "", "", "", "Enhance Material"
