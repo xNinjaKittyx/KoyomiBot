@@ -86,11 +86,11 @@ class MyClient(commands.AutoShardedBot):
             headers={'User-Agent': 'Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)'}
         )
         self.key_config = Config('config.toml')
-        self.load_all_modules()
 
     def run(self) -> None:
         log.info('Starting Bot'.center(30, '-'))
         self.loop.run_until_complete(self.db.initialize_redis())
+        self.load_all_modules()
         try:
             self.loop.run_until_complete(self.start(self.key_config.DiscordToken))
         except KeyboardInterrupt:
