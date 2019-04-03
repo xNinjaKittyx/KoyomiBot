@@ -56,7 +56,7 @@ class PAD(commands.Cog):
         if not skills:
             return 'None'
         for x in skills:
-            result.append(self.awakenings[x+1]['name'])
+            result.append(self.awakenings[x-1]['name'])
         return "\n".join(result)
 
     @staticmethod
