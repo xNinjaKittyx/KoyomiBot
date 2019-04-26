@@ -4,25 +4,26 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"discord.py" = {git = "https://github.com/Rapptz/discord.py",ref = "rewrite",extras = ["voice"]}
 aiofiles = "*"
 aiohttp = "*"
 aioredis = "*"
 "beautifulsoup4" = "*"
 cleverwrap = "*"
 click = "*"
+"discord.py" = {extras = ["voice"],version = ">=1.0"}
 motor = "*"
 pymongo = "*"
 python-rapidjson = "*"
 psutil = "*"
+simplefuzzyset = "*"
 toml = "*"
 uvloop = {version = "*",os_name = "== 'linux'"}
 wikipedia = "*"
 xmltodict = "*"
 youtube_dl = "*"
-fuzzyset = "*"
 
 [dev-packages]
+black = "*"
 pylama = "*"
 mypy = "*"
 pylint = "*"
@@ -31,4 +32,4 @@ pycodestyle = "*"
 pydocstyle = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
