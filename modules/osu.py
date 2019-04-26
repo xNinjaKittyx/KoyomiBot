@@ -1,6 +1,7 @@
 
 import logging
 
+from dataclasses import dataclass
 from typing import Optional
 from urllib import parse
 
@@ -14,27 +15,26 @@ from main import MyClient
 
 log = logging.getLogger(__name__)
 
-
+@dataclass
 class OsuPlayer:
-
-    def __init__(self, player: dict):
-        self.id = player["user_id"]
-        self.username = player["username"]
-        self.c300 = player["count300"]
-        self.c100 = player["count100"]
-        self.c50 = player["count50"]
-        self.playcount = player["playcount"]
-        self.ranked = player["ranked_score"]
-        self.total = player["total_score"]
-        self.pp = player["pp_rank"]
-        self.level = player["level"]
-        self.pp_raw = player["pp_raw"]
-        self.accuracy = player["accuracy"]
-        self.count_ss = player["count_rank_ss"]
-        self.count_s = player["count_rank_s"]
-        self.count_a = player["count_rank_a"]
-        self.country = player["country"]
-        self.pp_country_rank = player["pp_country_rank"]
+    user_id: int
+    username: str
+    count300: int
+    count100: int
+    count50: int
+    playcount: int
+    ranked_score: int
+    total_score: int
+    pp_rank: int
+    level: float
+    pp_raw: int
+    accuracy: float
+    count_rank_ss: int
+    count_rank_s: int
+    count_rank_a: int
+    country: str
+    total_seconds_played: int
+    pp_country_rank: int
 
     def display(self, author: str) -> discord.Embed:
         title = self.username
@@ -46,11 +46,11 @@ class OsuPlayer:
         lvl = int(float(self.level))
         percent = int((float(self.level) - lvl) * 100)
         em.add_field(name='Level', value="{0} ({1}%)".format(lvl, percent))
-        em.add_field(name='Rank', value=self.pp)
+        em.add_field(name='Rank', value=self.pp_rank)
         em.add_field(name='Country Rank', value=self.pp_country_rank)
         em.add_field(name='Playcount', value=self.playcount)
-        em.add_field(name='Total Score', value=self.total)
-        em.add_field(name='Ranked Score', value=self.ranked)
+        em.add_field(name='Total Score', value=self.total_score)
+        em.add_field(name='Ranked Score', value=self.ranked_score)
         return em
 
 
@@ -80,7 +80,7 @@ class Osu(commands.Cog):
         result = await self.getlink(0, name)
         if result is None:
             return
-        player = OsuPlayer(result)
+        player = OsuPlayer(**result)
         em = player.display(ctx.author)
         em.set_image(
             url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex")
@@ -92,7 +92,7 @@ class Osu(commands.Cog):
         result = await self.getlink(1, name)
         if result is None:
             return
-        player = OsuPlayer(result)
+        player = OsuPlayer(**result)
         em = player.display(ctx.author)
         em.set_image(
             url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=1&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
@@ -105,7 +105,7 @@ class Osu(commands.Cog):
         result = await self.getlink(2, name)
         if result is None:
             return
-        player = OsuPlayer(result)
+        player = OsuPlayer(**result)
         em = player.display(ctx.author)
         em.set_image(
             url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=2&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
@@ -118,7 +118,7 @@ class Osu(commands.Cog):
         result = await self.getlink(3, name)
         if result is None:
             return
-        player = OsuPlayer(result)
+        player = OsuPlayer(**result)
         em = player.display(ctx.author)
         em.set_image(
             url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex")
