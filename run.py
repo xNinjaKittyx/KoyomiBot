@@ -3,7 +3,7 @@ import contextlib
 import logging
 import os
 
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
 
 import click
 
@@ -30,7 +30,7 @@ def log_setup() -> None:
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(module)s:%(lineno)d - %(message)s')
-        fh = TimedRotatingFileHandler(filename='logs/koyomi.log', when='midnight')
+        fh = RotatingFileHandler(filename='logs/koyomi.log', maxBytes=10*1024*1024, backupCount=10)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
         sh = logging.StreamHandler()
