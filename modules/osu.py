@@ -2,7 +2,7 @@
 import logging
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 from urllib import parse
 
 import discord
