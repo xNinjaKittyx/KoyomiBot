@@ -31,6 +31,7 @@ modules = {
     'modules.forex',
     'modules.gfycat',
     'modules.guild',
+    'modules.image',
     'modules.info',
     'modules.osu',
     'modules.overwatch',
