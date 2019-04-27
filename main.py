@@ -63,11 +63,11 @@ async def _get_prefix(bot: discord.Client, msg: discord.Message) -> list:
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
 
     if bot.key_config.debug:
-        base.append('k!>')
+        base = ['k!>']
     else:
         base.append('k>')
-    if msg.guild is not None:
-        base.extend(await bot.db.get_guild_prefixes(msg.guild))
+        if msg.guild is not None:
+            base.extend(await bot.db.get_guild_prefixes(msg.guild))
 
     return base
 
