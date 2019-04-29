@@ -34,18 +34,14 @@ class Info(commands.Cog):
     @staticmethod
     def getcpuusage():
         total = 0
-        for proc in psutil.process_iter():
-            if 'python' in proc.name():
-                total += proc.cpu_percent() / psutil.cpu_count()
-        return total
+        proc = psutil.Process()
+        return proc.cpu_percent()
 
     @staticmethod
     def getmemusage():
         total = 0
-        for proc in psutil.process_iter():
-            if 'python' in proc.name():
-                total += psutil.Process().memory_info().rss / (1024 ** 2)
-        return total
+        proc = psutil.Process()
+        return proc.memory_info().rss / (1024 ** 2)
 
     @commands.command()
     async def ping(self, ctx):
