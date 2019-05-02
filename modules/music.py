@@ -121,9 +121,7 @@ class Music(commands.Cog):
     def cog_unload(self) -> None:
         for state in self.voice_states.values():
             try:
-                state.audio_player.cancel()
-                if state.voice:
-                    self.bot.loop.create_task(state.voice.disconnect())
+                self.bot.loop.run_until_complete(state.leave())
             except Exception as e:
                 logging.error(f"Exception raised: {e}")
 
@@ -141,13 +139,14 @@ class Music(commands.Cog):
                 await state.join()
             except discord.ClientException:
                 await ctx.send(f"Could not join voice channel: {ctx.author.voice.channel.name}")
+                return False
 
             self.voice_states[ctx.guild.id] = state
             await ctx.send(f"Music binded to {ctx.author.voice.channel.name} & {ctx.message.channel}")
             return True
 
         await ctx.send(
-            "I am already in a voice channel. You can use `move` or `stop` + `join` to make me join another channel.")
+            "I am already in a voice channel. You can use `move` or `leave` + `join` to make me join another channel.")
         return True
 
     async def check_state_and_user(self, state: VoiceState, ctx: commands.Context) -> bool:
@@ -189,9 +188,15 @@ class Music(commands.Cog):
             return False
         if await self.check_state_and_user(state, ctx):
             return False
-
-        with youtube_dl.YoutubeDL(self.opts) as ydl:
-            song_info = ydl.extract_info(song, download=False)
+        try:
+            with youtube_dl.YoutubeDL(self.opts) as ydl:
+                song_info = ydl.extract_info(song, download=False)
+        except youtube_dl.utils.ExtractorError:
+            logging.error(f'Youtube-dl Extractor Error on {song}')
+            return False
+        except youtube_dl.utils.DownloadError:
+            logging.error(f'Youtube-dl Download Error on {song}')
+            return False
         bitrate = 0
         url = ''
         codec = ''
