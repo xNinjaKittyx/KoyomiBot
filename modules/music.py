@@ -161,7 +161,7 @@ class Music(commands.Cog):
             return False
         state = self.voice_states.get(ctx.guild.id)
         if state is not None:
-            if await self.check_state_and_user(state, ctx):
+            if state.msg_channel != ctx.message.channel:
                 return False
             await state.move(ctx.author.voice.channel)
             return True
