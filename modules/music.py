@@ -140,8 +140,9 @@ class Music(commands.Cog):
             try:
                 # Bind to a chat and a voice channel.
                 await state.join()
-            except discord.ClientException:
+            except discord.ClientException as e:
                 await ctx.send(f"Could not join voice channel: {ctx.author.voice.channel.name}")
+                logging.exception(e)
                 return False
 
             self.voice_states[ctx.guild.id] = state
