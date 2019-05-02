@@ -56,7 +56,7 @@ class VoiceState:
         self.audio_player = self.bot.loop.create_task(self.audio_player_task())
 
     async def join(self) -> None:
-        self.voice = await self.voice_channel.connect()
+        self.voice = await self.voice_channel.connect(5)
 
     async def move(self, new_voice: discord.VoiceChannel) -> None:
         await self.voice.move_to(new_voice)
