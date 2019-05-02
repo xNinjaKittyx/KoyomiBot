@@ -44,7 +44,7 @@ class VoiceEntry:
 
 class VoiceState:
     def __init__(self, bot: discord.Client, voice_channel: discord.VoiceChannel, msg_channel: discord.TextChannel):
-        self.current_state = None
+        self.current = None
         self.voice_channel = voice_channel
         self.msg_channel = msg_channel
         self.voice: discord.VoiceClient = None
@@ -74,6 +74,9 @@ class VoiceState:
             except Exception as e:
                 logging.exception(e)
         return
+
+    def skip_status(self) -> str:
+        return f"{len(self.skip_votes)}/{(len(self.voice_channel.members) // 2)}"
 
     def skip(self, user: discord.User) -> Optional[str]:
         if self.voice.is_playing():
@@ -214,7 +217,11 @@ class Music(commands.Cog):
             await ctx.send(f'Could not find a suitable audio for {song}')
             return False
 
-        sauce = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(url), volume=0.25)
+        sauce = discord.PCMVolumeTransformer(
+            discord.FFmpegPCMAudio(
+                url,
+                before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+            ), volume=0.25)
         entry = VoiceEntry(ctx.message, sauce, song_info)
         await ctx.send('Queued: ' + str(entry))
         await state.songs.put(entry)
@@ -256,7 +263,6 @@ class Music(commands.Cog):
             return
         if state.voice.is_paused():
             state.voice.resume()
-            await self.refreshplayer(ctx.guild, 'Song has been resumed by ' + str(ctx.author))
 
     @commands.command(no_pm=True)
     async def now_playing(self, ctx: commands.Context) -> bool:
@@ -267,10 +273,8 @@ class Music(commands.Cog):
             await ctx.send('No song is playing')
             return True
         else:
-            skip_count = len(state.skip_votes)
-            msg = 'Now playing [skips: {}/3]'.format(skip_count)
-            await self.refreshplayer(ctx.guild, msg)
-            await ctx.message.delete()
+            msg = f'Now playing [skips: {state.skip_status()}]'
+            await ctx.send(embed=state.current.get_embed(msg))
             return True
 
     @commands.command(no_pm=True)
@@ -278,8 +282,11 @@ class Music(commands.Cog):
         """Vote to skip a song. The song requester can automatically skip.
         3 skip votes are needed for the song to be skipped.
         """
-        guild = ctx.guild
-        state = self.get_voice_state(guild)
+        state = self.voice_states.get(ctx.guild.id)
+        if state is None:
+            return False
+        if state.current is None:
+            return True
         if not state.voice.is_playing():
             return False
 
