@@ -18,7 +18,7 @@ python-rapidjson = "*"
 psutil = "*"
 simplefuzzyset = "*"
 toml = "*"
-uvloop = {version = "*",os_name = "== 'linux'"}
+uvloop = {version = "*",sys_platform = "!= 'win32'"}
 wikipedia = "*"
 xmltodict = "*"
 youtube_dl = "*"
@@ -32,6 +32,7 @@ mccabe = "*"
 pycodestyle = "*"
 pydocstyle = "*"
 ipython = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.7"
