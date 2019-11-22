@@ -62,7 +62,7 @@ class Weather:
         curr = darksky["currently"]
         title = "Powered by GoogleGeoCode and DarkSky"
         desc = self.discordicon(curr["icon"]) + " It is " + curr["summary"] + " in " + place
-        deg = u" \N{DEGREE SIGN}F"
+        deg = " \N{DEGREE SIGN}F"
         em = dmbd.newembed(author, title, desc)
         em.add_field(name="Temperature", value=str(curr["temperature"]) + deg)
         em.add_field(name="Feels Like", value=str(curr["apparentTemperature"]) + deg)

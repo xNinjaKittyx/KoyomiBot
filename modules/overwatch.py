@@ -5,7 +5,6 @@ import random
 
 from typing import List
 
-import rapidjson
 import discord
 from discord.ext import commands
 

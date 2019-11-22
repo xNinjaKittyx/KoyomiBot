@@ -58,7 +58,7 @@ class Wordcount:
         await redis_pool.zincrby("CmdDB", 1, name)
 
     async def wordcount(self, content):
-        for x in re.compile("\w+").findall(content.replace("\n", " ")):
+        for x in re.compile(r"\w+").findall(content.replace("\n", " ")):
             if len(x) <= 2:
                 continue
             if x.startswith("http"):

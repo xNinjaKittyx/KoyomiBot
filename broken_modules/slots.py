@@ -18,22 +18,22 @@ class Slots:
     async def slots(self, ctx, bet: int):
         """ Bet your Aragis for more Aragis. """
         if len(self.emojis) != 6:
-            for x in self.bot.emojis:
-                if x.name == "FeelsBadMan":
-                    self.emojis.append(x)
+            for emoji in self.bot.emojis:
+                if emoji.name == "FeelsBadMan":
+                    self.emojis.append(emoji)
                     break
 
-            for x in self.bot.emojis:
-                if x.name == "thonking":
-                    self.emojis.append(x)
+            for emoji in self.bot.emojis:
+                if emoji.name == "thonking":
+                    self.emojis.append(emoji)
                     break
         user = await self.bot.cogs["Profile"].get_koyomi_user(ctx.author)
         if await user.get_coins() >= bet >= 0:
             slot1 = random.randint(0, 5)
             slot2 = random.randint(0, 5)
             slot3 = random.randint(0, 5)
-            result = set([slot1, slot2, slot3])
-            final = "||{0}|{1}|{2}||".format(self.emojis[slot1], self.emojis[slot2], self.emojis[slot3])
+            result = {slot1, slot2, slot3}
+            final = "||{}|{}|{}||".format(self.emojis[slot1], self.emojis[slot2], self.emojis[slot3])
             final += "\nPlaced {} into the machine\n".format(bet)
             if len(result) == 3:
                 final += "\nBetter Luck Next Time."
@@ -48,8 +48,8 @@ class Slots:
                 await user.set_coins(await user.get_coins() + (bet * 3 + jack))
                 await redis_pool.set("jackpot", 0)
 
-            em = dmbd.newembed(ctx.author, "SLOT MACHINE", final)
-            await ctx.send(embed=em)
+            embed = dmbd.newembed(ctx.author, "SLOT MACHINE", final)
+            await ctx.send(embed=embed)
         else:
             await ctx.send("Not enough Aragis")
             return False
@@ -63,7 +63,7 @@ class Slots:
 
     @slots.error
     async def on_slot_error(self, ctx, error):
-        if type(error) == commands.CommandOnCooldown:
+        if isinstance(error, commands.CommandOnCooldown):
             await ctx.send("Try again after {} seconds.".format(int(error.retry_after)))
         print(error)
 

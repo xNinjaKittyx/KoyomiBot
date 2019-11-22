@@ -1,9 +1,6 @@
 import asyncio
 import logging
-import random
 import re
-
-import rapidjson
 
 from bs4 import BeautifulSoup
 from discord.ext import commands
@@ -60,7 +57,8 @@ class Ryzen(commands.Cog):
                                     g = self.bot.get_guild(82242522046275584)
                                     await asyncio.sleep(0)
                                 await c.send(
-                                    f'{g.get_role(603782837996355594).mention} Holy Shit {key} is IN STOCK: {result[key]["link"]}'
+                                    f"{g.get_role(603782837996355594).mention}"
+                                    f'Holy Shit {key} is IN STOCK: {result[key]["link"]}'
                                 )
 
                 if result:

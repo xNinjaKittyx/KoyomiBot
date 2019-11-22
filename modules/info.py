@@ -31,13 +31,11 @@ class Info(commands.Cog):
 
     @staticmethod
     def getcpuusage():
-        total = 0
         proc = psutil.Process()
         return proc.cpu_percent()
 
     @staticmethod
     def getmemusage():
-        total = 0
         proc = psutil.Process()
         return proc.memory_info().rss / (1024 ** 2)
 

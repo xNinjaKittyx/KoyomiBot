@@ -84,7 +84,7 @@ class PAD(commands.Cog):
         if type2 is None:
             return types[type1]
         elif type3 is None:
-            return "{0}/{1}".format(types[type1], types[type2])
+            return "{}/{}".format(types[type1], types[type2])
         else:
             return "/".join([types[type1], types[type2], types[type3]])
 

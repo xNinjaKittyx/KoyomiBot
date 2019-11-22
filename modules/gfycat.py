@@ -30,7 +30,7 @@ class Gfycat(commands.Cog):
         title = gif["title"]
         desc = ""
         if gif["tags"]:
-            desc = " #" + " #".join((x for x in gif["tags"]))
+            desc = " #" + " #".join(x for x in gif["tags"])
 
         url = f"https://gfycat.com/{title}"
         em = dmbd.newembed(author, title, desc, url, footer="gfycat")

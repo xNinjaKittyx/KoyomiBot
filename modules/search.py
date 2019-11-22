@@ -3,7 +3,6 @@ import logging
 from typing import Callable
 
 import discord
-import rapidjson
 import wikipedia
 import xmltodict
 from discord.ext import commands

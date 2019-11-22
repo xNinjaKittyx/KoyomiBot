@@ -18,7 +18,7 @@ class Todo:
             if await redis_pool.exists("todo"):
                 todolist = await redis_pool.lrange("todo", 0, -1)
                 for n, x in enumerate(todolist):
-                    result += "\n" + "\n".join(textwrap.wrap("{0}. {1}".format(n + 1, x.decode("utf-8")), width=width))
+                    result += "\n" + "\n".join(textwrap.wrap("{}. {}".format(n + 1, x.decode("utf-8")), width=width))
                 result += end
                 await ctx.send("```{}```".format(result))
             else:

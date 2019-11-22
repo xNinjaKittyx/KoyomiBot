@@ -45,10 +45,10 @@ class OsuPlayer:
         url = "https://osu.ppy.sh/u/" + self.username
         em = dmbd.newembed(author, title, desc, url)
         em.add_field(name="Performance", value=self.pp_raw + "pp")
-        em.add_field(name="Accuracy", value="{0:.2f}%".format(float(self.accuracy)))
+        em.add_field(name="Accuracy", value="{:.2f}%".format(float(self.accuracy)))
         lvl = int(float(self.level))
         percent = int((float(self.level) - lvl) * 100)
-        em.add_field(name="Level", value="{0} ({1}%)".format(lvl, percent))
+        em.add_field(name="Level", value="{} ({}%)".format(lvl, percent))
         em.add_field(name="Rank", value=self.pp_rank)
         em.add_field(name="Country Rank", value=self.pp_country_rank)
         em.add_field(name="Playcount", value=self.playcount)
@@ -58,6 +58,8 @@ class OsuPlayer:
 
 
 class Osu(commands.Cog):
+    options = "&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
+
     def __init__(self, bot: MyClient):
         self.bot = bot
 
@@ -84,9 +86,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
-        )
+        em.set_image(url=(f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0{self.options}"))
 
         await ctx.send(embed=em)
 
@@ -97,9 +97,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=1&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
-        )
+        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=1{self.options}")
 
         await ctx.send(embed=em)
 
@@ -110,9 +108,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=2&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
-        )
+        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=2{self.options}")
 
         await ctx.send(embed=em)
 
@@ -123,9 +119,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
-        )
+        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3{self.options}")
 
         await ctx.send(embed=em)
 

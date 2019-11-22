@@ -1,10 +1,8 @@
 """ To Get an Anime or Manga from MyAnimeList"""
 import logging
-from datetime import datetime
 from typing import Optional
 
 import rapidjson
-from bs4 import BeautifulSoup
 from discord.ext import commands
 
 import utility.discordembed as dmbd
