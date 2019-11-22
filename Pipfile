@@ -12,7 +12,7 @@ cleverwrap = "*"
 click = "*"
 "discord.py" = {extras = ["voice"],version = ">=1.0"}
 motor = "*"
-Pillow = "*"
+Pillow = ">=6.2.0"
 pymongo = "*"
 python-rapidjson = "*"
 psutil = "*"
