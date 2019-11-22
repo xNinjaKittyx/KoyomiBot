@@ -1,5 +1,3 @@
-
-
 from discord.ext import commands
 
 
@@ -13,12 +11,16 @@ class Mail:
         """ Send a message to the developer."""
         app_info = await self.bot.application_info()
         await app_info.owner.send(
-            'Author: ' + str(ctx.author) +
-            '\nID: ' + str(ctx.author.id) +
-            '\nServer: ' + str(ctx.guild) +
-            '\nMessage: ' + str(ctx.message.content[8:])
+            "Author: "
+            + str(ctx.author)
+            + "\nID: "
+            + str(ctx.author.id)
+            + "\nServer: "
+            + str(ctx.guild)
+            + "\nMessage: "
+            + str(ctx.message.content[8:])
         )
-        await ctx.message.add_reaction('✅')
+        await ctx.message.add_reaction("✅")
 
 
 def setup(bot):

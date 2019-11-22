@@ -1,4 +1,3 @@
-
 import logging
 
 import rapidjson
@@ -12,7 +11,6 @@ log = logging.getLogger(__name__)
 
 
 class Forex(commands.Cog):
-
     def __init__(self, bot: MyClient):
         self.bot = bot
 
@@ -20,7 +18,7 @@ class Forex(commands.Cog):
     async def forex(self, ctx: commands.Context, *args: str) -> None:
         num_of_args = len(args)
         if num_of_args == 1:
-            base = 'USD'
+            base = "USD"
             if len(args[0]) != 3:
                 return
             conversion = args[0].upper()
@@ -32,21 +30,21 @@ class Forex(commands.Cog):
         else:
             return
 
-        cache = await self.bot.db.redis.get(f'exchangerateapi:{base}')
+        cache = await self.bot.db.redis.get(f"exchangerateapi:{base}")
         if cache is None:
-            url = f'https://api.exchangeratesapi.io/latest?base={base}'
+            url = f"https://api.exchangeratesapi.io/latest?base={base}"
             async with self.bot.session.get(url) as r:
                 if r.status != 200:
-                    log.error('Could not get info from ExchangeRagesAPI')
+                    log.error("Could not get info from ExchangeRagesAPI")
                     return
                 result = await r.json()
-            await self.bot.db.redis.set(f'exchangerateapi:{base}', rapidjson.dumps(result))
+            await self.bot.db.redis.set(f"exchangerateapi:{base}", rapidjson.dumps(result))
         else:
             result = rapidjson.loads(cache)
 
         desc = f"{base} to {conversion} conversion"
-        em = dmbd.newembed(ctx.author, 'Foreign Exchange', desc, 'https://exchangeratesapi.io/')
-        em.add_field(name=f'1 {base}', value=f"{result['rates'][conversion]}  {conversion}")
+        em = dmbd.newembed(ctx.author, "Foreign Exchange", desc, "https://exchangeratesapi.io/")
+        em.add_field(name=f"1 {base}", value=f"{result['rates'][conversion]}  {conversion}")
         await ctx.send(embed=em)
 
 

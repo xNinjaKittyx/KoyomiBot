@@ -1,4 +1,3 @@
-
 import logging
 import random
 
@@ -15,7 +14,6 @@ log = logging.getLogger(__name__)
 
 
 class Gfycat(commands.Cog):
-
     def __init__(self, bot: MyClient):
         self.bot = bot
 
@@ -24,10 +22,10 @@ class Gfycat(commands.Cog):
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                log.error(f'Gyfcat returned {r.status}')
+                log.error(f"Gyfcat returned {r.status}")
                 return
             giflist = await r.json()
-        num = random.randint(0, count-1)
+        num = random.randint(0, count - 1)
         gif = giflist["gfycats"][num]
         title = gif["title"]
         desc = ""
@@ -35,8 +33,8 @@ class Gfycat(commands.Cog):
             desc = " #" + " #".join((x for x in gif["tags"]))
 
         url = f"https://gfycat.com/{title}"
-        em = dmbd.newembed(author, title, desc, url, footer='gfycat')
-        em.set_image(url=gif['content_urls']['largeGif']['url'])
+        em = dmbd.newembed(author, title, desc, url, footer="gfycat")
+        em.set_image(url=gif["content_urls"]["largeGif"]["url"])
         return em
 
     async def get_user(self, ctx: commands.Context, target: str) -> Optional[discord.User]:
@@ -104,8 +102,6 @@ class Gfycat(commands.Cog):
     #     em.description = f"{ctx.author.display_name} is so sad. Cheer up :("
     #     await ctx.send(embed=em)
     #     await self.bot.cogs['Wordcount'].cmdcount('kanashi')
-
-
 
 
 def setup(bot: MyClient) -> None:

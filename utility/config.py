@@ -3,7 +3,7 @@ import os
 import toml
 
 
-config_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'config'))
+config_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config"))
 
 
 class Config:
@@ -14,21 +14,25 @@ class Config:
             os.makedirs(config_folder)
 
         if not os.path.exists(self.filename_filepath):
-            with open(self.filename_filepath, 'w') as f:
-                f.write(toml.dumps({
-                    'DiscordToken': '',
-                    'DiscordBotsGG': '',
-                    'DiscordBots': '',
-                    # 'GoogleMapsAPI': '',
-                    # 'DarkSkyAPI': '',
-                    # 'CleverbotAPI': '',
-                    # 'AnilistID': '',
-                    # 'AnilistSecret': '',
-                    # 'OsuAPI': '',
-                    # 'DiscordBotsGG': '',
-                    # 'DiscordBotsPW': '',
-                    'debug': True,
-                }))
+            with open(self.filename_filepath, "w") as f:
+                f.write(
+                    toml.dumps(
+                        {
+                            "DiscordToken": "",
+                            "DiscordBotsGG": "",
+                            "DiscordBots": "",
+                            # 'GoogleMapsAPI': '',
+                            # 'DarkSkyAPI': '',
+                            # 'CleverbotAPI': '',
+                            # 'AnilistID': '',
+                            # 'AnilistSecret': '',
+                            # 'OsuAPI': '',
+                            # 'DiscordBotsGG': '',
+                            # 'DiscordBotsPW': '',
+                            "debug": True,
+                        }
+                    )
+                )
             raise FileNotFoundError(f"Filename {filename} not found. Created one for you.")
 
         self.reload()

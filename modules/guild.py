@@ -1,4 +1,3 @@
-
 import logging
 
 from typing import Callable
@@ -14,11 +13,11 @@ log = logging.getLogger(__name__)
 def is_guild_owner() -> Callable:
     async def predicate(ctx: commands.Context) -> bool:
         return ctx.author == ctx.guild.owner
+
     return commands.check(predicate)
 
 
 class GuildCommands(commands.Cog):
-
     def __init__(self, bot: MyClient):
         self.bot = bot
 

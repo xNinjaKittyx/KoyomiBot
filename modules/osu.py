@@ -1,4 +1,3 @@
-
 import logging
 
 from dataclasses import dataclass
@@ -43,33 +42,32 @@ class OsuPlayer:
     def display(self, author: str) -> discord.Embed:
         title = self.username
         desc = self.country.upper()
-        url = 'https://osu.ppy.sh/u/' + self.username
+        url = "https://osu.ppy.sh/u/" + self.username
         em = dmbd.newembed(author, title, desc, url)
-        em.add_field(name='Performance', value=self.pp_raw + 'pp')
-        em.add_field(name='Accuracy', value="{0:.2f}%".format(float(self.accuracy)))
+        em.add_field(name="Performance", value=self.pp_raw + "pp")
+        em.add_field(name="Accuracy", value="{0:.2f}%".format(float(self.accuracy)))
         lvl = int(float(self.level))
         percent = int((float(self.level) - lvl) * 100)
-        em.add_field(name='Level', value="{0} ({1}%)".format(lvl, percent))
-        em.add_field(name='Rank', value=self.pp_rank)
-        em.add_field(name='Country Rank', value=self.pp_country_rank)
-        em.add_field(name='Playcount', value=self.playcount)
-        em.add_field(name='Total Score', value=self.total_score)
-        em.add_field(name='Ranked Score', value=self.ranked_score)
+        em.add_field(name="Level", value="{0} ({1}%)".format(lvl, percent))
+        em.add_field(name="Rank", value=self.pp_rank)
+        em.add_field(name="Country Rank", value=self.pp_country_rank)
+        em.add_field(name="Playcount", value=self.playcount)
+        em.add_field(name="Total Score", value=self.total_score)
+        em.add_field(name="Ranked Score", value=self.ranked_score)
         return em
 
 
 class Osu(commands.Cog):
-
     def __init__(self, bot: MyClient):
         self.bot = bot
 
     async def getlink(self, mode: int, playername: str) -> Optional[dict]:
         cookiezi = self.bot.key_config.OsuAPI
-        link = f'http://osu.ppy.sh/api/get_user?k={cookiezi}&u={playername}&m={mode}'
+        link = f"http://osu.ppy.sh/api/get_user?k={cookiezi}&u={playername}&m={mode}"
 
         async with self.bot.session.get(link) as r:
             if r.status != 200:
-                self.bot.logger.warning(f'{link} failed with r.status')
+                self.bot.logger.warning(f"{link} failed with r.status")
                 return None
             j = await r.json()
             if j:
@@ -87,7 +85,8 @@ class Osu(commands.Cog):
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
         em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex")
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
+        )
 
         await ctx.send(embed=em)
 
@@ -125,7 +124,8 @@ class Osu(commands.Cog):
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
         em.set_image(
-            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex")
+            url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3&pp=1&countryrank&flagshadow&darkheader&darktriangles&onlineindicator=undefined&xpbar&xpbarhex"
+        )
 
         await ctx.send(embed=em)
 

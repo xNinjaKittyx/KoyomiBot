@@ -8,32 +8,32 @@ from utility.redis import redis_pool
 
 
 class Animehangman:
-
     def __init__(self, bot):
         self.bot = bot
-        self.anilistid = self.bot.config['AnilistID']
-        self.anilistsecret = self.bot.config['AnilistSecret']
+        self.anilistid = self.bot.config["AnilistID"]
+        self.anilistsecret = self.bot.config["AnilistSecret"]
         if not self.anilistid or not self.anilistsecret:
-            print('ID or Secret is missing for AniList')
+            print("ID or Secret is missing for AniList")
             raise ImportError
         self.max = 90248
-        self.bot.loop.run_until_complete(redis_pool.delete('achminst'))
+        self.bot.loop.run_until_complete(redis_pool.delete("achminst"))
 
     async def refreshtoken(self):
-        if await redis_pool.exists('AnilistToken'):
+        if await redis_pool.exists("AnilistToken"):
             return
         else:
             async with self.bot.session.post(
-                'https://anilist.co/api/auth/access_token', data={
-                    'grant_type': 'client_credentials',
-                    'client_id': self.anilistid,
-                    'client_secret': self.anilistsecret
-                }
+                "https://anilist.co/api/auth/access_token",
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": self.anilistid,
+                    "client_secret": self.anilistsecret,
+                },
             ) as r:
                 if r.status != 200:
                     return
                 results = await r.json(loads=rapidjson.loads)
-                await redis_pool.setex('AnilistToken', 3600, results['access_token'])
+                await redis_pool.setex("AnilistToken", 3600, results["access_token"])
 
     async def display(self, ctx, currentboard, guess, misses, picture, win=0):
         subtitle = "Where you test your weeb level!"
@@ -43,17 +43,15 @@ class Animehangman:
         em.add_field(name="Word", value="`" + currentboard.title() + "`", inline=False)
         if misses:
             em.add_field(name="Guess", value=guess)
-            em.add_field(name="Misses", value=' '.join(misses))
+            em.add_field(name="Misses", value=" ".join(misses))
         if not (len(misses) == 6 or win == 1):
             em.add_field(
                 name="How to Play",
                 value=(
-                    "Use " + self.bot.command_prefix +
-                    "guess [x] to guess the next letter\n"
-                    "Type " + self.bot.command_prefix +
-                    "guess quit to exit\n"
+                    "Use " + self.bot.command_prefix + "guess [x] to guess the next letter\n"
+                    "Type " + self.bot.command_prefix + "guess quit to exit\n"
                 ),
-                inline=False
+                inline=False,
             )
 
         if len(misses) == 0:
@@ -78,21 +76,21 @@ class Animehangman:
 
     async def displayanswer(self, ctx, char):
         try:
-            anime = char['anime'][0]
+            anime = char["anime"][0]
         except IndexError:
-            anime = char['anime']
-        subtitle = anime['title_japanese']
-        url = "https://anilist.co/anime/" + str(anime['id'])
-        em = dmbd.newembed(ctx.author, 'Here\'s the answer!', subtitle, url)
-        em.set_image(url=anime['image_url_lge'])
-        em.add_field(name=anime['title_romaji'], value=anime['title_english'])
-        em.add_field(name="Type", value=anime['type'])
-        em.add_field(name='Rating', value=anime['average_score'])
+            anime = char["anime"]
+        subtitle = anime["title_japanese"]
+        url = "https://anilist.co/anime/" + str(anime["id"])
+        em = dmbd.newembed(ctx.author, "Here's the answer!", subtitle, url)
+        em.set_image(url=anime["image_url_lge"])
+        em.add_field(name=anime["title_romaji"], value=anime["title_english"])
+        em.add_field(name="Type", value=anime["type"])
+        em.add_field(name="Rating", value=anime["average_score"])
         try:
-            name_last = str(char['name_last'])
+            name_last = str(char["name_last"])
         except Exception as e:
             name_last = ""
-        em.add_field(name=char['name_japanese'], value=char['name_first'] + " " + name_last)
+        em.add_field(name=char["name_japanese"], value=char["name_first"] + " " + name_last)
 
         await ctx.send(embed=em)
 
@@ -100,10 +98,10 @@ class Animehangman:
         char = None
         while char is None:
             async with self.bot.session.get(
-                "https://anilist.co/api/character/" +
-                str(random.randint(1, self.max)) +
-                "/page?access_token=" +
-                await redis_pool.get('AnilistToken').decode('utf-8')
+                "https://anilist.co/api/character/"
+                + str(random.randint(1, self.max))
+                + "/page?access_token="
+                + await redis_pool.get("AnilistToken").decode("utf-8")
             ) as r:
                 if r.status != 200:
                     self.bot.logger.warning("ANIME CHARACTER RETURNING 404")
@@ -112,7 +110,7 @@ class Animehangman:
 
                 self.bot.logger.debug(tempchar["id"])
             default = "https://cdn.anilist.co/img/dir/character/reg/default.jpg"
-            if tempchar["anime"] == [] or tempchar['image_url_lge'] == default:
+            if tempchar["anime"] == [] or tempchar["image_url_lge"] == default:
                 continue
             char = tempchar
         return char
@@ -120,10 +118,10 @@ class Animehangman:
     @commands.command(no_pm=True)
     async def achm(self, ctx):
         """ Play Anime Character Hangman!"""
-        await self.bot.cogs['Wordcount'].cmdused('achm')
-        if await redis_pool.exists('achminst'):
-            for instance in await redis_pool.lrange('achminst', 0, -1):
-                if ctx.channel.id == int(instance.decode('utf-8')):
+        await self.bot.cogs["Wordcount"].cmdused("achm")
+        if await redis_pool.exists("achminst"):
+            for instance in await redis_pool.lrange("achminst", 0, -1):
+                if ctx.channel.id == int(instance.decode("utf-8")):
                     await ctx.send("There's already a game running!")
                     return
 
@@ -132,25 +130,22 @@ class Animehangman:
         char = await self.getchar()
 
         answer = char["name_first"].lower()
-        currentboard = "_"*len(char["name_first"])
+        currentboard = "_" * len(char["name_first"])
         if char["name_last"]:
             answer += " " + char["name_last"].lower()
-            currentboard += " " + "_"*len(char["name_last"])
+            currentboard += " " + "_" * len(char["name_last"])
         misses = []
         guess = "FirstDisplay"
         picture = char["image_url_lge"]
         author = ctx.author
         prev_message = await self.display(ctx, currentboard, guess, misses, picture)
-        await redis_pool.rpush('achminst', ctx.channel.id)
+        await redis_pool.rpush("achminst", ctx.channel.id)
         while True:
 
             def check(msg):
-                return msg.content.startswith(self.bot.command_prefix + 'guess') and msg.channel == ctx.channel
+                return msg.content.startswith(self.bot.command_prefix + "guess") and msg.channel == ctx.channel
 
-            msg = await self.bot.wait_for(
-                'message',
-                check=check
-                )
+            msg = await self.bot.wait_for("message", check=check)
             await prev_message.delete()
             author = msg.author
             pref_length = len(self.bot.command_prefix) + 5
@@ -160,10 +155,10 @@ class Animehangman:
 
             if len(guess) < 1:
                 await ctx.send("You need to give me a letter!")
-            elif guess == 'quit':
+            elif guess == "quit":
                 await ctx.send("You Ragequit? What a loser.")
                 for _ in range(6 - len(misses)):
-                    misses.append('.')
+                    misses.append(".")
                 await self.display(ctx, currentboard, guess, misses, picture, 0)
                 break
             elif len(guess) > 1:
@@ -179,7 +174,7 @@ class Animehangman:
             elif guess in answer:
                 for number, value in enumerate(answer):
                     if value == guess:
-                        currentboard = currentboard[:number] + value + currentboard[number+1:]
+                        currentboard = currentboard[:number] + value + currentboard[number + 1 :]
             else:
                 misses.append(guess)
 
@@ -195,7 +190,7 @@ class Animehangman:
                 prev_message = await self.display(ctx, currentboard, guess, misses, picture, 0)
 
         await self.displayanswer(ctx, char)
-        await redis_pool.lrem('achminst', 1, ctx.channel.id)
+        await redis_pool.lrem("achminst", 1, ctx.channel.id)
         return
 
 

@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 
@@ -17,11 +16,11 @@ log = logging.getLogger(__name__)
 def is_owner() -> Callable:
     async def predicate(ctx: commands.Context) -> bool:
         return ctx.author.id == 82221891191844864
+
     return commands.check(predicate)
 
 
 class Admin(commands.Cog):
-
     def __init__(self, bot: MyClient):
         self.bot = bot
 
@@ -43,13 +42,14 @@ class Admin(commands.Cog):
     async def redisinfo(self, ctx: commands.Context) -> None:
         em = dmbd.newembed(ctx.author, "Redis Info")
         info = await self.bot.db.redis.info()
-        em.add_field(name="Version", value=info['server']['redis_version'])
-        em.add_field(name="Uptime", value=info['server']['uptime_in_seconds'])
+        em.add_field(name="Version", value=info["server"]["redis_version"])
+        em.add_field(name="Uptime", value=info["server"]["uptime_in_seconds"])
         em.add_field(
             name="Memory Usage",
-            value=f"{int(info['memory']['used_memory']) / int(info['memory']['total_system_memory']):.6f}%")
-        em.add_field(name="Memory Usage", value=info['memory']['used_memory_human'])
-        em.add_field(name="Peak Memory Usage", value=info['memory']['used_memory_peak_human'])
+            value=f"{int(info['memory']['used_memory']) / int(info['memory']['total_system_memory']):.6f}%",
+        )
+        em.add_field(name="Memory Usage", value=info["memory"]["used_memory_human"])
+        em.add_field(name="Peak Memory Usage", value=info["memory"]["used_memory_peak_human"])
         await ctx.send(embed=em)
 
     @commands.command(hidden=True)

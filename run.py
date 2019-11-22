@@ -22,15 +22,15 @@ def log_setup() -> None:
     # Taken from Rapptz' RoboDanny
     try:
         try:
-            os.makedirs('logs')
+            os.makedirs("logs")
         except FileExistsError:
             pass
-        logging.getLogger('discord').setLevel(logging.INFO)
+        logging.getLogger("discord").setLevel(logging.INFO)
 
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
-        formatter = logging.Formatter('%(asctime)s::%(levelname)s:%(module)s:%(lineno)d - %(message)s')
-        fh = RotatingFileHandler(filename='logs/koyomi.log', maxBytes=10*1024*1024, backupCount=10)
+        formatter = logging.Formatter("%(asctime)s::%(levelname)s:%(module)s:%(lineno)d - %(message)s")
+        fh = RotatingFileHandler(filename="logs/koyomi.log", maxBytes=10 * 1024 * 1024, backupCount=10)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
         sh = logging.StreamHandler()

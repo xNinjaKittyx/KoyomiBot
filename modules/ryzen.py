@@ -1,5 +1,3 @@
-
-
 import asyncio
 import logging
 import random
@@ -19,8 +17,9 @@ log = logging.getLogger(__name__)
 
 class Ryzen(commands.Cog):
     """ Ryzen Notifier """
-    tr_re_compile = re.compile(r'tr.*')
-    ryzen_re_compile = re.compile(r'RYZEN [9] 3.*')
+
+    tr_re_compile = re.compile(r"tr.*")
+    ryzen_re_compile = re.compile(r"RYZEN [9] 3.*")
 
     def __init__(self, bot: MyClient):
 
@@ -29,7 +28,7 @@ class Ryzen(commands.Cog):
         self.bot.loop.create_task(self.update_values())
 
     async def update_values(self) -> None:
-        url = 'https://www.nowinstock.net/computers/processors/amd/'
+        url = "https://www.nowinstock.net/computers/processors/amd/"
         while True:
             result = {}
             try:
@@ -39,16 +38,19 @@ class Ryzen(commands.Cog):
                         await asyncio.sleep(5)
                         continue
 
-                    soup = BeautifulSoup(await r.text(), 'html.parser')
-                    for entry in soup.body.find_all(id='data')[0].find_all(id=self.tr_re_compile):
+                    soup = BeautifulSoup(await r.text(), "html.parser")
+                    for entry in soup.body.find_all(id="data")[0].find_all(id=self.tr_re_compile):
                         key = entry.td.a.text
                         if self.ryzen_re_compile.findall(key):
                             # This means its a correct Ryzen.
                             result[key] = {
-                                "link": entry.td.a['href'],
+                                "link": entry.td.a["href"],
                                 "stock": entry.td.next_sibling.text,
                             }
-                            if result[key]['stock'] == "In Stock" and self._data.get(key, {}).get('stock') != 'In Stock':
+                            if (
+                                result[key]["stock"] == "In Stock"
+                                and self._data.get(key, {}).get("stock") != "In Stock"
+                            ):
                                 c = self.bot.get_channel(546860175005581322)
                                 g = self.bot.get_guild(82242522046275584)
                                 while c is None:
@@ -70,11 +72,12 @@ class Ryzen(commands.Cog):
     @commands.command()
     async def ryzen(self, ctx: commands.Context) -> None:
         em = dmbd.newembed(
-            a='EZCLAP RYZENSTOCK',
-            u='https://www.nowinstock.net/computers/processors/amd/',
-            footer='WHERE IS RYZEN 3900X REEEEEE')
+            a="EZCLAP RYZENSTOCK",
+            u="https://www.nowinstock.net/computers/processors/amd/",
+            footer="WHERE IS RYZEN 3900X REEEEEE",
+        )
         for key in self._data:
-            em.add_field(name=key, value=self._data[key]['stock'])
+            em.add_field(name=key, value=self._data[key]["stock"])
         await ctx.send(embed=em)
 
 

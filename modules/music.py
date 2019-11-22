@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 
@@ -18,24 +17,24 @@ class VoiceEntry:
 
         # save memory and use only a portion of the info.
         self.info = {
-            'duration': info['duration'],
-            'uploader': info['uploader'],
-            'title': info['title'],
-            'url': info['url'],
-            'id': info['id'],
+            "duration": info["duration"],
+            "uploader": info["uploader"],
+            "title": info["title"],
+            "url": info["url"],
+            "id": info["id"],
         }
 
     def __str__(self) -> str:
-        fmt = '**{0}** uploaded by {1} and requested by {2}'
-        if self.info['duration']:
-            fmt = fmt + ' [length: {0[0]}m {0[1]}s]'.format(divmod(self.info['duration'], 60))
-        return fmt.format(self.info['title'], self.info['uploader'], self.requester)
+        fmt = "**{0}** uploaded by {1} and requested by {2}"
+        if self.info["duration"]:
+            fmt = fmt + " [length: {0[0]}m {0[1]}s]".format(divmod(self.info["duration"], 60))
+        return fmt.format(self.info["title"], self.info["uploader"], self.requester)
 
     def get_embed(self, title: str) -> discord.Embed:
         desc = str(self)
-        if 'https://' in self.info['url']:
-            em = dmbd.newembed(title, None, desc, self.info['url'])
-            em.set_image(url='https://img.youtube.com/vi/' + self.info['id'] + '/maxresdefault.jpg')
+        if "https://" in self.info["url"]:
+            em = dmbd.newembed(title, None, desc, self.info["url"])
+            em.set_image(url="https://img.youtube.com/vi/" + self.info["id"] + "/maxresdefault.jpg")
         else:
             em = dmbd.newembed(title, None, desc)
 
@@ -43,7 +42,9 @@ class VoiceEntry:
 
 
 class VoiceState:
-    def __init__(self, bot: discord.Client, voice_channel: discord.VoiceChannel, msg_channel: discord.TextChannel):
+    def __init__(
+        self, bot: discord.Client, voice_channel: discord.VoiceChannel, msg_channel: discord.TextChannel,
+    ):
         self.current = None
         self.voice_channel = voice_channel
         self.msg_channel = msg_channel
@@ -97,7 +98,7 @@ class VoiceState:
             self.play_next_song.clear()
             self.current = await self.songs.get()
             self.skip_votes.clear()
-            await self.msg_channel.send(embed=self.current.get_embed('Now Playing '))
+            await self.msg_channel.send(embed=self.current.get_embed("Now Playing "))
             self.voice.play(self.current.sauce, after=self.toggle_next)
             await self.play_next_song.wait()
 
@@ -105,16 +106,12 @@ class VoiceState:
 class Music(commands.Cog):
 
     opts = {
-        'format': 'bestaudio/best',
-        'default-search': 'auto',
-        'quiet': True,
-        'noplaylist': True,
-        'forceurl': True,
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
+        "format": "bestaudio/best",
+        "default-search": "auto",
+        "quiet": True,
+        "noplaylist": True,
+        "forceurl": True,
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192",}],
     }
 
     def __init__(self, bot: discord.Client):
@@ -150,7 +147,8 @@ class Music(commands.Cog):
             return True
 
         await ctx.send(
-            "I am already in a voice channel. You can use `move` or `leave` + `join` to make me join another channel.")
+            "I am already in a voice channel. You can use `move` or `leave` + `join` to make me join another channel."
+        )
         return True
 
     async def check_state_and_user(self, state: VoiceState, ctx: commands.Context) -> bool:
@@ -196,35 +194,34 @@ class Music(commands.Cog):
             with youtube_dl.YoutubeDL(self.opts) as ydl:
                 song_info = ydl.extract_info(song, download=False)
         except youtube_dl.utils.ExtractorError:
-            logging.error(f'Youtube-dl Extractor Error on {song}')
+            logging.error(f"Youtube-dl Extractor Error on {song}")
             return False
         except youtube_dl.utils.DownloadError:
-            logging.error(f'Youtube-dl Download Error on {song}')
+            logging.error(f"Youtube-dl Download Error on {song}")
             return False
         bitrate = 0
-        url = ''
-        codec = ''
-        for x in song_info['formats']:
-            abr = x.get('abr', 0)
+        url = ""
+        codec = ""
+        for x in song_info["formats"]:
+            abr = x.get("abr", 0)
             if 192 >= abr > bitrate:
-                url = x['url']
+                url = x["url"]
                 bitrate = abr
-                codec = x['acodec']
+                codec = x["acodec"]
 
         logging.info(url)
         logging.info((codec, bitrate))
         if not url:
-            logging.error(f'Could not find a suitable audio for {song}')
-            await ctx.send(f'Could not find a suitable audio for {song}')
+            logging.error(f"Could not find a suitable audio for {song}")
+            await ctx.send(f"Could not find a suitable audio for {song}")
             return False
 
         sauce = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(
-                url,
-                before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
-            ), volume=0.25)
+            discord.FFmpegPCMAudio(url, before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",),
+            volume=0.25,
+        )
         entry = VoiceEntry(ctx.message, sauce, song_info)
-        await ctx.send('Queued: ' + str(entry))
+        await ctx.send("Queued: " + str(entry))
         await state.songs.put(entry)
         return True
 
@@ -240,7 +237,7 @@ class Music(commands.Cog):
 
         if 0 < value <= 100 and state.voice.is_playing():
             state.voice.source.volume = value / 200
-            await ctx.send(f'Adjusted volume to {value}')
+            await ctx.send(f"Adjusted volume to {value}")
         return True
 
     @commands.command(no_pm=True)
@@ -253,7 +250,7 @@ class Music(commands.Cog):
             return
         if state.voice.is_playing():
             state.voice.pause()
-            await ctx.send('Paused Music.')
+            await ctx.send("Paused Music.")
 
     @commands.command(no_pm=True)
     async def resume(self, ctx: commands.Context) -> None:
@@ -271,10 +268,10 @@ class Music(commands.Cog):
         if state is None:
             return False
         if state.current is None:
-            await ctx.send('No song is playing')
+            await ctx.send("No song is playing")
             return True
         else:
-            msg = f'Now playing [skips: {state.skip_status()}]'
+            msg = f"Now playing [skips: {state.skip_status()}]"
             await ctx.send(embed=state.current.get_embed(msg))
             return True
 
