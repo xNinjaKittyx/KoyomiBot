@@ -38,6 +38,7 @@ modules = {
     'modules.overwatch',
     'modules.pad',
     'modules.random',
+    # 'modules.ryzen',  # Not used. Was used when 3900X's were rare to get!
     'modules.search',
     # 'modules.animehangman',
     # 'modules.blackjack',

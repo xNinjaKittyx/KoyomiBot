@@ -30,10 +30,21 @@ class Random(commands.Cog):
                 if r.status != 200:
                     log.warning(f'{url} returned {r.text}')
                     await asyncio.sleep(60)
+                    continue
                 result = await r.json()
             self.max_pokemon = result['count']
             log.info('Refreshed Pokemon Count')
             await asyncio.sleep(3600 * 24)
+
+    @commands.command()
+    async def prime(self, ctx: commands.Context) -> None:
+        await ctx.send(
+            'Hey there! Do you want to know about Twitch Prime? Oh! You may be asking, '
+            '"What\'s Twitch Prime?" Let me tell ya! When you connect your Amazon account '
+            'to your Twitch account, you can get 1 free sub to ANY streamer on Twitch, every '
+            'month! Yup, and along with that, get yourself some Twitch loot! With Twitch loot, '
+            'you can go ahead and get yourself some exclusive Twitch gear and your favorite games! '
+        )
 
     @commands.command()
     async def pokemon(self, ctx: commands.Context, numid: int = None) -> None:
