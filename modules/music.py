@@ -111,7 +111,7 @@ class Music(commands.Cog):
         "quiet": True,
         "noplaylist": True,
         "forceurl": True,
-        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}],
+        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192",}],
     }
 
     def __init__(self, bot: discord.Client):
