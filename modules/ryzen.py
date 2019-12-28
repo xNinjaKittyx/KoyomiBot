@@ -31,7 +31,7 @@ class Ryzen(commands.Cog):
             try:
                 async with self.bot.session.get(url) as r:
                     if r.status != 200:
-                        log.warning(f"{url} returned {r.text}")
+                        log.warning(f"{url} returned {await req.text()}")
                         await asyncio.sleep(5)
                         continue
 

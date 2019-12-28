@@ -5,7 +5,7 @@ import os
 
 import aiohttp
 import discord
-import rapidjson
+import orjson as json
 
 from discord.ext import commands
 from discord.utils import find
@@ -29,6 +29,7 @@ modules = {
     "modules.discordbots",
     "modules.forex",
     "modules.gfycat",
+    "modules.dragalia",
     "modules.guild",
     "modules.image",
     "modules.info",
@@ -85,7 +86,7 @@ class MyClient(commands.AutoShardedBot):
 
         self.session = aiohttp.ClientSession(
             loop=self.loop,
-            json_serialize=rapidjson.dumps,
+            json_serialize=json.dumps,
             headers={"User-Agent": "Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)"},
         )
         self.key_config = Config("config.toml")

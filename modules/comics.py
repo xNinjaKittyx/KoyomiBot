@@ -4,7 +4,7 @@ import random
 
 from typing import List, Optional
 
-import rapidjson
+import orjson as json
 
 from bs4 import BeautifulSoup
 from discord.ext import commands
@@ -45,9 +45,9 @@ class Comics(commands.Cog):
                         log.error(f"Unable to get XKCD #{num}")
                         return {}
                     j = await r.json()
-                await redis.hmset_dict("xkcd", {num: rapidjson.dumps(j)})
+                await redis.hmset_dict("xkcd", {num: json.dumps(j)})
                 return j
-        return rapidjson.loads(result.decode("utf-8"))
+        return json.loads(result.decode("utf-8"))
 
     @commands.command()
     async def xkcd(self, ctx: commands.Context) -> None:

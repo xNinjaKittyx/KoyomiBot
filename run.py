@@ -16,6 +16,10 @@ else:
 
 from main import MyClient
 
+import faulthandler
+
+faulthandler.enable()
+
 
 @contextlib.contextmanager
 def log_setup() -> None:
@@ -38,6 +42,9 @@ def log_setup() -> None:
         logger.addHandler(sh)
 
         yield
+    except BaseException as e:
+        logger.exception(e)
+        raise
     finally:
         # __exit__
         handlers = logger.handlers[:]

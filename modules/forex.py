@@ -1,6 +1,6 @@
 import logging
 
-import rapidjson
+import orjson as json
 from discord.ext import commands
 
 import utility.discordembed as dmbd
@@ -38,9 +38,9 @@ class Forex(commands.Cog):
                     log.error("Could not get info from ExchangeRagesAPI")
                     return
                 result = await r.json()
-            await self.bot.db.redis.set(f"exchangerateapi:{base}", rapidjson.dumps(result))
+            await self.bot.db.redis.set(f"exchangerateapi:{base}", json.dumps(result))
         else:
-            result = rapidjson.loads(cache)
+            result = json.loads(cache)
 
         desc = f"{base} to {conversion} conversion"
         em = dmbd.newembed(ctx.author, "Foreign Exchange", desc, "https://exchangeratesapi.io/")

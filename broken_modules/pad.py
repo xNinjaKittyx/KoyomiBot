@@ -4,7 +4,7 @@ from operator import itemgetter
 
 import discord
 import simplefuzzyset as fuzzyset
-import rapidjson
+import orjson as json
 
 from discord.ext import commands
 
@@ -32,10 +32,10 @@ class PAD(commands.Cog):
                     else:
                         self.monsters = await r.json()
                         await self.bot.db.redis.set(
-                            "pad:monsters", rapidjson.dumps(self.monsters), expire=one_day,
+                            "pad:monsters", json.dumps(self.monsters), expire=one_day,
                         )
             else:
-                self.monsters = rapidjson.loads(mons)
+                self.monsters = json.loads(mons)
 
             log.info("Refreshed PAD Monsters")
             awake = await self.bot.db.redis.get("pad:awakenings")
@@ -47,10 +47,10 @@ class PAD(commands.Cog):
                     else:
                         self.awakenings = await r.json()
                         await self.bot.db.redis.set(
-                            "pad:awakenings", rapidjson.dumps(self.awakenings), expire=one_day,
+                            "pad:awakenings", json.dumps(self.awakenings), expire=one_day,
                         )
             else:
-                self.awakenings = rapidjson.loads(awake)
+                self.awakenings = json.loads(awake)
             log.info("Refreshed PAD Awakenings")
             await asyncio.sleep(3600)
 

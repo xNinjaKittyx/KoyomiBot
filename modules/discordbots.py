@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import rapidjson
+import orjson as json
 
 from discord.ext import commands
 
@@ -26,7 +26,7 @@ class DiscordBotUpdates(commands.Cog):
             async with self.bot.session.post(
                 f"https://discordbots.org/api/bots/{self.bot.user.id}/stats",
                 headers={"Authorization": self.bot.key_config.DiscordBots, "Content-Type": "application/json",},
-                data=rapidjson.dumps(
+                data=json.dumps(
                     {
                         "shard_id": self.bot.shard_id,
                         "shard_count": self.bot.shard_count,
@@ -57,7 +57,7 @@ class DiscordBotUpdates(commands.Cog):
             #         'Authorization': self.bot.key_config.DiscordBotsGG,
             #         'Content-Type': 'application/json'
             #     },
-            #     data=rapidjson.dumps(data)
+            #     data=json.dumps(data)
             # ) as f:
             #     if f.status >= 300 or f.status < 200:
             #         log.error(f'Failed to post server count discord.bots.gg: {f.text}')

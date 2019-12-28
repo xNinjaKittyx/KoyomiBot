@@ -2,7 +2,7 @@ import io
 import random
 import time
 
-import rapidjson
+import orjson as json
 from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageColor
 
 from .redis import redis_pool1 as redis_pool
@@ -53,7 +53,7 @@ class KoyomiUser:
                 "level": 1,
                 "pokes_given": 0,
                 "pokes_received": 0,
-                "owned_badges": rapidjson.dumps({"discord": 1}),
+                "owned_badges": json.dumps({"discord": 1}),
                 "selected_badge": "discord",
                 "description": "Kamimashita",
                 "waifu": "None",
@@ -167,7 +167,7 @@ class KoyomiUser:
         await self.set_field("pokes_received", value)
 
     async def get_owned_badges(self):
-        return rapidjson.loads(await self.get_field("owned_badges"))
+        return json.loads(await self.get_field("owned_badges"))
 
     async def get_badge(self):
         return await self.get_field("selected_badge")

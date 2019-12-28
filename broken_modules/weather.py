@@ -1,7 +1,7 @@
 """ Weather Module"""
 
 from discord.ext import commands
-import rapidjson
+import orjson as json
 
 from utility import discordembed as dmbd
 
@@ -39,7 +39,7 @@ class Weather:
         async with self.bot.session.get(url) as r:
             if r.status != 200:
                 return None
-            return await r.json(loads=rapidjson.loads)
+            return await r.json(loads=json.loads)
 
     async def getdarksky(self, lat, lng):
         key = self.bot.config["DarkSkyAPI"]
@@ -56,7 +56,7 @@ class Weather:
         async with self.bot.session.get(url) as r:
             if r.status != 200:
                 return None
-            return await r.json(loads=rapidjson.loads)
+            return await r.json(loads=json.loads)
 
     def display(self, author, place, darksky):
         curr = darksky["currently"]

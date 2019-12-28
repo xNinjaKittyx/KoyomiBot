@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-import rapidjson
+import orjson as json
 from discord.ext import commands
 
 import utility.discordembed as dmbd
@@ -54,9 +54,9 @@ class Anime(commands.Cog):
                     log.error(f"Status: {r.status}. Did not get INFO from {url}")
                     return None
                 mal_details = await r.json()
-                await self.bot.db.redis.set(cache_string, rapidjson.dumps(mal_details))
+                await self.bot.db.redis.set(cache_string, json.dumps(mal_details))
         else:
-            mal_details = rapidjson.loads(mal_details)
+            mal_details = json.loads(mal_details)
 
         return mal_details
 
@@ -122,9 +122,9 @@ class Anime(commands.Cog):
                     log.error(f"Status: {r.status}. Did not get INFO from {url}")
                     return None
                 mal_details = await r.json()
-                await self.bot.db.redis.set(cache_string, rapidjson.dumps(mal_details))
+                await self.bot.db.redis.set(cache_string, json.dumps(mal_details))
         else:
-            mal_details = rapidjson.loads(mal_details)
+            mal_details = json.loads(mal_details)
 
         return mal_details
 

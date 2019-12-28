@@ -4,7 +4,7 @@ import random
 
 
 import utility.discordembed as dmbd
-import rapidjson
+import orjson as json
 
 from discord.ext import commands
 
@@ -47,7 +47,7 @@ class Interactions:
             if r.status != 200:
                 raise ConnectionError(f"Could not GET from Gfycat {r.status}")
 
-            response = await r.json(loads=rapidjson.loads)
+            response = await r.json(loads=json.loads)
             cursor = response["cursor"]
             total = response["found"]
 
@@ -73,7 +73,7 @@ class Interactions:
                         if r.status != 200:
                             raise ConnectionError(f"Could not GET from Gfycat {r.status}")
 
-                        response = await r.json(loads=rapidjson.loads)
+                        response = await r.json(loads=json.loads)
                         cursor = response["cursor"]
                         number -= 100
 
