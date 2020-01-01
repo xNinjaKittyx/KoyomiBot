@@ -27,12 +27,13 @@ class Gfycat(commands.Cog):
             giflist = await r.json()
         num = random.randint(0, count - 1)
         gif = giflist["gfycats"][num]
+        gfyname = gif["gfyName"]
         title = gif["title"]
         desc = ""
         if gif["tags"]:
             desc = " #" + " #".join(x for x in gif["tags"])
 
-        url = f"https://gfycat.com/{title}"
+        url = f"https://gfycat.com/{gfyname}"
         em = dmbd.newembed(author, title, desc, url, footer="gfycat")
         em.set_image(url=gif["content_urls"]["largeGif"]["url"])
         return em

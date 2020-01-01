@@ -31,7 +31,7 @@ modules = {
     "modules.gfycat",
     "modules.dragalia",
     "modules.guild",
-    "modules.image",
+    # "modules.image",
     "modules.info",
     "modules.music",
     "modules.osu",
@@ -40,21 +40,6 @@ modules = {
     "modules.random",
     # 'modules.ryzen',  # Not used. Was used when 3900X's were rare to get!
     "modules.search",
-    # 'modules.animehangman',
-    # 'modules.blackjack',
-    # 'modules.cleverbot',
-    # 'modules.comics',
-    # 'modules.image',
-    # 'modules.interactions',
-    # 'modules.log',
-    # 'modules.mail',
-    # 'modules.pad',
-    # 'modules.profile',
-    # 'modules.slots',
-    # 'modules.tags',
-    # 'modules.todo',
-    # 'modules.weather',
-    # 'modules.wordcount',
 }
 
 

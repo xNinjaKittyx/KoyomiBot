@@ -11,14 +11,10 @@ class Mail:
         """ Send a message to the developer."""
         app_info = await self.bot.application_info()
         await app_info.owner.send(
-            "Author: "
-            + str(ctx.author)
-            + "\nID: "
-            + str(ctx.author.id)
-            + "\nServer: "
-            + str(ctx.guild)
-            + "\nMessage: "
-            + str(ctx.message.content[8:])
+            f"Author: {ctx.author}\n"
+            f"ID: {ctx.author.id}\n"
+            f"Server: {ctx.guild}\n"
+            f"Message: {ctx.message.content[8:]}"
         )
         await ctx.message.add_reaction("✅")
 

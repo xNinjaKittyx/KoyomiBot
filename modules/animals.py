@@ -75,6 +75,7 @@ class Animals(commands.Cog):
                 return
         em = dmbd.newembed(ctx.author, "Random Dog", footer="random.dog")
         em.set_image(url=result["url"])
+        await ctx.send(embed=em)
 
     @commands.command()
     async def floof(self, ctx: commands.Context) -> None:
@@ -83,8 +84,9 @@ class Animals(commands.Cog):
                 log.error("Could not get info from randomfox.ca")
                 return
             result = await r.json()
-        em = dmbd.newembed(ctx.author, "Random Dog", u=result["link"], footer="randomfox.ca")
+        em = dmbd.newembed(ctx.author, "Random  Fox", u=result["link"], footer="randomfox.ca")
         em.set_image(url=result["image"])
+        await ctx.send(embed=em)
 
 
 def setup(bot: MyClient) -> None:

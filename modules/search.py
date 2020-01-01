@@ -58,16 +58,20 @@ class Search(commands.Cog):
             if r.status != 200:
                 log.error("Safebooru search failed")
                 return
-            weeblist = xmltodict.parse(await r.text())
-            weeblist = weeblist["posts"]["post"]
-
-        size = len(weeblist)
+            try:
+                weeblist = xmltodict.parse(await r.text())["posts"]["post"]
+            except KeyError:
+                weeblist = []
+        if not isinstance(weeblist, list):
+            size = 1
+        else:
+            size = len(weeblist)
         page = 0
         max_page = size - 1
 
         title = f"Safebooru: {search}"
-        sample_url = "https:{0[@sample_url]}"
-        file_url = "https:{0[@file_url]}"
+        sample_url = "{0[@sample_url]}"
+        file_url = "{0[@file_url]}"
         desc = "{0} / " + str(size)
         source = "[Here]({0[@source]})"
         em = dmbd.newembed(ctx.author, title)
@@ -81,6 +85,7 @@ class Search(commands.Cog):
             em.description = desc.format(page + 1)
             em.add_field(name="Source", value=source.format(weeblist))
             em.add_field(name="Tags", value=weeblist["@tags"])
+            print(em.to_dict())
             await ctx.send(embed=em)
         else:
             em.set_image(url=sample_url.format(weeblist[0]))
@@ -171,10 +176,12 @@ class Search(commands.Cog):
             url = page.url
             em = dmbd.newembed(ctx.author, title, desc, url)
 
-            em.set_image(url=page.images[0], footer="Wikipedia")
+            em.set_image(url=page.images[0])
             em.set_thumbnail(
-                url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/"
-                + "Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png"
+                url=(
+                    "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/"
+                    "Wikipedia-logo-v2-en.svg/250px-Wikipedia-logo-v2-en.svg.png"
+                )
             )
             await ctx.send(embed=em)
 

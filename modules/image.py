@@ -8,6 +8,9 @@ from discord.ext import commands
 from PIL import Image
 
 
+# TODO: Needs more jpeg. Jk, this needs to have a separate thread handling the IO.
+
+
 class ImageManipulator(commands.Cog):
     MAX_SIZE = 8 * 1024 * 1024
 

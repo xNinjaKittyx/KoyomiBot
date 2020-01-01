@@ -86,7 +86,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(url=(f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0{self.options}"))
+        # em.set_image(url=(f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=0{self.options}"))
 
         await ctx.send(embed=em)
 
@@ -97,7 +97,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=1{self.options}")
+        # em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=1{self.options}")
 
         await ctx.send(embed=em)
 
@@ -108,7 +108,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=2{self.options}")
+        # em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=2{self.options}")
 
         await ctx.send(embed=em)
 
@@ -119,7 +119,7 @@ class Osu(commands.Cog):
             return
         player = OsuPlayer(**result)
         em = player.display(ctx.author)
-        em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3{self.options}")
+        # em.set_image(url=f"http://lemmmy.pw/osusig/sig.php?colour=hex{em.color}&uname={name}&mode=3{self.options}")
 
         await ctx.send(embed=em)
 

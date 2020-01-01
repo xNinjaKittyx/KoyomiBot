@@ -13,19 +13,14 @@ from utility import discordembed as dmbd
 log = logging.getLogger(__name__)
 
 
-def is_owner() -> Callable:
-    async def predicate(ctx: commands.Context) -> bool:
-        return ctx.author.id == 82221891191844864
-
-    return commands.check(predicate)
-
-
 class Admin(commands.Cog):
     def __init__(self, bot: MyClient):
         self.bot = bot
 
+    def cog_check(self, ctx: commands.Context) -> bool:
+        return ctx.author.id == 82221891191844864
+
     @commands.command(hidden=True)
-    @is_owner()
     async def kys(self, ctx: commands.Context) -> None:
         """ Bot kills itself """
         await ctx.send("Bot is *kill*")
@@ -33,12 +28,10 @@ class Admin(commands.Cog):
         await self.bot.close()
 
     @commands.command(hidden=True)
-    @is_owner()
     async def status(self, ctx: commands.Context, *, s: str) -> None:
         await self.bot.change_presence(game=discord.Game(name=s))
 
     @commands.command(hidden=True)
-    @is_owner()
     async def redisinfo(self, ctx: commands.Context) -> None:
         em = dmbd.newembed(ctx.author, "Redis Info")
         info = await self.bot.db.redis.info()
@@ -53,7 +46,6 @@ class Admin(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command(hidden=True)
-    @is_owner()
     async def changeavatar(self, ctx: commands.Context, *, url: str) -> None:
         """ Changes the Avatar"""
         async with self.bot.session.get(url) as r:
@@ -66,7 +58,6 @@ class Admin(commands.Cog):
                     await ctx.send("Wrong image format was passed.")
 
     @commands.command(hidden=True)
-    @is_owner()
     async def changeusername(self, ctx: commands.Context, *, s: str) -> None:
         """ Changes the Username """
         await self.bot.user.edit(username=s)

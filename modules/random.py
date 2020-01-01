@@ -142,7 +142,7 @@ class Random(commands.Cog):
             if r.status != 200:
                 log.warning(f"{url} returned {r.text}")
                 return
-            result = await r.json(content_type="application/hal+json")
+            result = await r.json()
         await ctx.send(result["value"])
 
     @commands.command()
@@ -161,7 +161,7 @@ class Random(commands.Cog):
     async def dadjoke(self, ctx: commands.Context) -> None:
         """ Random Dad Joke """
         url = "http://icanhazdadjoke.com/"
-        async with self.bot.session.get(url) as r:
+        async with self.bot.session.get(url, headers={"Accept": "application/json"}) as r:
             if r.status != 200:
                 log.warning(f"{url} returned {r.text}")
                 return
@@ -172,20 +172,19 @@ class Random(commands.Cog):
     @commands.command()
     async def quotesondesign(self, ctx: commands.Context) -> None:
         """ Get Random Quote from Quotes on Design"""
-        url = "http://quotesondesign.com/wp-json/posts?filter[orderby]=rand&filter[posts_per_page]=1"
+        # https://quotesondesign.com/wp-json/wp/v2/posts/?orderby=id&per_page=1
+        # This API actually gives deterministic results... so it has to be changed to work correctly.
+
+        url = "https://quotesondesign.com/wp-json/wp/v2/posts/?orderby=rand"
         async with self.bot.session.get(url) as r:
             if r.status != 200:
                 log.warning(f"{url} returned {r.text}")
                 return
             result = (await r.json())[0]
-        source = result.get("custom_meta", None)
-        if source:
-            source = result.get("Source", "")
-        else:
-            source = ""
+
         em = dmbd.newembed(
-            a=result["title"],
-            d=BeautifulSoup(result["content"], "html.parser").get_text().strip() + "\n" + "Source: " + source,
+            a=result["title"]["rendered"],
+            d=BeautifulSoup(result["content"], "html.parser").get_text().strip() + "\n",
             u=result["link"],
             footer="QuotesOnDesign",
         )

@@ -75,7 +75,7 @@ class KoyomiDB:
 
     async def get_guild_prefixes(self, guild: discord.Guild) -> list:
         cache = await self.redis.lrange(f"{guild.id}_prefix", 0, 9)
-        return [c.decode("utf-8") for c in cache] if cache else list((await self.get_guild_info(guild))["prefix"])
+        return cache if cache else list((await self.get_guild_info(guild))["prefix"])
 
     async def set_guild_prefixes(self, guild: discord.Guild, prefix: str) -> Tuple[bool, str]:
         if len(prefix) > 10:
