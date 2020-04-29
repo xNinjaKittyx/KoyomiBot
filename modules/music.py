@@ -76,19 +76,36 @@ class VoiceState:
             except Exception as e:
                 logging.exception(e)
 
+    def remove_skip(self, user: discord.User) -> bool:
+        try:
+            self.skip_votes.remove(user.id)
+            return True
+        except KeyError:
+            return False
+
+    def add_skip(self, user: discord.User) -> bool:
+        prev = len(self.skip_votes)
+        self.skip_votes.add(user.id)
+        return len(self.skip_votes) > prev
+
     def max_skip(self) -> int:
         return max((len(self.voice_channel.members) - 1) // 2, 1)
 
     def skip_status(self) -> str:
-        return f"{len(self.skip_votes)}/{self.max_skip()}"
+        return f"{len(self.skip_votes)} / {self.max_skip()}"
+
+    def check_skip(self) -> bool:
+        if len(self.skip_votes) >= self.max_skip():
+            self.voice.stop()
+            return True
+        return False
 
     def skip(self, user: discord.User) -> Optional[str]:
         if self.voice.is_playing():
-            self.skip_votes.add(user.id)
-            if len(self.skip_votes) >= self.max_skip():
-                self.voice.stop()
-                return None
-            return f"Skip Requested: {len(self.skip_votes)}/{self.max_skip()}"
+            if self.add_skip(user):
+                if self.check_skip():
+                    return None
+                return f"Skip Requested: {self.skip_status()}"
         return None
 
     def toggle_next(self, error):
@@ -155,6 +172,22 @@ class Music(commands.Cog):
                 self.bot.loop.run_until_complete(state.leave())
             except Exception as e:
                 logging.error(f"Exception raised: {e}")
+
+    async def on_voice_state_update(
+        self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState
+    ) -> None:
+        guild_id = member.guild.id
+        if guild_id in self.voice_states:
+            # We got a voice state related to that voice channel
+            if before.channel and before.channel == self.voice_states[guild_id].voice_channel:
+                # User left the channel
+                self.voice_states[guild_id].remove_skip(member)
+                self.voice_states[guild_id].check_skip()
+                # TODO: Add logic to also leave server if the voice channel is empty
+
+            # if after.channel and after.channel == self.voice_states[guild_id].voice_channel
+            #     # Someone Joined the channel
+            #     self.voice_states[guild_id]
 
     async def initialize_voice_state(self, ctx: discord.ext.commands.Context) -> Optional[VoiceState]:
         try:
