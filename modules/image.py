@@ -74,3 +74,4 @@ class ImageManipulator(commands.Cog):
 
 def setup(bot: Client) -> None:
     bot.add_cog(ImageManipulator(bot))
+
