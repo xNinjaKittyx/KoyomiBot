@@ -27,6 +27,7 @@ class Overwatch(commands.Cog):
                 if r.status != 200:
                     log.error("Could not get heroes from https://overwatch-api.net/api/v1/hero")
                     await asyncio.sleep(60)
+                    continue
                 result = await r.json()
             self.heroes = [hero["name"] for hero in result["data"]]
             log.info("Refreshed Overwatch Heroes")

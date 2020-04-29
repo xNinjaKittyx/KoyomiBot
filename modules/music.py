@@ -3,6 +3,7 @@ import logging
 
 from typing import Dict, Optional, Set
 
+import async_timeout
 import discord
 from discord.ext import commands
 import youtube_dl
@@ -56,36 +57,38 @@ class VoiceState:
         self.skip_votes: Set[int] = set()
         self.audio_player = self.bot.loop.create_task(self.audio_player_task())
 
+    def __del__(self):
+        if self.bot.loop.is_running():
+            self.bot.loop.ensure_future(self.leave())
+        self.audio_player.cancel()
+
     async def join(self) -> None:
         self.voice = await self.voice_channel.connect()
 
     async def move(self, new_voice: discord.VoiceChannel) -> None:
         await self.voice.move_to(new_voice)
+        self.voice_channel = new_voice
 
     async def leave(self) -> None:
-        if self.voice is not None:
-            if self.voice.is_playing:
-                self.voice.stop()
-            try:
-                self.audio_player.cancel()
-            except asyncio.CancelledError:
-                pass
+        if self.voice is not None and self.voice.is_connected():
             try:
                 await self.voice.disconnect()
             except Exception as e:
                 logging.exception(e)
-        return
+
+    def max_skip(self) -> int:
+        return max((len(self.voice_channel.members) - 1) // 2, 1)
 
     def skip_status(self) -> str:
-        return f"{len(self.skip_votes)}/{(len(self.voice_channel.members) // 2)}"
+        return f"{len(self.skip_votes)}/{self.max_skip()}"
 
     def skip(self, user: discord.User) -> Optional[str]:
         if self.voice.is_playing():
             self.skip_votes.add(user.id)
-            if len(self.skip_votes) > (len(self.voice_channel.members) // 2):
+            if len(self.skip_votes) >= self.max_skip():
                 self.voice.stop()
                 return None
-            return f"Skip Requested: {len(self.skip_votes)}/{len(self.voice_channel.members) // 2}"
+            return f"Skip Requested: {len(self.skip_votes)}/{self.max_skip()}"
         return None
 
     def toggle_next(self, error):
@@ -95,11 +98,21 @@ class VoiceState:
 
     async def audio_player_task(self):
         while True:
-            self.play_next_song.clear()
-            self.current = await self.songs.get()
-            self.skip_votes.clear()
-            await self.msg_channel.send(embed=self.current.get_embed("Now Playing "))
-            self.voice.play(self.current.sauce, after=self.toggle_next)
+            try:
+                self.play_next_song.clear()
+                async with async_timeout.timeout(180):
+                    self.current = await self.songs.get()
+                self.skip_votes.clear()
+                await self.msg_channel.send(embed=self.current.get_embed("Now Playing "))
+                self.voice.play(self.current.sauce, after=self.toggle_next)
+            except asyncio.CancelledError:
+                return
+            except asyncio.TimeoutError:
+                await self.msg_channel.send("No activity within 3 minutes. Exiting.")
+                await self.leave()
+                return
+            except Exception as e:
+                logging.exception(error)
             await self.play_next_song.wait()
 
 
@@ -117,6 +130,24 @@ class Music(commands.Cog):
     def __init__(self, bot: discord.Client):
         self.bot = bot
         self.voice_states: Dict[int, VoiceState] = {}
+        self.bot.loop.create_task(self.clean_voice_states_task())
+
+    async def clean_voice_states_task(self):
+        while True:
+            clean_guild_ids = []
+            logging.info(f"There are currently {len(self.voice_states)} voice states.")
+            for guild_id, state in self.voice_states.items():
+                if not state or not state.voice or not state.voice.is_connected():
+                    clean_guild_ids.append(guild_id)
+
+            for guild_id in clean_guild_ids:
+                del self.voice_states[guild_id]
+
+            await asyncio.sleep(30)
+
+    def cog_command_error(self, ctx: discord.ext.commands.Context, error: discord.ext.commands.CommandError) -> None:
+        if isinstance(error, discord.ext.commands.CommandInvokeError):
+            logging.exception(f"Music Cog Internal Error: {error}")
 
     def cog_unload(self) -> None:
         for state in self.voice_states.values():
@@ -125,48 +156,41 @@ class Music(commands.Cog):
             except Exception as e:
                 logging.error(f"Exception raised: {e}")
 
+    async def initialize_voice_state(self, ctx: discord.ext.commands.Context) -> Optional[VoiceState]:
+        try:
+            current_state = self.voice_states[ctx.guild.id]
+            if not current_state.voice.is_connected():
+                del current_state
+            if check_state_and_user(self, current_state, ctx):
+                return current_state
+            else:
+                del current_state
+        except KeyError:
+            pass
+
+        state = VoiceState(self.bot, ctx.author.voice.channel, ctx.message.channel)
+        try:
+            # Bind to a chat and a voice channel.
+            await state.join()
+        except discord.ClientException as e:
+            await ctx.send(f"Could not join voice channel: {ctx.author.voice.channel.name}")
+            logging.exception(e)
+            return None
+
+        self.voice_states[ctx.guild.id] = state
+        await ctx.send(f"Music binded to {ctx.author.voice.channel.name} & {ctx.message.channel}")
+        return state
+
+    def check_state_and_user(self, state: VoiceState, ctx: commands.Context) -> bool:
+        return state.msg_channel != ctx.message.channel or state.voice_channel != ctx.author.voice.channel
+
     @commands.command(no_pm=True)
     async def join(self, ctx: discord.ext.commands.Context) -> bool:
         """Joins a voice channel."""
         if ctx.author.voice is None:
             await ctx.send(f"{ctx.author} is not in a voice channel.")
             return False
-        state = self.voice_states.get(ctx.guild.id)
-        if state is None:
-            state = VoiceState(self.bot, ctx.author.voice.channel, ctx.message.channel)
-            try:
-                # Bind to a chat and a voice channel.
-                await state.join()
-            except discord.ClientException as e:
-                await ctx.send(f"Could not join voice channel: {ctx.author.voice.channel.name}")
-                logging.exception(e)
-                return False
-
-            self.voice_states[ctx.guild.id] = state
-            await ctx.send(f"Music binded to {ctx.author.voice.channel.name} & {ctx.message.channel}")
-            return True
-
-        await ctx.send(
-            "I am already in a voice channel. You can use `move` or `leave` + `join` to make me join another channel."
-        )
-        return True
-
-    async def check_state_and_user(self, state: VoiceState, ctx: commands.Context) -> bool:
-        return state.msg_channel != ctx.message.channel or state.voice_channel != ctx.author.voice.channel
-
-    @commands.command(no_pm=True)
-    async def move(self, ctx: commands.Context) -> bool:
-        if ctx.author.voice is None:
-            return False
-        state = self.voice_states.get(ctx.guild.id)
-        if state is not None:
-            if state.msg_channel != ctx.message.channel:
-                return False
-            await state.move(ctx.author.voice.channel)
-            return True
-
-        await ctx.send("I am not in a channel. Use `join` for me to join a voice channel.")
-        return True
+        return bool(await self.initialize_voice_state(ctx))
 
     @commands.command(no_pm=True)
     async def leave(self, ctx: discord.ext.commands.Context) -> bool:
@@ -174,11 +198,10 @@ class Music(commands.Cog):
             return False
         state = self.voice_states.get(ctx.guild.id)
         if state is not None:
-            if await self.check_state_and_user(state, ctx):
+            if self.check_state_and_user(state, ctx):
                 return False
-            await state.leave()
+            del state
             await ctx.send("Goodbye.")
-            del self.voice_states[ctx.guild.id]
         return True
 
     @commands.command(no_pm=True)
@@ -187,8 +210,12 @@ class Music(commands.Cog):
             return False
         state = self.voice_states.get(ctx.guild.id)
         if state is None:
+            state = await self.initialize_voice_state(ctx)
+        if state is None:
+            await ctx.send("Could not join voice channel.")
             return False
-        if await self.check_state_and_user(state, ctx):
+        state = self.voice_states.get(ctx.guild.id)
+        if self.check_state_and_user(state, ctx):
             return False
         try:
             with youtube_dl.YoutubeDL(self.opts) as ydl:
@@ -209,7 +236,7 @@ class Music(commands.Cog):
                 bitrate = abr
                 codec = x["acodec"]
 
-        logging.info(url)
+        logging.debug(url)
         logging.info((codec, bitrate))
         if not url:
             logging.error(f"Could not find a suitable audio for {song}")
@@ -217,7 +244,7 @@ class Music(commands.Cog):
             return False
 
         sauce = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(url, before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",),
+            discord.FFmpegPCMAudio(url, before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 8",),
             volume=0.25,
         )
         entry = VoiceEntry(ctx.message, sauce, song_info)
@@ -232,7 +259,7 @@ class Music(commands.Cog):
         state = self.voice_states.get(ctx.guild.id)
         if state is None:
             return False
-        if await self.check_state_and_user(state, ctx):
+        if self.check_state_and_user(state, ctx):
             return False
 
         if 0 < value <= 100 and state.voice.is_playing():
@@ -246,7 +273,7 @@ class Music(commands.Cog):
         state = self.voice_states.get(ctx.guild.id)
         if state is None:
             return
-        if await self.check_state_and_user(state, ctx):
+        if self.check_state_and_user(state, ctx):
             return
         if state.voice.is_playing():
             state.voice.pause()
@@ -257,13 +284,13 @@ class Music(commands.Cog):
         state = self.voice_states.get(ctx.guild.id)
         if state is None:
             return
-        if await self.check_state_and_user(state, ctx):
+        if self.check_state_and_user(state, ctx):
             return
         if state.voice.is_paused():
             state.voice.resume()
 
     @commands.command(no_pm=True)
-    async def now_playing(self, ctx: commands.Context) -> bool:
+    async def current(self, ctx: commands.Context) -> bool:
         state = self.voice_states.get(ctx.guild.id)
         if state is None:
             return False
