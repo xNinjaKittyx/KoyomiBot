@@ -59,7 +59,7 @@ class VoiceState:
 
     def __del__(self):
         if self.bot.loop.is_running():
-            self.bot.loop.ensure_future(self.leave())
+            asyncio.ensure_future(self.leave())
         self.audio_player.cancel()
 
     async def join(self) -> None:
