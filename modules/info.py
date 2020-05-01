@@ -41,7 +41,7 @@ class Info(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        em = dmbd.newembed(ctx.author, d=self.bot.latency)
+        em = dmbd.newembed(ctx.author, d=str(self.bot.latency))
         await ctx.send(embed=em)
 
     @commands.command()

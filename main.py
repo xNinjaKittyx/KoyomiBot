@@ -133,32 +133,6 @@ class MyClient(commands.AutoShardedBot):
     async def on_guild_remove(self, guild: discord.Guild) -> None:
         log.info(f"KoyomiBot left a guild :( {guild.name}")
 
-    async def on_member_join(self, member: discord.Member) -> None:
-        log.debug(f"{member.name}/{member.id} has joined the guild {member.guild.name}/{member.guild.id}")
-
-    async def on_member_remove(self, member: discord.Member) -> None:
-        log.debug(f"{member.name}/{member.id} has left the guild {member.guild.name}/{member.guild.id}")
-
-    async def on_message_delete(self, msg: discord.Message) -> None:
-        if msg.author.bot:
-            return
-        if msg.guild:
-            mod_log = find(lambda c: c.name == "koyomilog", msg.guild.channels)
-            if mod_log is None:
-                return
-            await mod_log.send(f"{msg.author.name} deleted the message: {msg.content}")
-
-    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
-        if before.author.bot:
-            return
-        if before.guild:
-            mod_log = find(lambda c: c.name == "koyomilog", before.guild.channels)
-            if mod_log is None:
-                return
-            await mod_log.send(
-                f"{before.author.name} edited the message: \n Before: {before.content}\n After: {after.content}"
-            )
-
     async def on_ready(self) -> None:
         random.seed()
         log.info("Logged in as")
