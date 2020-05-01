@@ -167,11 +167,12 @@ class MyClient(commands.AutoShardedBot):
         url = f"https://discordapp.com/api/oauth2/authorize?client_id={self.user.id}&scope=bot&permissions=0"
         log.info(f"Invite Link: {url}")
         try:
+            log.info(os.name)
             if not discord.opus.is_loaded() and os.name == "nt":
                 discord.opus.load_opus("libopus0.x64.dll")
 
             if not discord.opus.is_loaded() and os.name == "posix":
-                discord.opus.load_opus("/usr/local/lib/libopus.so")
+                discord.opus.load_opus("/usr/lib/x86_64-linux-gnu/libopus.so.0")
             log.info("Loaded Opus Library")
         except Exception as e:
             log.error(e)
