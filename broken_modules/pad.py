@@ -4,7 +4,7 @@ from operator import itemgetter
 
 import discord
 import simplefuzzyset as fuzzyset
-import orjson as json
+import rapidjson as json
 
 from discord.ext import commands
 

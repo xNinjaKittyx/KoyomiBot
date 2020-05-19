@@ -4,7 +4,7 @@ import random
 
 
 import utility.discordembed as dmbd
-import orjson as json
+import rapidjson as json
 
 from discord.ext import commands
 

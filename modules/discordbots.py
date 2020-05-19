@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import orjson as json
+import rapidjson as json
 
 from discord.ext import commands
 

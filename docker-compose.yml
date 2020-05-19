@@ -1,0 +1,23 @@
+version: '3'
+services:
+  koyomi:
+    image: "koyomi"
+    volumes:
+      - /home/user/python/discordbots/KoyomiBot/logs:/opt/logs/
+      - /home/user/python/discordbots/KoyomiBot/config:/opt/config/
+    depends_on:
+      - "redis"
+      - "mongo"
+
+  redis:
+    image: "redis:alpine"
+    restart: always
+
+  mongo:
+    image: "mongo:latest"
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - /home/user/python/discordbots/KoyomiBot/db:/data/db

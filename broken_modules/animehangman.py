@@ -1,6 +1,6 @@
 import random
 
-import orjson as json
+import rapidjson as json
 
 from discord.ext import commands
 from utility import discordembed as dmbd

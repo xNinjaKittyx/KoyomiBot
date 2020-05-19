@@ -4,7 +4,7 @@ import random
 
 from typing import List, Optional
 
-import orjson as json
+import rapidjson as json
 
 from bs4 import BeautifulSoup
 from discord.ext import commands

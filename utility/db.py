@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 
 import aioredis
@@ -6,9 +7,9 @@ import motor.motor_asyncio
 
 
 class KoyomiDB:
-    def __init__(self) -> None:
-        self._client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017")
-        self._db = self._client.koyomibot
+    def __init__(self, key_config) -> None:
+        self._client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://mongo", username=key_config.MongoUsername, password=key_config.MongoPassword)
+        self._db = self._client.key_config
         self._guild_collection = self._db.guild_collection
         self._user_collection = self._db.user_collection
 
@@ -18,7 +19,7 @@ class KoyomiDB:
         await self.redis.wait_closed()
 
     async def initialize_redis(self) -> None:
-        self.redis = await aioredis.create_redis_pool("redis://localhost", encoding="utf-8")
+        self.redis = await aioredis.create_redis_pool("redis://redis", encoding="utf-8")
 
     async def _reset_guild_cache(self, guild_id: int) -> None:
         self.redis.delete(f"{guild_id}_prefix", f"{guild_id}_ignore")

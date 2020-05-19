@@ -5,7 +5,7 @@ import os
 
 import aiohttp
 import discord
-import orjson as json
+import rapidjson as json
 
 from discord.ext import commands
 from discord.utils import find
@@ -67,14 +67,14 @@ class MyClient(commands.AutoShardedBot):
             help_attrs=dict(hidden=True),
             fetch_offline_members=False,
         )
-        self.db = KoyomiDB()
+        self.key_config = Config("config.toml")
+        self.db = KoyomiDB(self.key_config)
 
         self.session = aiohttp.ClientSession(
             loop=self.loop,
             json_serialize=json.dumps,
             headers={"User-Agent": "Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)"},
         )
-        self.key_config = Config("config.toml")
 
     def run(self) -> None:
         log.info("Starting Bot".center(30, "-"))
@@ -146,7 +146,7 @@ class MyClient(commands.AutoShardedBot):
                 discord.opus.load_opus("libopus0.x64.dll")
 
             if not discord.opus.is_loaded() and os.name == "posix":
-                discord.opus.load_opus("/usr/lib/x86_64-linux-gnu/libopus.so.0")
+                discord.opus.load_opus("/usr/lib/libopus.so.0")
             log.info("Loaded Opus Library")
         except Exception as e:
             log.error(e)

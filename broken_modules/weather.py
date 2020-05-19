@@ -1,7 +1,7 @@
 """ Weather Module"""
 
 from discord.ext import commands
-import orjson as json
+import rapidjson as json
 
 from utility import discordembed as dmbd
 
