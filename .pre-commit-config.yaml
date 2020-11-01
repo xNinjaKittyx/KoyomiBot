@@ -1,29 +1,30 @@
 default_stages: [commit, push]
 default_language_version:
-  python: python3.7
+  python: python3.8
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.4.0
+    rev: v3.3.0
     hooks:
     - id: check-json
     - id: pretty-format-json
       args: ["--autofix", "--no-sort-keys"]
   - repo: https://github.com/ambv/black
-    rev: stable
+    rev: 19.10b0
     hooks:
     - id: black
       args: ["-l 120"]
-      language_version: python3.7
-  # - repo: https://github.com/asottile/pyupgrade
-  #   rev: v1.25.1
-  #   hooks:
-  #   - id: pyupgrade
-  #     args: ["--py3-plus"]
-  #     language_version: python3.7
-  # - repo: local
-  #   hooks:
-  #   - id: pylama
-  #     name: pylama
-  #     entry: pylama
-  #     language: python
-  #     types: ["python"]
+  - repo: https://github.com/pycqa/isort
+    rev: 5.6.4
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.3
+    hooks:
+    - id: pyupgrade
+      args: ["--py38-plus"]
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+    - id: flake8
+      args: ["--config=.config/flake8"]

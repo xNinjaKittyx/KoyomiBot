@@ -25,3 +25,9 @@ Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
 Invite Link: [Invite](https://discordapp.com/api/oauth2/authorize?client_id=310366123759632385&scope=bot&permissions=0)
 
 Mostly the bot only needs permission to send messages & read messages in your channels.
+
+
+## TODO:
+
+    - Reorganize files to place python project inside a subfolder.
+    - Improve Music player.

@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 120
+ignore =
+    E231  # Until black fixes this
+    W503  # Not pep8 compatible
+    E203  # Not pep8 compatible

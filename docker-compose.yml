@@ -1,13 +1,17 @@
 version: '3'
 services:
   koyomi:
+    container_name: "koyomi"
     image: "koyomi"
+    restart: always
     volumes:
-      - /home/user/python/discordbots/KoyomiBot/logs:/opt/logs/
-      - /home/user/python/discordbots/KoyomiBot/config:/opt/config/
+      - /home/user/python/discordbots/KoyomiBot/koyomibot/logs:/opt/koyomibot/logs/
+      - /home/user/python/discordbots/KoyomiBot/koyomibot/config:/opt/koyomibot/config/
     depends_on:
       - "redis"
       - "mongo"
+    dns:
+      - 8.8.8.8
 
   redis:
     image: "redis:alpine"
