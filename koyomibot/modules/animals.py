@@ -13,36 +13,33 @@ class Animals(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def shibe(self, ctx: commands.Context) -> None:
-        async with self.bot.session.get("https://shibe.online/api/shibes") as r:
-            if r.status != 200:
-                log.error("Could not get info from Shibe.online")
-                return
-            result = await r.json()
+    async def shibe(self, ctx: commands.Context) -> bool:
+        result = await self.bot.request_get("https://shibe.online/api/shibes")
+        if result is None:
+            return False
         em = dmbd.newembed(ctx.author, "Shibes", footer="shibe.online")
         em.set_image(url=result[0])
         await ctx.send(embed=em)
+        return True
 
     @commands.command()
-    async def catfact(self, ctx: commands.Context) -> None:
-        async with self.bot.session.get("https://cat-fact.herokuapp.com/facts/random") as r:
-            if r.status != 200:
-                log.error("Could not get info from cat-fact.com")
-                return
-            result = await r.json()
+    async def catfact(self, ctx: commands.Context) -> bool:
+        result = await self.bot.request_get("https://cat-fact.herokuapp.com/facts/random")
+        if result is None:
+            return False
         em = dmbd.newembed(ctx.author, "Random Cat Fact", d=result["text"], footer="cat-fact")
         await ctx.send(embed=em)
+        return True
 
     @commands.command()
-    async def meow(self, ctx: commands.Context) -> None:
-        async with self.bot.session.get("https://aws.random.cat/meow") as r:
-            if r.status != 200:
-                log.error("Could not get info from random.cat")
-                return
-            result = await r.json()
+    async def meow(self, ctx: commands.Context) -> bool:
+        result = await self.bot.request_get("https://aws.random.cat/meow")
+        if result is None:
+            return False
         em = dmbd.newembed(ctx.author, "Random Cat", footer="random.cat")
         em.set_image(url=result["file"])
         await ctx.send(embed=em)
+        return True
 
     @commands.command()
     async def meow2(self, ctx: commands.Context, text: str = "") -> None:
@@ -63,29 +60,27 @@ class Animals(commands.Cog):
         await ctx.send(embed=em)
 
     @commands.command()
-    async def woof(self, ctx: commands.Context) -> None:
-        async with self.bot.session.get("https://random.dog/woof.json") as r:
-            if r.status != 200:
-                log.error("Could not get info from random.dog")
-                return
-            result = await r.json()
-            if result["url"].endswith(".mp4"):
-                log.error("MP4 link detected, exiting out...")
-                return
+    async def woof(self, ctx: commands.Context) -> bool:
+        result = await self.bot.request_get("https://random.dog/woof.json")
+        if result is None:
+            return False
+        if result["url"].endswith(".mp4"):
+            log.error("random.dog MP4 link detected, exiting out...")
+            return False
         em = dmbd.newembed(ctx.author, "Random Dog", footer="random.dog")
         em.set_image(url=result["url"])
         await ctx.send(embed=em)
+        return True
 
     @commands.command()
-    async def floof(self, ctx: commands.Context) -> None:
-        async with self.bot.session.get("https://randomfox.ca/floof/") as r:
-            if r.status != 200:
-                log.error("Could not get info from randomfox.ca")
-                return
-            result = await r.json()
-        em = dmbd.newembed(ctx.author, "Random  Fox", u=result["link"], footer="randomfox.ca")
+    async def floof(self, ctx: commands.Context) -> bool:
+        result = await self.bot.request_get("https://randomfox.ca/floof/")
+        if result is None:
+            return False
+        em = dmbd.newembed(ctx.author, "Random Fox", u=result["link"], footer="randomfox.ca")
         em.set_image(url=result["image"])
         await ctx.send(embed=em)
+        return True
 
 
 def setup(bot: MyClient) -> None:

@@ -3,7 +3,6 @@ import logging
 import random
 from typing import List, Optional
 
-import rapidjson as json
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
@@ -23,28 +22,19 @@ class Comics(commands.Cog):
     async def refreshxkcd(self) -> None:
         while True:
             log.info("Refreshing XKCD Comics.")
-            async with self.bot.session.get("https://xkcd.com/info.0.json") as r:
-                if r.status != 200:
-                    log.warning("XKCD is down. Trying again in 1 minute.")
-                    await asyncio.sleep(60)
-                    continue
-                j = await r.json()
-                self.highest_xkcd = j["num"]
-            await asyncio.sleep(3600)
+            result = await self.bot.request_get("https://xkcd.com/info.0.json")
+            if result is None:
+                log.warning("XKCD did not return successfully, trying again in 1 min")
+                await asyncio.sleep(60)
+            else:
+                self.highest_xkcd = result["num"]
+                await asyncio.sleep(3600)
 
     async def getxkcd(self, num: int) -> Optional[dict]:
         """ Num should be passed as an INT """
-        with await self.bot.db.redis as redis:
-            result = await redis.hget("xkcd", num)
-            if result is None:
-                async with self.bot.session.get(f"https://xkcd.com/{num}/info.0.json") as r:
-                    if r.status != 200:
-                        log.error(f"Unable to get XKCD #{num}")
-                        return {}
-                    j = await r.json()
-                await redis.hmset_dict("xkcd", {num: json.dumps(j)})
-                return j
-        return json.loads(result.decode("utf-8"))
+        cache_str = f"xkcd:{num}"
+        result = await self.bot.request_get(f"https://xkcd.com/{num}/info.0.json", cache_str=cache_str)
+        return result if result else {}
 
     @commands.command()
     async def xkcd(self, ctx: commands.Context) -> None:
@@ -62,32 +52,29 @@ class Comics(commands.Cog):
     async def refreshcyanide(self) -> None:
         while True:
             log.info("Refreshing C&H Comics.")
-            async with self.bot.session.get("https://explosm.net/comics/latest") as r:
-                if r.status != 200:
-                    log.warning("Cyanide&Happiness is down")
-                    await asyncio.sleep(60)
-                    continue
-                soup = BeautifulSoup(await r.text(), "html.parser")
-            self.cyanidemax = int(soup.find(property="og:url").get("content").split("/")[-2])
-            await asyncio.sleep(3600)
+            result = await self.bot.request_get("https://explosm.net/comics/latest", return_as_json=False)
+            if result is None:
+                log.warning("C&H did not return successfully, trying again in 1 min")
+                await asyncio.sleep(60)
+            else:
+                soup = BeautifulSoup(result, "html.parser")
+                self.cyanidemax = int(soup.find(property="og:url").get("content").split("/")[-2])
+                await asyncio.sleep(3600)
 
     async def getcyanide(self, num: int) -> Optional[str]:
-        with await self.bot.db.redis as redis:
-            result = await redis.hget("cyanide", num)
-            if result is None:
-                async with self.bot.session.get(f"https://explosm.net/comics/{num}") as r:
-                    if r.status != 200:
-                        log.warning(f"Unable to get Cyanide #{num}")
-                        return None
-                    soup = BeautifulSoup(await r.text(), "html.parser")
-                if soup.prettify().startswith("Could not"):
-                    self.dead_cyanide.append(num)
-                    return None
-                img = f'http:{soup.find(id="main-comic")["src"]}'
-                await redis.hmset_dict("xkcd", {num: img})
-                return img
+        cache_str = f"cyanide:{num}"
+        # Redis space can definitely be optimized.
+        result = await self.bot.request_get(
+            f"https://explosm.net/comics/{num}", cache_str=cache_str, return_as_json=False
+        )
+        if result is None:
+            return None
 
-        return result.decode("utf-8")
+        soup = BeautifulSoup(result, "html.parser")
+        if soup.prettify().startswith("Could not"):
+            self.dead_cyanide.append(num)
+            return None
+        return f'http:{soup.find(id="main-comic")["src"]}'
 
     @commands.command()
     async def cyanide(self, ctx: commands.Context) -> None:
@@ -112,13 +99,11 @@ class Comics(commands.Cog):
     @commands.command()
     async def cyanidercg(self, ctx: commands.Context) -> None:
         """ Gives a randomly generated Cyanide & Happiness Comic"""
-        async with self.bot.session.get("https://explosm.net/rcg") as r:
-            if r.status != 200:
-                log.warning("Unable to get RCG for Cyanide")
-                await ctx.send("Could not get you a random Cyanide&Happiness at this time.")
-                return
-            soup = BeautifulSoup(await r.text(), "html.parser")
-        img = f"http:{soup.find(id='rcg-comic').img['src']}"
+        result = await self.bot.request_get("https://explosm.net/rcg", return_as_json=False)
+        if result is None:
+            return None
+        soup = BeautifulSoup(result, "html.parser")
+        img = soup.find(id="rcg-image").value
         em = dmbd.newembed(ctx.author, "Cyanide and Happiness RCG", u=img, footer="Explosm")
         em.set_image(url=img)
         await ctx.send(embed=em)

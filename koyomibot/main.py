@@ -3,6 +3,7 @@ import logging
 import os
 import random
 from datetime import datetime
+from typing import Optional
 
 import aiohttp
 import discord
@@ -19,26 +20,9 @@ description = """
 KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.
 """
 
-modules = {
-    "admin",
-    "animals",
-    "anime",
-    "comics",
-    "discordbots",
-    "forex",
-    "gfycat",
-    "dragalia",
-    "guild",
-    # "modules.image",
-    "info",
-    "music",
-    "osu",
-    # "modules.overwatch",
-    # "modules.pad",
-    "random",
-    # 'modules.ryzen',  # Not used. Was used when 3900X's were rare to get!
-    "search",
-}
+modules = [
+    item[:-3] for item in os.listdir(os.path.join(os.path.dirname(__file__), "modules")) if not item.startswith("__")
+]
 
 
 # Quick snippet from Danny's code.
@@ -74,6 +58,26 @@ class MyClient(commands.AutoShardedBot):
             json_serialize=json.dumps,
             headers={"User-Agent": "Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)"},
         )
+
+    async def request_get(self, url: str, cache_str: str = "", return_as_json: bool = True) -> Optional[dict]:
+        if cache_str:
+            cached_obj = await self.db.redis.get(cache_str)
+            if cached_obj:
+                if return_as_json:
+                    return json.loads(cached_obj)
+                else:
+                    return cached_obj.decode("utf-8")
+        async with self.session.get(url) as r:
+            if r.status != 200:
+                log.error(f"HTTPSession: {r.status} on {url}")
+                return None
+            if return_as_json:
+                result = await r.json()
+            else:
+                result = await r.text()
+        if cache_str:
+            await self.db.redis.set(cache_str, json.dumps(result))
+        return result
 
     def run(self) -> None:
         log.info("Starting Bot".center(30, "-"))

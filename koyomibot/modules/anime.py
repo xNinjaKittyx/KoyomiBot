@@ -2,7 +2,6 @@
 import logging
 from typing import Optional
 
-import rapidjson as json
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
@@ -23,6 +22,8 @@ class Anime(commands.Cog):
 
     async def get_anime(self, string: str) -> Optional[dict]:
         cache_string = f"animesearch:{string}"
+
+        # TODO: Refactoring this out...
         mal_id = await self.bot.db.redis.get(cache_string)
         if mal_id is None:
             url = self.search_jikan.format("anime", string)
@@ -45,19 +46,7 @@ class Anime(commands.Cog):
 
         # Now get the actual anime details:
         cache_string = f"anime:{mal_id}"
-        mal_details = await self.bot.db.redis.get(cache_string)
-        if mal_details is None:
-            url = self.get_jikan.format("anime", mal_id)
-            async with self.bot.session.get(url) as r:
-                if r.status != 200:
-                    log.error(f"Status: {r.status}. Did not get INFO from {url}")
-                    return None
-                mal_details = await r.json()
-                await self.bot.db.redis.set(cache_string, json.dumps(mal_details))
-        else:
-            mal_details = json.loads(mal_details)
-
-        return mal_details
+        return await self.bot.request_get(self.get_jikan.format("anime", mal_id), cache_str=cache_string)
 
     @commands.command()
     async def animetrailer(self, ctx: commands.Context, *, anime_search: str) -> None:
@@ -113,19 +102,7 @@ class Anime(commands.Cog):
 
         # Now get the actual manga details:
         cache_string = f"manga:{mal_id}"
-        mal_details = await self.bot.db.redis.get(cache_string)
-        if mal_details is None:
-            url = self.get_jikan.format("manga", mal_id)
-            async with self.bot.session.get(url) as r:
-                if r.status != 200:
-                    log.error(f"Status: {r.status}. Did not get INFO from {url}")
-                    return None
-                mal_details = await r.json()
-                await self.bot.db.redis.set(cache_string, json.dumps(mal_details))
-        else:
-            mal_details = json.loads(mal_details)
-
-        return mal_details
+        return await self.bot.request_get(self.get_jikan.format("manga", mal_id), cache_str=cache_string)
 
     @commands.command()
     async def manga(self, ctx: commands.Context, *, manga_search: str) -> None:

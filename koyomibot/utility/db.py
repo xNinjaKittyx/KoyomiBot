@@ -56,15 +56,7 @@ class KoyomiDB:
         if result is None:
             result = {
                 "id": user.id,
-                "msg_cd": 0,
-                "poke_cd": 0,
-                "xp": 0,
                 "name": full_name,
-                "coins": 30,
-                "level": 1,
-                "pokes_given": 0,
-                "pokes_received": 0,
-                "description": "Kamimashita",
                 "ignore": False,
             }
             await self._user_collection.insert_one(result)
