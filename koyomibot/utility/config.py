@@ -14,6 +14,7 @@ DEFAULT_CONFIG = {
     "DiscordBots": "",
     "MongoUsername": "root",
     "MongoPassword": "password",
+    "SplunkAuth": "SplunkAuth",
     # 'GoogleMapsAPI': '',
     # 'DarkSkyAPI': '',
     # 'CleverbotAPI': '',

@@ -29,5 +29,4 @@ Mostly the bot only needs permission to send messages & read messages in your ch
 
 ## TODO:
 
-    - Reorganize files to place python project inside a subfolder.
-    - Improve Music player.
+    - None

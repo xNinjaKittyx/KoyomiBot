@@ -14,7 +14,8 @@ RUN apk del build-base
 RUN apk add opus
 
 COPY . .
-RUN rm -r /opt/koyomibot/logs /opt/koyomibot/config
+
+RUN rm -rf /opt/logs /opt/koyomibot/config || true
 
 
 CMD ["poetry", "run", "botrun"]

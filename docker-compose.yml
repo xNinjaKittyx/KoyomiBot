@@ -5,23 +5,39 @@ services:
     image: "koyomi"
     restart: always
     volumes:
-      - /home/user/python/discordbots/KoyomiBot/koyomibot/logs:/opt/koyomibot/logs/
-      - /home/user/python/discordbots/KoyomiBot/koyomibot/config:/opt/koyomibot/config/
+      - /opt/koyomibot/logs:/opt/koyomibot/logs/
+      - /opt/koyomibot/config:/opt/koyomibot/config/
     depends_on:
       - "redis"
       - "mongo"
+      - "splunk"
     dns:
       - 8.8.8.8
 
   redis:
+    container_name: "koyomi-redis"
     image: "redis:alpine"
     restart: always
 
   mongo:
+    container_name: "koyomi-mongo"
     image: "mongo:latest"
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
-      - /home/user/python/discordbots/KoyomiBot/db:/data/db
+      - /opt/koyomibot/db:/data/db
+
+  splunk:
+    container_name: "koyomi-splunk"
+    image: "splunk/splunk:latest"
+    restart: always
+    environment:
+      SPLUNK_PASSWORD: somereallylongpassword123!
+      SPLUNK_START_ARGS: --accept-license
+    ports:
+      - "8000:8000"
+    volumes:
+      - /opt/koyomibot/splunk/etc:/opt/splunk/etc/
+      - /opt/koyomibot/splunk/var:/opt/splunk/var/

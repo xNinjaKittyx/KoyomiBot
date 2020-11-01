@@ -103,13 +103,12 @@ ENV/
 # PyCharm files
 /.idea
 
-# Config Files
-config/config.json
-lmfao.png
-
-/.vscode*
+.vscode/
 .mypy_cache/
-config/
 
+# Ignore persistent data
+config/
+db/
+splunk/
 
 Pipfile.lock

@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import random
+from datetime import datetime
 
 import aiohttp
 import discord
@@ -105,16 +106,42 @@ class MyClient(commands.AutoShardedBot):
             return False
         return await self.db.check_user_blacklist(ctx.author)
 
+    async def push_to_splunk(self, ctx: discord.ext.commands.Context) -> None:
+        data = {
+            "host": "koyomi",
+            "sourcetype": "discord-commands",
+            "event": {
+                "author": ctx.author.id,
+                "message": ctx.message.content,
+                "args": str(ctx.args),
+                "kwargs": str(ctx.kwargs),
+                "prefix": ctx.prefix,
+                "command": ctx.command.name,
+                "guild_id": ctx.guild.id if ctx.guild else None,
+                "guild_name": ctx.guild.name if ctx.guild else None,
+                "timestamp": datetime.now().isoformat(),
+                "failed": ctx.command_failed,
+            },
+        }
+        log.info(f"Pushing to splunk: {data}")
+        await self.session.post(
+            "https://splunk:8088/services/collector/event",
+            headers={"Authorization": f"Splunk {self.key_config.SplunkAuth}"},
+            json=data,
+            verify_ssl=False,
+        )
+
     async def process_commands(self, msg: discord.Message) -> None:
         ctx = await self.get_context(msg)
 
         if ctx.command is None:
             return
 
-        log.info("User: {ctx.author} attempted to use command {msg.content}")
+        log.info(f"User: {ctx.author} attempted to use command {msg.content}")
 
         if await self.check_blacklist(ctx):
             await self.invoke(ctx)
+            await self.push_to_splunk(ctx)
 
     async def on_message(self, msg: discord.Message) -> None:
         if msg.author.bot:

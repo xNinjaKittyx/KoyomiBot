@@ -179,7 +179,7 @@ class Music(commands.Cog):
     async def clean_voice_states_task(self) -> None:
         while True:
             clean_guild_ids = []
-            log.info(f"There are currently {len(self.voice_states)} voice states.")
+            log.debug(f"There are currently {len(self.voice_states)} voice states.")
             for guild_id, state in self.voice_states.items():
                 if not state or not state.voice or not state.voice.is_connected():
                     clean_guild_ids.append(guild_id)
@@ -422,6 +422,10 @@ class Music(commands.Cog):
         final_list.append("```")
 
         await ctx.send("\n".join(final_list))
+
+    @commands.command(no_pm=True)
+    async def current_voice_channels(self, ctx: commands.Context) -> bool:
+        await ctx.send(f"Currently in {len(self.voice_states)} channels")
 
 
 def setup(bot: discord.Client) -> None:
