@@ -5,28 +5,35 @@
 A Bot that has a lot of random stuff... Provides a lot of different fun, unique commands.
 
 
+## Features
+
+- Lookup your favorite anime/manga.
+- Ask for a funny comic.
+- Random Cat Pic? Fox Pic? Dog Pic?
+
 ## Goals
 
 - Be 100% SFW, no worry about nsfw vs sfw content.
-- Attempt to keep as few logs, and as few identifiable data as possible.
-- To bring some life to your discord with some quick and easy commands.
-- Add as many web scraping features that make sense without much user input.
+- Minimal Setup. Should be pretty straightforward to setup.
+- No annoying PMs on-join or anything of the sort (plenty of other bots available)
+- Just a fun bot to interact with.
 
 ## Info
 
-- Uses prefix `k>`. Staging bot will use `k!> for testing`
+- Uses prefix `k>`. Staging bot will use `k!>` for testing
 
 ## Userful Links
 
-Official Website: [GitHubPages](https://xNinjaKittyx.github.io/KoyomiBot)
+Official Website (Nothing atm): [GitHubPages](https://xNinjaKittyx.github.io/KoyomiBot)
 
 Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
 
 Invite Link: [Invite](https://discordapp.com/api/oauth2/authorize?client_id=310366123759632385&scope=bot&permissions=0)
 
-Mostly the bot only needs permission to send messages & read messages in your channels.
+Mostly the bot only needs permission to send messages & read messages in your channels. Will need to have voice channel support for music.
 
 
 ## TODO:
 
-    - None
+- Fix my in-chat hangman game. will be fun.
+- Make a high-tech help menu
