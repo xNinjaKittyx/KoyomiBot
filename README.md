@@ -7,9 +7,15 @@ A Bot that has a lot of random stuff... Provides a lot of different fun, unique 
 
 ## Features
 
-- Lookup your favorite anime/manga.
-- Ask for a funny comic.
+- Lookup your favorite anime/manga
+- Ask for a funny comic from xkcd or explosm
 - Random Cat Pic? Fox Pic? Dog Pic?
+- Look up dragalia characters (In Progress)
+- Foreign Exchange Rates
+- Random Gifs
+- Typical Music Bot stuff (Still buggy)
+- Look up osu! users
+- Search through safebooru (warning might have some questionable content), urban dictionary, or wikipedia
 
 ## Goals
 
