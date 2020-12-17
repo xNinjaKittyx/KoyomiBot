@@ -147,10 +147,18 @@ class MyClient(commands.AutoShardedBot):
             await self.invoke(ctx)
             await self.push_to_splunk(ctx)
 
+    async def on_command_error(self, ctx, error) -> None:
+        try:
+            raise error
+        except discord.ext.commands.errors.MissingRequiredArgument:
+            log.error(f"{ctx.command} failed with {error}")
+        except Exception:
+            log.exception(f"{ctx.command} failed with {error}")
+
     async def on_message(self, msg: discord.Message) -> None:
         if msg.author.bot:
             return
-        await self.process_commands(msg)
+        return await self.process_commands(msg)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         if not await self.db.check_guild_blacklist(guild):

@@ -19,16 +19,37 @@ A Bot that has a lot of random stuff... Provides a lot of different fun, unique 
 
 ## Goals
 
-- Be 100% SFW, no worry about nsfw vs sfw content.
 - Minimal Setup. Should be pretty straightforward to setup.
 - No annoying PMs on-join or anything of the sort (plenty of other bots available)
 - Just a fun bot to interact with.
+
+## Hosting it yourself
+
+I cannot guarantee any support if you decide to host it yourself. Use at your own risk.
+
+You'll need to first setup docker and docker-compose.
+
+Clone the repository
+```
+git clone https://github.com/xNinjaKittyx/KoyomiBot.git
+```
+
+You can run the wrapper script `./rebuild_and_run.sh`, or run the commands independently in that script.
+
+On first run, it will fail, so you want to take it back down
+```
+docker-compose down
+```
+
+Edit `./koyomibot/config/config.toml` with the proper token values.
+
+Then rerun `./rebuild_and_run.sh` and it should work this time as is.
 
 ## Info
 
 - Uses prefix `k>`. Staging bot will use `k!>` for testing
 
-## Userful Links
+## Useful Links
 
 Official Website (Nothing atm): [GitHubPages](https://xNinjaKittyx.github.io/KoyomiBot)
 

@@ -1,4 +1,4 @@
-""" Overwatch API usage"""
+""" Overwatch API usage - No longer used as the API is not maintained."""
 import asyncio
 import logging
 import random

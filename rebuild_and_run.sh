@@ -1,6 +1,7 @@
 #!/bin/bash
 
 pre-commit run -a && \
-    docker build -t koyomi . --network host && \
+    docker-compose build && \
+    docker-compose down
     docker-compose up -d && \
-    docker container ls -a
+    docker container logs -f koyomi

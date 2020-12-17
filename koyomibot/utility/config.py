@@ -15,6 +15,8 @@ DEFAULT_CONFIG = {
     "MongoUsername": "root",
     "MongoPassword": "password",
     "SplunkAuth": "SplunkAuth",
+    "IEX_API_VERSION": "iexcloud-sandbox",
+    "IEX_TOKEN": "TOKEN_HERE",
     # 'GoogleMapsAPI': '',
     # 'DarkSkyAPI': '',
     # 'CleverbotAPI': '',

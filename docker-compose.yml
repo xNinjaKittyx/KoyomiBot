@@ -1,18 +1,16 @@
-version: '3'
+version: '3.8'
 services:
   koyomi:
     container_name: "koyomi"
-    image: "koyomi"
+    build: .
     restart: always
     volumes:
-      - /opt/koyomibot/logs:/opt/koyomibot/logs/
-      - /opt/koyomibot/config:/opt/koyomibot/config/
+      - ./logs:/opt/logs/
+      - ./koyomibot/config:/opt/koyomibot/config/
     depends_on:
       - "redis"
       - "mongo"
       - "splunk"
-    dns:
-      - 8.8.8.8
 
   redis:
     container_name: "koyomi-redis"

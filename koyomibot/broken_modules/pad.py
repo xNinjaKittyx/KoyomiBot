@@ -1,3 +1,4 @@
+""" No longer used as the API is not maintained """
 import asyncio
 import logging
 from operator import itemgetter

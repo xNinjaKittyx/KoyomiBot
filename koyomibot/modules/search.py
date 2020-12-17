@@ -8,17 +8,9 @@ from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
 from koyomibot.main import MyClient
+from koyomibot.utility.reactions import get_page_check
 
 log = logging.getLogger(__name__)
-
-
-def get_check(msg: discord.Message) -> Callable:
-    def check(reaction: discord.Reaction, user: discord.User) -> bool:
-        if user.bot:
-            return False
-        return str(reaction.emoji) in ["◀", "▶", "❌"] and reaction.message.id == msg.id
-
-    return check
 
 
 class Search(commands.Cog):
@@ -96,7 +88,7 @@ class Search(commands.Cog):
             await msg.add_reaction("▶")
             await msg.add_reaction("❌")
 
-            check = get_check(msg)
+            check = get_page_check(msg)
 
             while True:
                 page = await self.get_page(check, msg, page, max_page)
@@ -146,7 +138,7 @@ class Search(commands.Cog):
                 await msg.add_reaction("▶")
                 await msg.add_reaction("❌")
 
-                check = get_check(msg)
+                check = get_page_check(msg)
 
                 while True:
                     page = await self.get_page(check, msg, page, max_page)

@@ -1,17 +1,19 @@
 
 
-FROM python:3.8-alpine
+FROM python:3.8-buster
 
 WORKDIR /opt
 
-RUN apk add build-base python3-dev libffi-dev openssl-dev ffmpeg
+RUN apt update && apt install build-essential python-dev libffi-dev libssl-dev ffmpeg libopus0 -y
 
+RUN python -m pip install -U pip
 RUN pip install poetry
 COPY pyproject.toml .
 COPY poetry.lock .
+RUN poetry run python -m pip install -U pip
 RUN poetry install --no-dev
-RUN apk del build-base
-RUN apk add opus
+# RUN apt remove build-essential -y
+RUN apt clean
 
 COPY . .
 

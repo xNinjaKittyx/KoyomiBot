@@ -1,7 +1,6 @@
 import logging
 import time
 
-import psutil
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
@@ -33,16 +32,6 @@ class Info(commands.Cog):
 
         return f"{days}d {hours}h {minutes}m {seconds}s"
 
-    @staticmethod
-    def getcpuusage():
-        proc = psutil.Process()
-        return proc.cpu_percent()
-
-    @staticmethod
-    def getmemusage():
-        proc = psutil.Process()
-        return proc.memory_info().rss / (1024 ** 2)
-
     @commands.command()
     async def ping(self, ctx):
         em = dmbd.newembed(ctx.author, d=str(self.bot.latency))
@@ -67,9 +56,6 @@ class Info(commands.Cog):
         em.add_field(name="Total Guilds", value=len(self.bot.guilds))
         em.add_field(name="Current Guild Users", value=len(ctx.guild.members))
         em.add_field(name="Uptime", value=self.getuptime())
-        if author.id == 82221891191844864:
-            em.add_field(name="CPU", value=f"{self.getcpuusage():.2f}%")
-            em.add_field(name="Memory", value=f"{self.getmemusage():.2f} MB")
         em.add_field(name="Invite", value=f"[Click Me :)]({inviteurl})")
         em.add_field(name="Support", value=f"[Discord Link]({supporturl})")
 

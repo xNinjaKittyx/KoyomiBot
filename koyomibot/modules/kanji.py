@@ -1,23 +1,14 @@
 import logging
 import random
-from typing import Callable
 
 import discord
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
 from koyomibot.main import MyClient
+from koyomibot.utility.reactions import get_check, get_page_check
 
 log = logging.getLogger(__name__)
-
-
-def get_check(msg: discord.Message) -> Callable:
-    def check(reaction: discord.Reaction, user: discord.User) -> bool:
-        if user.bot:
-            return False
-        return str(reaction.emoji) in ["✅"] and reaction.message.id == msg.id
-
-    return check
 
 
 class Kanji(commands.Cog):
@@ -55,6 +46,12 @@ class Kanji(commands.Cog):
         await ctx.send(embed=em)
         return True
 
+    def _kanji_fields(self, result: dict, embed: discord.Embed) -> None:
+        embed.clear_fields()
+        embed.description = ", ".join(result["meanings"][0]["glosses"])
+        for variant in result["variants"]:
+            embed.add_field(name=variant["written"], value=variant["pronounced"])
+
     @commands.command()
     async def kanjiwords(self, ctx: commands.Context, *, character: str):
         """ Word Examples for a Kanji """
@@ -62,7 +59,38 @@ class Kanji(commands.Cog):
         result = await self._make_call(f"words/{character}")
         if result is None:
             return False
-        await ctx.send("--construction--")
+        page = 0
+        max_page = len(result)
+        em = dmbd.newembed(ctx.author, character)
+        self._kanji_fields(result[page], em)
+        msg = await ctx.send(embed=em)
+        if max_page == 1:
+            return
+        await msg.add_reaction("◀")
+        await msg.add_reaction("▶")
+        await msg.add_reaction("❌")
+        check = get_page_check(msg)
+        while True:
+            try:
+                res, user = await self.bot.wait_for("reaction_add", check=check, timeout=120)
+            except TimeoutError:
+                await msg.clear_reactions()
+                break
+            if res is None:
+                await msg.clear_reactions()
+                break
+            elif res.emoji == "❌":
+                await msg.clear_reactions()
+                break
+            elif res.emoji == "◀":
+                await msg.remove_reaction(res.emoji, user)
+                page = max(0, page - 1)
+            elif res.emoji == "▶":
+                await msg.remove_reaction(res.emoji, user)
+                page = min(max_page, page + 1)
+            self._kanji_fields(result[page], em)
+            await msg.edit(embed=em)
+
         return True
 
     @commands.command()

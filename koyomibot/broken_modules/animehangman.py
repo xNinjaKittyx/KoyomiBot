@@ -1,6 +1,5 @@
 import random
 
-import rapidjson as json
 from discord.ext import commands
 
 from koyomibot.utility import discordembed as dmbd
@@ -32,7 +31,7 @@ class Animehangman:
             ) as r:
                 if r.status != 200:
                     return
-                results = await r.json(loads=json.loads)
+                results = await r.json()
                 await redis_pool.setex("AnilistToken", 3600, results["access_token"])
 
     async def display(self, ctx, currentboard, guess, misses, picture, win=0):
@@ -106,7 +105,7 @@ class Animehangman:
                 if r.status != 200:
                     self.bot.logger.warning("ANIME CHARACTER RETURNING 404")
                     continue
-                tempchar = await r.json(loads=json.loads)
+                tempchar = await r.json()
 
                 self.bot.logger.debug(tempchar["id"])
             default = "https://cdn.anilist.co/img/dir/character/reg/default.jpg"

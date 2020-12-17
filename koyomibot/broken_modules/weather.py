@@ -1,6 +1,5 @@
-""" Weather Module"""
+""" Weather Module -- Retired as darksky is no longer"""
 
-import rapidjson as json
 from discord.ext import commands
 
 from koyomibot.utility import discordembed as dmbd
@@ -39,24 +38,7 @@ class Weather:
         async with self.bot.session.get(url) as r:
             if r.status != 200:
                 return None
-            return await r.json(loads=json.loads)
-
-    async def getdarksky(self, lat, lng):
-        key = self.bot.config["DarkSkyAPI"]
-        url = (
-            "https://api.darksky.net/forecast/"
-            + key
-            + "/"
-            + str(lat)
-            + ","
-            + str(lng)
-            + "?exclude=minutely,hourly,daily,alerts,flags"
-        )
-
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                return None
-            return await r.json(loads=json.loads)
+            return await r.json()
 
     def display(self, author, place, darksky):
         curr = darksky["currently"]
