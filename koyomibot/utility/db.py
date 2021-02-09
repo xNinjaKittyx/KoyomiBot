@@ -1,8 +1,10 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import aioredis
 import discord
 import motor.motor_asyncio
+import pandas as pd
+import pyarrow
 
 
 class KoyomiDB:
@@ -13,6 +15,7 @@ class KoyomiDB:
         self._db = self._client.key_config
         self._guild_collection = self._db.guild_collection
         self._user_collection = self._db.user_collection
+        self._pyarrow_context = pyarrow.default_serialization_context()
 
     async def close(self) -> None:
         self.redis.close()
@@ -22,8 +25,17 @@ class KoyomiDB:
     async def initialize_redis(self) -> None:
         self.redis = await aioredis.create_redis_pool("redis://redis", encoding="utf-8")
 
+    async def set_dataframe(self, key: str, value: pd.DataFrame) -> None:
+        await self.redis.set(key, self._pyarrow_context.serialize(value).to_buffer().to_pybytes(), expire=3600)
+
+    async def get_dataframe(self, key: str) -> Optional[pd.DataFrame]:
+        redis_data = await self.redis.get(key)
+        if not redis_data:
+            return redis_data
+        return self._pyarrow_context.deserialize(redis_data)
+
     async def _reset_guild_cache(self, guild_id: int) -> None:
-        self.redis.delete(f"{guild_id}_prefix", f"{guild_id}_ignore")
+        await self.redis.delete(f"{guild_id}_prefix", f"{guild_id}_ignore")
 
     async def get_guild_info(self, guild: discord.Guild) -> dict:
 
