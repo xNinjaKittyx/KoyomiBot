@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Optional
 
 from discord.ext import commands
 
@@ -64,6 +65,25 @@ class Info(commands.Cog):
     @commands.command()
     async def uptime(self, ctx):
         await ctx.send("```" + self.getuptime() + "```")
+
+    @commands.command(aliases=["av"])
+    async def avatar(self, ctx, discord_id: Optional[str] = None) -> None:
+        if discord_id is None:
+            member = ctx.author
+        else:
+            discord_id = str(discord_id)
+            for person in ctx.guild.members:
+                log.info(discord_id)
+                log.info((str(person.id), str(person.name), str(person.nick)))
+                if discord_id in (str(person.id), str(person.name), str(person.nick)):
+                    member = person
+                    break
+            else:
+                return False
+
+        em = dmbd.newembed(member)
+        em.set_image(url=member.avatar_url)
+        await ctx.send(embed=em)
 
 
 def setup(bot: MyClient) -> None:

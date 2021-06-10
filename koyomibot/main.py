@@ -128,6 +128,7 @@ class MyClient(commands.AutoShardedBot):
             },
         }
         log.info(f"Pushing to splunk: {data}")
+
         await self.session.post(
             "https://splunk:8088/services/collector/event",
             headers={"Authorization": f"Splunk {self.key_config.SplunkAuth}"},
@@ -145,7 +146,10 @@ class MyClient(commands.AutoShardedBot):
 
         if await self.check_blacklist(ctx):
             await self.invoke(ctx)
-            await self.push_to_splunk(ctx)
+            try:
+                await self.push_to_splunk(ctx)
+            except Exception:
+                log.exception("Failed to push to splunk.")
 
     async def on_command_error(self, ctx, error) -> None:
         try:
