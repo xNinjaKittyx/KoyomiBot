@@ -10,8 +10,6 @@ config_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "c
 
 DEFAULT_CONFIG = {
     "DiscordToken": "",
-    "DiscordBotsGG": "",
-    "DiscordBots": "",
     "MongoUsername": "root",
     "MongoPassword": "password",
     "SplunkAuth": "SplunkAuth",

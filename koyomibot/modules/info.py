@@ -77,12 +77,15 @@ class Info(commands.Cog):
                 log.info((str(person.id), str(person.name), str(person.nick)))
                 if discord_id in (str(person.id), str(person.name), str(person.nick)):
                     member = person
+                    log.info(member.avatar_url)
                     break
             else:
                 return False
 
+        log.info(member.avatar_url)
         em = dmbd.newembed(member)
         em.set_image(url=member.avatar_url)
+        log.info(em.to_dict())
         await ctx.send(embed=em)
 
 

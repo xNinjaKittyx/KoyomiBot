@@ -48,6 +48,7 @@ class MyClient(commands.AutoShardedBot):
             pm_help=True,
             help_attrs=dict(hidden=True),
             fetch_offline_members=False,
+            intents=discord.Intents.all(),
         )
         self.key_config = Config("config.toml")
         self.db = KoyomiDB(self.key_config)
