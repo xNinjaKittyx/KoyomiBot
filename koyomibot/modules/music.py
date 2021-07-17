@@ -45,7 +45,10 @@ class VoiceEntry:
 
 class VoiceState:
     def __init__(
-        self, bot: discord.Client, voice_channel: discord.VoiceChannel, msg_channel: discord.TextChannel,
+        self,
+        bot: discord.Client,
+        voice_channel: discord.VoiceChannel,
+        msg_channel: discord.TextChannel,
     ):
         self.current: Optional[VoiceEntry] = None
         self.voice_channel = voice_channel
@@ -64,7 +67,7 @@ class VoiceState:
         self.audio_player.cancel()
 
     async def update_message(self, embed: discord.Embed):
-        """ This will update the associated message. """
+        """This will update the associated message."""
 
     async def join(self) -> bool:
         try:
@@ -168,7 +171,13 @@ class Music(commands.Cog):
         "quiet": True,
         "noplaylist": True,
         "forceurl": True,
-        "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192",}],
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192",
+            }
+        ],
     }
 
     def __init__(self, bot: discord.Client):
@@ -320,7 +329,10 @@ class Music(commands.Cog):
             return False
 
         sauce = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(url, before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 8",),
+            discord.FFmpegPCMAudio(
+                url,
+                before_options="-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 8",
+            ),
             volume=0.25,
         )
         entry = VoiceEntry(ctx.message, sauce, song_info)
@@ -347,7 +359,7 @@ class Music(commands.Cog):
 
     @commands.command(no_pm=True)
     async def pause(self, ctx: commands.Context) -> None:
-        """ Pauses the current song."""
+        """Pauses the current song."""
         state = self.voice_states.get(ctx.guild.id)
         if state is None or state.voice is None:
             return
@@ -404,7 +416,7 @@ class Music(commands.Cog):
 
     @commands.command(no_pm=True)
     async def queue(self, ctx: commands.Context) -> bool:
-        """ Prints a list of states. """
+        """Prints a list of states."""
         state = self.voice_states.get(ctx.guild.id)
         if state is None:
             return False

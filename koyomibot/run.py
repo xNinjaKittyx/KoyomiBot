@@ -22,7 +22,6 @@ faulthandler.enable()
 
 @contextlib.contextmanager
 def log_setup() -> None:
-    # Taken from Rapptz' RoboDanny
     try:
         try:
             os.makedirs("logs")

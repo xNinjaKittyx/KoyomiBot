@@ -107,5 +107,5 @@ class Interactions(commands.Cog):
 
 
 def setup(bot):
-    """ Setup Interactions Module"""
+    """Setup Interactions Module"""
     bot.add_cog(Interactions(bot))

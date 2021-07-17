@@ -46,7 +46,7 @@ class Stocks(commands.Cog):
 
     @commands.command()
     async def quote(self, ctx, *, ticker: str):
-        """ Basic Quote """
+        """Basic Quote"""
         ticker = ticker.upper()
         df = await self._get_historical_data(ticker)
         if df.empty:
@@ -57,7 +57,10 @@ class Stocks(commands.Cog):
 
         df.index = pd.DatetimeIndex(df.index)
         df.plot(
-            y=["close", "open"], ylabel="US Dollars", title=ticker, lw=1,
+            y=["close", "open"],
+            ylabel="US Dollars",
+            title=ticker,
+            lw=1,
         )
         today_data = await self._get_quote(ticker)
         log.info(today_data)

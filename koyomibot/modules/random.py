@@ -14,10 +14,10 @@ log = logging.getLogger(__name__)
 
 
 class Random(commands.Cog):
-    """ Commands that are RANDOM"""
+    """Commands that are RANDOM"""
 
     def __init__(self, bot: MyClient):
-        """ Initialize Class"""
+        """Initialize Class"""
         self.bot = bot
         self.shinychance = 0
         self.bot.loop.create_task(self.get_max_pokemon())
@@ -47,7 +47,7 @@ class Random(commands.Cog):
 
     @commands.command()
     async def pokemon(self, ctx: commands.Context, numid: int = None) -> None:
-        """ Get a random pokemon! """
+        """Get a random pokemon!"""
         if numid is None:
             numid = random.randint(1, self.max_pokemon)
         url = f"https://pokeapi.co/api/v2/pokemon/{numid}"
@@ -94,7 +94,7 @@ class Random(commands.Cog):
 
     @commands.command()
     async def flip(self, ctx: commands.Context, coins: int = 1) -> None:
-        """ Flips a coin."""
+        """Flips a coin."""
         em = dmbd.newembed(ctx.author)
         for x in range(coins):
             if random.randint(0, 1):
@@ -106,7 +106,7 @@ class Random(commands.Cog):
 
     @commands.command(name="8ball")
     async def ball(self, ctx: commands.Context) -> None:
-        """ Ask the 8Ball """
+        """Ask the 8Ball"""
         answers = [
             "It is certain",
             "It is decidedly so",
@@ -135,7 +135,7 @@ class Random(commands.Cog):
 
     @commands.command()
     async def trump(self, ctx: commands.Context) -> None:
-        """ Returns a Trump Quote. """
+        """Returns a Trump Quote."""
         url = "https://api.tronalddump.io/random/quote"
         async with self.bot.session.get(url) as r:
             if r.status != 200:
@@ -146,19 +146,24 @@ class Random(commands.Cog):
 
     @commands.command()
     async def forismatic(self, ctx: commands.Context) -> None:
-        """ Get random quote from Forismatic """
+        """Get random quote from Forismatic"""
         url = "https://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en"
         async with self.bot.session.get(url) as r:
             if r.status != 200:
                 log.warning("{url} returned {r.text}")
                 return
             result = await r.json()
-        em = dmbd.newembed(a=result["quoteAuthor"], d=result["quoteText"], u=result["quoteLink"], footer="forismatic",)
+        em = dmbd.newembed(
+            a=result["quoteAuthor"],
+            d=result["quoteText"],
+            u=result["quoteLink"],
+            footer="forismatic",
+        )
         await ctx.send(embed=em)
 
     @commands.command()
     async def dadjoke(self, ctx: commands.Context) -> None:
-        """ Random Dad Joke """
+        """Random Dad Joke"""
         url = "https://icanhazdadjoke.com/"
         async with self.bot.session.get(url, headers={"Accept": "application/json"}) as r:
             if r.status != 200:
@@ -170,7 +175,7 @@ class Random(commands.Cog):
 
     @commands.command()
     async def quotesondesign(self, ctx: commands.Context) -> None:
-        """ Get Random Quote from Quotes on Design"""
+        """Get Random Quote from Quotes on Design"""
         # https://quotesondesign.com/wp-json/wp/v2/posts/?orderby=id&per_page=1
         # This API actually gives deterministic results... so it has to be changed to work correctly.
 
@@ -210,11 +215,16 @@ class Random(commands.Cog):
                 return
             result = await r.json()
 
-        em = dmbd.newembed(a="Chuck Norris", d=result["value"], u=result["url"], footer="ChuckNorris.io",)
+        em = dmbd.newembed(
+            a="Chuck Norris",
+            d=result["value"],
+            u=result["url"],
+            footer="ChuckNorris.io",
+        )
         em.set_thumbnail(url=result["icon_url"])
         await ctx.send(embed=em)
 
 
 def setup(bot: MyClient) -> None:
-    """ Setup Webscrapper Module"""
+    """Setup Webscrapper Module"""
     bot.add_cog(Random(bot))

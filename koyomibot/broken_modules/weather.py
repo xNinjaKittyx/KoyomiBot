@@ -6,14 +6,14 @@ from koyomibot.utility import discordembed as dmbd
 
 
 class Weather:
-    """ Get the Weather"""
+    """Get the Weather"""
 
     def __init__(self, bot):
         self.bot = bot
 
     @staticmethod
     def discordicon(icon):
-        """ Return the correlating Discord Emote"""
+        """Return the correlating Discord Emote"""
         icons = {
             "clear-day": ":sunny:",
             "clear-night": ":crescent_moon:",
@@ -61,7 +61,7 @@ class Weather:
 
     @commands.command()
     async def weather(self, ctx, *, search: str):
-        """ Grab the weather using GoogleGeoCodeAPI and DarkSkyAPI"""
+        """Grab the weather using GoogleGeoCodeAPI and DarkSkyAPI"""
 
         location = await self.getgoogle(search)
         if location is None:

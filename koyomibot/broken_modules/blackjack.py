@@ -15,7 +15,7 @@ class Card:
         return False
 
     def __str__(self):
-        return "{} of {}".format(self._values(self.value), self.color)
+        return f"{self._values(self.value)} of {self.color}"
 
 
 class Deck:
@@ -152,7 +152,7 @@ class BlackJack:
             await ctx.send(
                 f"{ctx.author.mention}"
                 + "\nYou got {} and {} ".format(*player_hand)
-                + "\nDealer face-up Card: {}".format(dealer_hand[0])
+                + f"\nDealer face-up Card: {dealer_hand[0]}"
                 + "\nYou can either >jhit, >jstand, or >jsurrender"
             )
 
@@ -218,7 +218,7 @@ class BlackJack:
         output.append(f"\nDealer score is {dealer_score}")
         if dealer_score > 21:
             koyomi_user = await self.bot.cogs["Profile"].get_koyomi_user(ctx.author)
-            output.append("\nDealer busted. You won {} Aragis!".format(bet * 2))
+            output.append(f"\nDealer busted. You won {bet * 2} Aragis!")
             await koyomi_user.set_coins(await koyomi_user.get_coins() + bet * 2)
 
         else:
@@ -228,7 +228,7 @@ class BlackJack:
             else:
                 # If player wins
                 koyomi_user = await self.bot.cogs["Profile"].get_koyomi_user(ctx.author)
-                output.append("\nYou Won! You won {} Aragis".format(bet * 2))
+                output.append(f"\nYou Won! You won {bet * 2} Aragis")
                 await koyomi_user.set_coins(await koyomi_user.get_coins() + bet * 2)
 
         del self.players[ctx.author.id]
@@ -248,5 +248,5 @@ class BlackJack:
 
 
 def setup(bot):
-    """ Setup Blackjack.py"""
+    """Setup Blackjack.py"""
     bot.add_cog(BlackJack(bot))

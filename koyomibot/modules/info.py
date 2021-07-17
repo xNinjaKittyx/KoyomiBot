@@ -2,6 +2,7 @@ import logging
 import time
 from typing import Optional
 
+import discord
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
@@ -66,8 +67,8 @@ class Info(commands.Cog):
     async def uptime(self, ctx):
         await ctx.send("```" + self.getuptime() + "```")
 
-    @commands.command(aliases=["av"])
-    async def avatar(self, ctx, discord_id: Optional[str] = None) -> None:
+    def _get_discord_member(self, ctx: commands.Context, discord_id: Optional[str]) -> discord.Member:
+
         if discord_id is None:
             member = ctx.author
         else:
@@ -80,12 +81,38 @@ class Info(commands.Cog):
                     log.info(member.avatar_url)
                     break
             else:
-                return False
+                raise Exception(f"Could not find discord member with {discord_id}")
+
+        return member
+
+    @commands.command(aliases=["av"])
+    async def avatar(self, ctx, discord_id: Optional[str] = None) -> None:
+
+        member = self._get_discord_member(ctx, discord_id)
+        if member is None:
+            return
 
         log.info(member.avatar_url)
         em = dmbd.newembed(member)
         em.set_image(url=member.avatar_url)
         log.info(em.to_dict())
+        await ctx.send(embed=em)
+
+    @commands.command()
+    async def me(self, ctx: commands.Context, discord_id: Optional[str] = None) -> None:
+        member = self._get_discord_member(ctx, discord_id)
+        if member is None:
+            return
+
+        em = dmbd.newembed(member, f"{member.name}#{member.discriminator} ({member.nick})", member.id)
+        em.set_thumbnail(url=member.avatar_url)
+
+        em.add_field(name="Status", value=member.raw_status)
+        em.add_field(name="Activity", value=str(member.activity))
+        em.add_field(name="Created At", value=member.created_at)
+        em.add_field(name="Joined At", value=member.joined_at)
+        em.add_field(name="Premium Since", value=member.premium_since)
+
         await ctx.send(embed=em)
 
 

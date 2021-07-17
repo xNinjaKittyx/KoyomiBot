@@ -31,7 +31,7 @@ class Comics(commands.Cog):
                 await asyncio.sleep(3600)
 
     async def getxkcd(self, num: int) -> Optional[dict]:
-        """ Num should be passed as an INT """
+        """Num should be passed as an INT"""
         cache_str = f"xkcd:{num}"
         result = await self.bot.request_get(f"https://xkcd.com/{num}/info.0.json", cache_str=cache_str)
         return result if result else {}
@@ -44,7 +44,12 @@ class Comics(commands.Cog):
         if not result:
             return
 
-        em = dmbd.newembed(ctx.author, result["safe_title"], u=f"https://xkcd.com/{number}", footer="XKCD",)
+        em = dmbd.newembed(
+            ctx.author,
+            result["safe_title"],
+            u=f"https://xkcd.com/{number}",
+            footer="XKCD",
+        )
         em.set_image(url=result["img"])
         em.add_field(name=result["alt"], value="{month}/{day}/{year}".format_map(result))
         await ctx.send(embed=em)
@@ -78,7 +83,7 @@ class Comics(commands.Cog):
 
     @commands.command()
     async def cyanide(self, ctx: commands.Context) -> None:
-        """ Gives a random Cyanide & Happiness Comic"""
+        """Gives a random Cyanide & Happiness Comic"""
         img = None
         while img is None:
             number = random.randint(39, self.cyanidemax)
@@ -98,7 +103,7 @@ class Comics(commands.Cog):
 
     @commands.command()
     async def cyanidercg(self, ctx: commands.Context) -> None:
-        """ Gives a randomly generated Cyanide & Happiness Comic"""
+        """Gives a randomly generated Cyanide & Happiness Comic"""
         result = await self.bot.request_get("https://explosm.net/rcg", return_as_json=False)
         if result is None:
             return None

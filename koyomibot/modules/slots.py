@@ -11,13 +11,13 @@ class Slots(commands.Cog):
 
     @commands.command()
     async def slots(self, ctx):
-        """ Basic Slot Machine """
+        """Basic Slot Machine"""
 
         emojis = random.sample(self.bot.emojis, 6)
         slot1 = random.randint(0, 5)
         slot2 = random.randint(0, 5)
         slot3 = random.randint(0, 5)
-        final = "||{}|{}|{}||".format(emojis[slot1], emojis[slot2], emojis[slot3])
+        final = f"||{emojis[slot1]}|{emojis[slot2]}|{emojis[slot3]}||"
 
         embed = dmbd.newembed(ctx.author, "SLOT MACHINE", final)
         await ctx.send(embed=embed)

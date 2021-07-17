@@ -43,7 +43,7 @@ class OsuPlayer:
         url = "https://osu.ppy.sh/u/" + self.username
         em = dmbd.newembed(author, title, desc, url)
         em.add_field(name="Performance", value=self.pp_raw + "pp")
-        em.add_field(name="Accuracy", value="{:.2f}%".format(float(self.accuracy)))
+        em.add_field(name="Accuracy", value=f"{float(self.accuracy):.2f}%")
         lvl = int(float(self.level))
         percent = int((float(self.level) - lvl) * 100)
         em.add_field(name="Level", value=f"{lvl} ({percent}%)")

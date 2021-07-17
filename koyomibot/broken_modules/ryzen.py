@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class Ryzen(commands.Cog):
-    """ Ryzen Notifier """
+    """Ryzen Notifier"""
 
     tr_re_compile = re.compile(r"tr.*")
     ryzen_re_compile = re.compile(r"RYZEN [9] 3.*")
@@ -80,5 +80,5 @@ class Ryzen(commands.Cog):
 
 
 def setup(bot: MyClient) -> None:
-    """ Setup Webscrapper Module"""
+    """Setup Webscrapper Module"""
     bot.add_cog(Ryzen(bot))

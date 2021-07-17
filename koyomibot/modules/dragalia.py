@@ -140,7 +140,10 @@ class Dragalia(commands.Cog):
 
     @dragalia.command()
     async def optiwyrm(self, ctx: commands.Context) -> None:
-        embed = dmbd.newembed("Dragalia Lost", "Wyrmprints",)
+        embed = dmbd.newembed(
+            "Dragalia Lost",
+            "Wyrmprints",
+        )
         embed.set_image(url="https://i.redd.it/2yn68xpaghq31.jpg")
         await ctx.send(embed=embed)
 

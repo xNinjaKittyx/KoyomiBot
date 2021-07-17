@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 
 
 description = """
-KoyomiBot: Lots of Fun, Minimal Moderation, No bullshit, SFW.
+KoyomiBot - A bot.
 """
 
 modules = [

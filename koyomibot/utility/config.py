@@ -15,6 +15,7 @@ DEFAULT_CONFIG = {
     "SplunkAuth": "SplunkAuth",
     "IEX_API_VERSION": "iexcloud-sandbox",
     "IEX_TOKEN": "TOKEN_HERE",
+    "OpenWeatherAPIToken": "",
     # 'GoogleMapsAPI': '',
     # 'DarkSkyAPI': '',
     # 'CleverbotAPI': '',

@@ -22,18 +22,18 @@ class Admin(commands.Cog):
         self.bot = bot
 
     def cog_check(self, ctx: commands.Context) -> bool:
-        return ctx.author.id == 82221891191844864
+        return ctx.author.id == 136046460331491328
 
     @commands.command(hidden=True)
     async def kys(self, ctx: commands.Context) -> None:
-        """ Bot kills itself """
+        """Bot kills itself"""
         await ctx.send("Bot is *kill*")
         await asyncio.sleep(3)
         await self.bot.close()
 
     @commands.command(hidden=True)
     async def status(self, ctx: commands.Context, *, s: str) -> None:
-        await self.bot.change_presence(game=discord.Game(name=s))
+        await self.bot.change_presence(activity=discord.Game(name=s))
 
     @commands.command(hidden=True)
     async def redisinfo(self, ctx: commands.Context) -> None:
@@ -51,7 +51,7 @@ class Admin(commands.Cog):
 
     @commands.command(hidden=True)
     async def changeavatar(self, ctx: commands.Context, *, url: str) -> None:
-        """ Changes the Avatar"""
+        """Changes the Avatar"""
         async with self.bot.session.get(url) as r:
             if r.status == 200:
                 try:
@@ -63,7 +63,7 @@ class Admin(commands.Cog):
 
     @commands.command(hidden=True)
     async def changeusername(self, ctx: commands.Context, *, s: str) -> None:
-        """ Changes the Username """
+        """Changes the Username"""
         await self.bot.user.edit(username=s)
 
 

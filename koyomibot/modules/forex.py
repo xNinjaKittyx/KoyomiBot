@@ -48,5 +48,5 @@ class Forex(commands.Cog):
 
 
 def setup(bot: MyClient) -> None:
-    """ Setup Forex Module"""
+    """Setup Forex Module"""
     bot.add_cog(Forex(bot))

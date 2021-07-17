@@ -31,7 +31,9 @@ class PAD(commands.Cog):
                     else:
                         self.monsters = await r.json()
                         await self.bot.db.redis.set(
-                            "pad:monsters", json.dumps(self.monsters), expire=one_day,
+                            "pad:monsters",
+                            json.dumps(self.monsters),
+                            expire=one_day,
                         )
             else:
                 self.monsters = json.loads(mons)
@@ -46,7 +48,9 @@ class PAD(commands.Cog):
                     else:
                         self.awakenings = await r.json()
                         await self.bot.db.redis.set(
-                            "pad:awakenings", json.dumps(self.awakenings), expire=one_day,
+                            "pad:awakenings",
+                            json.dumps(self.awakenings),
+                            expire=one_day,
                         )
             else:
                 self.awakenings = json.loads(awake)
@@ -83,7 +87,7 @@ class PAD(commands.Cog):
         if type2 is None:
             return types[type1]
         elif type3 is None:
-            return "{}/{}".format(types[type1], types[type2])
+            return f"{types[type1]}/{types[type2]}"
         else:
             return "/".join([types[type1], types[type2], types[type3]])
 
@@ -103,14 +107,16 @@ class PAD(commands.Cog):
         em.add_field(name="Active Skill", value=mon["active_skill"])
         em.add_field(name="MP Sell Price", value=mon["monster_points"])
         em.add_field(
-            name="Awakenings", value=await self.getawaken(mon["awoken_skills"]), inline=False,
+            name="Awakenings",
+            value=await self.getawaken(mon["awoken_skills"]),
+            inline=False,
         )
 
         return em
 
     @commands.command()
     async def pad(self, ctx: commands.Context, *, arg: str) -> None:
-        """ Searches a PAD monster"""
+        """Searches a PAD monster"""
         if not self.awakenings or not self.monsters:
             log.error("PAD awakenings/monsters not exist.")
             return
@@ -153,7 +159,7 @@ class PAD(commands.Cog):
 
         if len(sorted_results) > 1:
             possible_results = [
-                "{}: {}  {}".format(index, self.monsters[index][name_type], fuzzy)
+                f"{index}: {self.monsters[index][name_type]}  {fuzzy}"
                 for i, (index, fuzzy, name_type) in zip(range(20), sorted_results)
             ]
             confused = await ctx.send("Which one did you mean? Respond with number.\n" + "\n".join(possible_results))

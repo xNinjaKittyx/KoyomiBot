@@ -36,7 +36,7 @@ class Kanji(commands.Cog):
 
     @commands.command()
     async def kanji(self, ctx: commands.Context, *, character: str) -> bool:
-        """ Information about a Kanji character """
+        """Information about a Kanji character"""
 
         result = await self._make_call(f"kanji/{character}")
         if result is None:
@@ -54,7 +54,7 @@ class Kanji(commands.Cog):
 
     @commands.command()
     async def kanjiwords(self, ctx: commands.Context, *, character: str):
-        """ Word Examples for a Kanji """
+        """Word Examples for a Kanji"""
 
         result = await self._make_call(f"words/{character}")
         if result is None:
@@ -95,7 +95,7 @@ class Kanji(commands.Cog):
 
     @commands.command()
     async def kanjireading(self, ctx: commands.Context, *, characters: str):
-        """ Possible Kanji for a given reading """
+        """Possible Kanji for a given reading"""
 
         result = await self._make_call(f"reading/{characters}")
         if result is None:
@@ -108,7 +108,7 @@ class Kanji(commands.Cog):
 
     @commands.command()
     async def kanjitest(self, ctx: commands.Context, *, difficulty: int) -> bool:
-        """ Test your kanji skills difficulty 1-4 """
+        """Test your kanji skills difficulty 1-4"""
         if difficulty not in range(5):
             return False
         endpoint = f"kanji/{('joyo', 'jouyou', 'jinmeiyo', 'jinmeiyou')[difficulty - 1]}"

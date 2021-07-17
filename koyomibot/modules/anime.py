@@ -71,7 +71,11 @@ class Anime(commands.Cog):
             return
 
         em = dmbd.newembed(
-            a=ctx.author, t=result["title"], d=result["title_japanese"], u=result["url"], footer="Jikan & MAL",
+            a=ctx.author,
+            t=result["title"],
+            d=result["title_japanese"],
+            u=result["url"],
+            footer="Jikan & MAL",
         )
         em.set_image(url=result["image_url"])
         em.add_field(name="Score", value=result["score"])
@@ -113,7 +117,11 @@ class Anime(commands.Cog):
             return
 
         em = dmbd.newembed(
-            a=ctx.author, t=result["title"], d=result["title_japanese"], u=result["url"], footer="Jikan & MAL",
+            a=ctx.author,
+            t=result["title"],
+            d=result["title_japanese"],
+            u=result["url"],
+            footer="Jikan & MAL",
         )
         em.set_image(url=result["image_url"])
         em.add_field(name="Score", value=result["score"])

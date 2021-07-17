@@ -39,7 +39,8 @@ class Overwatch(commands.Cog):
         em.add_field(name="Comp Rating", value=profile["rating"])
         if profile["competitiveStats"]:
             em.add_field(
-                name="Elimination Avg", value=profile["competitiveStats"]["eliminationsAvg"],
+                name="Elimination Avg",
+                value=profile["competitiveStats"]["eliminationsAvg"],
             )
             em.add_field(name="Death Avg", value=profile["competitiveStats"]["deathsAvg"])
             em.add_field(
@@ -48,7 +49,8 @@ class Overwatch(commands.Cog):
             )
         if profile["quickPlayStats"]:
             em.add_field(
-                name="Elimination Avg", value=profile["quickPlayStats"]["eliminationsAvg"],
+                name="Elimination Avg",
+                value=profile["quickPlayStats"]["eliminationsAvg"],
             )
             em.add_field(name="Death Avg", value=profile["quickPlayStats"]["deathsAvg"])
             em.add_field(
@@ -75,8 +77,8 @@ class Overwatch(commands.Cog):
 
     @commands.command()
     async def owrng(self, ctx: commands.Context) -> None:
-        """ RNG OVERWATCH """
-        await ctx.send("Play {}!".format(random.choice(self.heroes)))
+        """RNG OVERWATCH"""
+        await ctx.send(f"Play {random.choice(self.heroes)}!")
 
     @commands.command()
     async def owteam(self, ctx: commands.Context, num: int = 6) -> None:
@@ -86,5 +88,5 @@ class Overwatch(commands.Cog):
 
 
 def setup(bot: MyClient) -> None:
-    """ Setup OW Module"""
+    """Setup OW Module"""
     bot.add_cog(Overwatch(bot))

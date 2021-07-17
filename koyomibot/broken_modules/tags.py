@@ -12,7 +12,7 @@ class Tags:
 
     @commands.group()
     async def tags(self, ctx):
-        """ Display a tag. Subcommands: add, search, delete(admin-only)"""
+        """Display a tag. Subcommands: add, search, delete(admin-only)"""
         if ctx.invoked_subcommand is None:
             query = ctx.message.content.split(sep=" ", maxsplit=1)[1]
             result = await redis_pool.hget("tags", query)
@@ -73,5 +73,5 @@ class Tags:
 
 
 def setup(bot):
-    """ Setup Tags.py"""
+    """Setup Tags.py"""
     bot.add_cog(Tags(bot))

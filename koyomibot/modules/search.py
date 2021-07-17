@@ -116,7 +116,7 @@ class Search(commands.Cog):
 
     @commands.command()
     async def urban(self, ctx: commands.Context, *, search: str) -> None:
-        """ Searches Urban Dictionary. """
+        """Searches Urban Dictionary."""
         async with self.bot.session.get(f"https://api.urbandictionary.com/v0/define?term={search}") as r:
             if r.status != 200:
                 log.error("Urbandictionary Failed: {r.text}")
@@ -151,7 +151,7 @@ class Search(commands.Cog):
 
     @commands.command()
     async def wiki(self, ctx: commands.Context, *, search: str) -> None:
-        """ Grabs Wikipedia Article """
+        """Grabs Wikipedia Article"""
         searchlist = wikipedia.search(search)
         if len(searchlist) < 1:
             title = "Searched for: " + search

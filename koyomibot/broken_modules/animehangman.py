@@ -116,7 +116,7 @@ class Animehangman:
 
     @commands.command(no_pm=True)
     async def achm(self, ctx):
-        """ Play Anime Character Hangman!"""
+        """Play Anime Character Hangman!"""
         await self.bot.cogs["Wordcount"].cmdused("achm")
         if await redis_pool.exists("achminst"):
             for instance in await redis_pool.lrange("achminst", 0, -1):
