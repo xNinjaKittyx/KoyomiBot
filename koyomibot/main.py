@@ -2,13 +2,13 @@ import asyncio
 import logging
 import os
 import random
-from datetime import datetime
 from typing import Optional
 
 import aiohttp
 import discord
 import rapidjson as json
 from discord.ext import commands
+from urlextract import URLExtract
 
 from koyomibot.utility.config import Config
 from koyomibot.utility.db import KoyomiDB
@@ -54,10 +54,12 @@ class MyClient(commands.AutoShardedBot):
         self.db = KoyomiDB(self.key_config)
         self.koyomi_debug = debug
 
+        self.extractor = URLExtract()
+
         self.session = aiohttp.ClientSession(
             loop=self.loop,
             json_serialize=json.dumps,
-            headers={"User-Agent": "Koyomi Discord Bot (https://github.com/xNinjaKittyx/KoyomiBot/)"},
+            headers={"User-Agent": "KoyomiBot - Discord Bot"},
         )
 
     async def request_get(self, url: str, cache_str: str = "", return_as_json: bool = True) -> Optional[dict]:
@@ -111,31 +113,52 @@ class MyClient(commands.AutoShardedBot):
             return False
         return await self.db.check_user_blacklist(ctx.author)
 
-    async def push_to_splunk(self, ctx: discord.ext.commands.Context) -> None:
-        data = {
-            "host": "koyomi",
-            "sourcetype": "discord-commands",
-            "event": {
-                "author": ctx.author.id,
-                "message": ctx.message.content,
-                "args": str(ctx.args),
-                "kwargs": str(ctx.kwargs),
-                "prefix": ctx.prefix,
-                "command": ctx.command.name,
-                "guild_id": ctx.guild.id if ctx.guild else None,
-                "guild_name": ctx.guild.name if ctx.guild else None,
-                "timestamp": datetime.now().isoformat(),
-                "failed": ctx.command_failed,
-            },
-        }
-        log.info(f"Pushing to splunk: {data}")
+    async def push_to_influxdb(self, message: discord.ext.commands.Context) -> None:
+        # TODO: Implement InfluxDB
+        pass
 
-        await self.session.post(
-            "https://splunk:8088/services/collector/event",
-            headers={"Authorization": f"Splunk {self.key_config.SplunkAuth}"},
-            json=data,
-            verify_ssl=False,
-        )
+    async def push_to_linkace(self, message: discord.Message) -> None:
+        if not (self.key_config.LinkAceURL and self.key_config.LinkAceAPIToken):
+            return
+
+        for url in self.extractor.gen_urls(message.clean_content):
+            log.info(f"Detected URL {url}")
+            ignore = False
+            for ignore_value in self.key_config.LinkAceIgnore:
+                if ignore_value in url:
+                    ignore = True
+                    break
+            if ignore:
+                continue
+
+            payload = {
+                "url": url,
+                "description": message.jump_url,
+            }
+            async with self.session.post(
+                f"{self.key_config.LinkAceURL}/api/v1/links",
+                data=json.dumps(payload),
+                headers={
+                    "Authorization": f"Bearer {self.key_config.LinkAceAPIToken}",
+                    "Content-Type": "application/json",
+                },
+            ) as req:
+                if req.status != 200:
+                    log.error(f"LinkAce Failed {payload}")
+
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author.bot:
+            return
+        tasks = []
+        tasks.append(asyncio.ensure_future(self.push_to_linkace(message)))
+        tasks.append(asyncio.ensure_future(self.push_to_influxdb(message)))
+
+        await super().on_message(message)
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, Exception):
+                log.error(result)
 
     async def process_commands(self, msg: discord.Message) -> None:
         ctx = await self.get_context(msg)
@@ -147,10 +170,6 @@ class MyClient(commands.AutoShardedBot):
 
         if await self.check_blacklist(ctx):
             await self.invoke(ctx)
-            try:
-                await self.push_to_splunk(ctx)
-            except Exception:
-                log.exception("Failed to push to splunk.")
 
     async def on_command_error(self, ctx, error) -> None:
         try:
@@ -159,11 +178,6 @@ class MyClient(commands.AutoShardedBot):
             log.error(f"{ctx.command} failed with {error}")
         except Exception:
             log.exception(f"{ctx.command} failed with {error}")
-
-    async def on_message(self, msg: discord.Message) -> None:
-        if msg.author.bot:
-            return
-        return await self.process_commands(msg)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         if not await self.db.check_guild_blacklist(guild):
@@ -175,20 +189,18 @@ class MyClient(commands.AutoShardedBot):
         log.info(f"KoyomiBot left a guild :( {guild.name}")
 
     async def on_ready(self) -> None:
-        random.seed()
-        log.info("Logged in as")
-        log.info(f"Username {self.user.name}")
-        log.info(f"ID: {self.user.id}")
         url = f"https://discordapp.com/api/oauth2/authorize?client_id={self.user.id}&scope=bot&permissions=0"
-        log.info(f"Invite Link: {url}")
+        random.seed()
+        log.info("Logged in as\n" f"\tUsername {self.user.name}\n" f"\tID: {self.user.id}\n" f"\tInvite Link: {url}")
         try:
             log.info(os.name)
-            if not discord.opus.is_loaded() and os.name == "nt":
-                discord.opus.load_opus("libopus0.x64.dll")
-
-            if not discord.opus.is_loaded() and os.name == "posix":
-                discord.opus.load_opus("/usr/lib/libopus.so.0")
-            log.info("Loaded Opus Library")
+            if not discord.opus.is_loaded():
+                if os.name == "nt":
+                    discord.opus.load_opus("libopus0.x64.dll")
+                elif os.name == "posix":
+                    discord.opus.load_opus("/usr/lib/libopus.so.0")
         except Exception as e:
             log.error(e)
-            log.warning("Opus library did not load. Voice may not work.")
+        finally:
+            if discord.opus.is_loaded():
+                log.info("Loaded Opus Library")

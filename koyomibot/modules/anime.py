@@ -85,7 +85,7 @@ class Anime(commands.Cog):
         em.add_field(name="Episodes", value=result["episodes"])
         em.add_field(name="Status", value=result["status"])
         em.add_field(name="Genre", value=", ".join(res["name"] for res in result["genres"]))
-        em.add_field(name="Synopsis", value=result["synopsis"])
+        em.add_field(name="Synopsis", value=result["synopsis"][:1024])
         await ctx.send(embed=em)
 
     async def get_manga(self, string: str) -> Optional[dict]:

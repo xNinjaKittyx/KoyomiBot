@@ -33,12 +33,14 @@ class VoiceEntry:
         return fmt.format(self.info["title"], self.info["uploader"], self.requester)
 
     def get_embed(self, title: str) -> discord.Embed:
+        log.info(self.info)
         desc = str(self)
         if "https://" in self.info["url"]:
-            em = dmbd.newembed(title, None, desc, self.info["url"])
-            em.set_image(url="https://img.youtube.com/vi/" + self.info["id"] + "/maxresdefault.jpg")
+            em = dmbd.newembed(title, self.info["title"], desc, self.info["url"])
+            # lowkey takes up too much space in chat.
+            # em.set_image(url="https://img.youtube.com/vi/" + self.info["id"] + "/maxresdefault.jpg")
         else:
-            em = dmbd.newembed(title, None, desc)
+            em = dmbd.newembed(title, self.info["title"], desc)
 
         return em
 
@@ -151,12 +153,14 @@ class VoiceState:
             except asyncio.CancelledError:
                 return
             except asyncio.TimeoutError:
+                # I'm not sure how to fix this - The exit message still shows up after leaving.
+                if self.voice is None or not self.voice.is_connected():
+                    return
                 await self.msg_channel.send("No activity within 3 minutes. Exiting.")
                 await self.leave()
                 return
             except Exception as e:
                 log.exception(e)
-            await self.play_next_song.wait()
 
     async def get_queue(self) -> list:
         # This is generally not a good idea... but it shouldn't be too harmful here.
@@ -229,9 +233,10 @@ class Music(commands.Cog):
     async def initialize_voice_state(self, ctx: discord.ext.commands.Context) -> Optional[VoiceState]:
         try:
             current_state = self.voice_states[ctx.guild.id]
+            # If it's not connected or voice is none, delete this state and make a new one.
             if current_state.voice is None or not current_state.voice.is_connected():
-                del current_state
-            if self.check_state_and_user(current_state, ctx):
+                del self.voice_states[ctx.guild.id]
+            elif self.verify_channels(current_state, ctx):
                 return current_state
             else:
                 del current_state
@@ -247,7 +252,7 @@ class Music(commands.Cog):
                 del state
                 return None
         except discord.ClientException as e:
-            await ctx.send(f"Could not join voice channel: {ctx.author.voice.channel.name}")
+            await ctx.send(f"Could not join voice channel: {ctx.author.voice.channel.name} - {e}")
             log.exception(e)
             return None
 
@@ -255,10 +260,11 @@ class Music(commands.Cog):
         await ctx.send(f"Music binded to {ctx.author.voice.channel.name} & {ctx.message.channel}")
         return state
 
-    def check_state_and_user(self, state: VoiceState, ctx: commands.Context) -> bool:
-        return (state.msg_channel != ctx.message.channel) or (state.voice_channel != ctx.author.voice.channel)
+    def verify_channels(self, state: VoiceState, ctx: commands.Context) -> bool:
+        """ """
+        return (state.msg_channel == ctx.message.channel) and (state.voice_channel == ctx.author.voice.channel)
 
-    @commands.command(no_pm=True)
+    @commands.command(no_pm=True, aliases=["summon"])
     async def join(self, ctx: discord.ext.commands.Context) -> bool:
         """Joins a voice channel."""
         if ctx.author.voice is None:
@@ -266,13 +272,13 @@ class Music(commands.Cog):
             return False
         return bool(await self.initialize_voice_state(ctx))
 
-    @commands.command(no_pm=True)
+    @commands.command(no_pm=True, aliases=["stop"])
     async def leave(self, ctx: discord.ext.commands.Context) -> bool:
         if ctx.author.voice is None:
             return False
         state = self.voice_states.get(ctx.guild.id)
         if state is not None:
-            if self.check_state_and_user(state, ctx):
+            if not self.verify_channels(state, ctx):
                 return False
             await state.leave()
             del state
@@ -282,7 +288,12 @@ class Music(commands.Cog):
     def get_ytdl_info(self, song: str) -> Optional[dict]:
         try:
             with youtube_dl.YoutubeDL(self.opts) as ydl:
-                song_info = ydl.extract_info(song, download=False)
+                try:
+                    # First try to extract the info on its own.
+                    song_info = ydl.extract_info(song, download=False)
+                except Exception:
+                    # Try to do a search.
+                    song_info = ydl.extract_info(f"ytsearch:{song}", download=False)["entries"][0]
                 return song_info
         except youtube_dl.utils.ExtractorError:
             log.error(f"Youtube-dl Extractor Error on {song}")
@@ -303,7 +314,7 @@ class Music(commands.Cog):
             return False
         # By this point, it should have it. if not, raise exception
         state = self.voice_states[ctx.guild.id]
-        if self.check_state_and_user(state, ctx):
+        if not self.verify_channels(state, ctx):
             return False
         # If it has too many in queue, give it up.
         if state.songs.qsize() >= 5:
@@ -347,7 +358,7 @@ class Music(commands.Cog):
         state = self.voice_states.get(ctx.guild.id)
         if state is None or state.voice is None:
             return False
-        if self.check_state_and_user(state, ctx):
+        if not self.verify_channels(state, ctx):
             return False
 
         prev_volume = state.voice.source.volume
@@ -363,7 +374,7 @@ class Music(commands.Cog):
         state = self.voice_states.get(ctx.guild.id)
         if state is None or state.voice is None:
             return
-        if self.check_state_and_user(state, ctx):
+        if not self.verify_channels(state, ctx):
             return
         if state.voice.is_playing():
             state.voice.pause()
@@ -374,7 +385,7 @@ class Music(commands.Cog):
         state = self.voice_states.get(ctx.guild.id)
         if state is None or state.voice is None:
             return
-        if self.check_state_and_user(state, ctx):
+        if not self.verify_channels(state, ctx):
             return
         if state.voice.is_paused():
             state.voice.resume()

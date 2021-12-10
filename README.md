@@ -22,10 +22,11 @@ A Bot that has a lot of random stuff... Provides a lot of different fun, unique 
 - Minimal Setup. Should be pretty straightforward to setup.
 - No annoying PMs on-join or anything of the sort (plenty of other bots available)
 - Just a fun bot to interact with.
+- Some Useful integrations with other self-hosted programs.
 
 ## Hosting it yourself
 
-I cannot guarantee any support if you decide to host it yourself. Use at your own risk.
+I cannot provide any support if you decide to host it yourself. Use at your own risk.
 
 You'll need to first setup docker and docker-compose.
 
@@ -52,15 +53,3 @@ Then rerun `./rebuild_and_run.sh` and it should work this time as is.
 ## Useful Links
 
 Official Website (Nothing atm): [GitHubPages](https://xNinjaKittyx.github.io/KoyomiBot)
-
-Official Server Support: [Discord Invite](https://discord.gg/Fzz344U)
-
-Invite Link: [Invite](https://discordapp.com/api/oauth2/authorize?client_id=310366123759632385&scope=bot&permissions=0)
-
-Mostly the bot only needs permission to send messages & read messages in your channels. Will need to have voice channel support for music.
-
-
-## TODO:
-
-- Fix my in-chat hangman game. will be fun.
-- Make a high-tech help menu

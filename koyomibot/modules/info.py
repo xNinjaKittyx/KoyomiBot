@@ -45,21 +45,19 @@ class Info(commands.Cog):
         title = "Stats for " + self.bot.user.name
         desc = "Don't..t..t... look at my stats... Baka!"
         url = "https://github.com/xNinjaKittyx/"
-        inviteurl = (
-            "https://discordapp.com/api/oauth2/authorize?client_id="
-            + str(self.bot.user.id)
-            + "&scope=bot&permissions=0"
-        )
+        # inviteurl = (
+        #     f"https://discordapp.com/api/oauth2/authorize?client_id={self.bot.user.id}&scope=bot&permissions=0"
+        # )
 
-        supporturl = "https://discord.gg/Fzz344U"
+        # supporturl = "https://discord.gg/"
 
         em = dmbd.newembed(author, title, desc, url)
         em.add_field(name="Total Users", value=len(self.bot.users))
         em.add_field(name="Total Guilds", value=len(self.bot.guilds))
         em.add_field(name="Current Guild Users", value=len(ctx.guild.members))
         em.add_field(name="Uptime", value=self.getuptime())
-        em.add_field(name="Invite", value=f"[Click Me :)]({inviteurl})")
-        em.add_field(name="Support", value=f"[Discord Link]({supporturl})")
+        # em.add_field(name="Invite", value=f"[Click Me :)]({inviteurl})")
+        # em.add_field(name="Support", value=f"[Discord Link]({supporturl})")
 
         await ctx.send(embed=em)
 

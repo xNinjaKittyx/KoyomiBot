@@ -26,16 +26,3 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: password
     volumes:
       - /opt/koyomibot/db:/data/db
-
-  splunk:
-    container_name: "koyomi-splunk"
-    image: "splunk/splunk:latest"
-    restart: always
-    environment:
-      SPLUNK_PASSWORD: somereallylongpassword123!
-      SPLUNK_START_ARGS: --accept-license
-    ports:
-      - "8000:8000"
-    volumes:
-      - /opt/koyomibot/splunk/etc:/opt/splunk/etc/
-      - /opt/koyomibot/splunk/var:/opt/splunk/var/

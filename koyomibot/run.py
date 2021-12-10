@@ -32,9 +32,11 @@ def log_setup() -> None:
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
         formatter = logging.Formatter("%(asctime)s::%(levelname)s:%(module)s:%(lineno)d - %(message)s")
+
         fh = RotatingFileHandler(filename="logs/koyomi.log", maxBytes=10 * 1024 * 1024, backupCount=10)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
+
         sh = logging.StreamHandler()
         sh.setFormatter(formatter)
         logger.addHandler(sh)

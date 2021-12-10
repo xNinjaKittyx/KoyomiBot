@@ -94,7 +94,7 @@ class Weather(commands.Cog):
 
     @commands.command()
     async def weather_debug_stats(self, ctx: commands.Context):
-        if ctx.author.id != 136046460331491328:
+        if ctx.author.id != 82221891191844864:
             return
 
         log.info(self._weather_tasks)
