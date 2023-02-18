@@ -4,10 +4,12 @@ import random
 from typing import List, Optional
 
 from bs4 import BeautifulSoup
+from discord.commands import slash_command
 from discord.ext import commands
 
 from koyomibot.main import MyClient
 from koyomibot.utility import discordembed as dmbd
+from koyomibot.utility.allowed_guilds import ALLOWED_GUILDS
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ class Comics(commands.Cog):
         result = await self.bot.request_get(f"https://xkcd.com/{num}/info.0.json", cache_str=cache_str)
         return result if result else {}
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def xkcd(self, ctx: commands.Context) -> None:
         """Gives a random XKCD Comic"""
         number = random.randint(1, self.highest_xkcd)
@@ -81,7 +83,7 @@ class Comics(commands.Cog):
             return None
         return f'http:{soup.find(id="main-comic")["src"]}'
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def cyanide(self, ctx: commands.Context) -> None:
         """Gives a random Cyanide & Happiness Comic"""
         img = None
@@ -101,7 +103,7 @@ class Comics(commands.Cog):
         em.set_image(url=img)
         await ctx.send(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def cyanidercg(self, ctx: commands.Context) -> None:
         """Gives a randomly generated Cyanide & Happiness Comic"""
         result = await self.bot.request_get("https://explosm.net/rcg", return_as_json=False)

@@ -1,7 +1,7 @@
 import logging
 import os
 
-import toml
+import atoml as toml
 
 log = logging.getLogger(__name__)
 

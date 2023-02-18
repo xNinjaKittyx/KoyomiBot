@@ -4,7 +4,7 @@ from typing import Dict, Optional, Set
 
 import async_timeout
 import discord
-import youtube_dl
+import yt_dlp
 from discord.ext import commands
 
 from koyomibot.utility import discordembed as dmbd
@@ -287,7 +287,7 @@ class Music(commands.Cog):
 
     def get_ytdl_info(self, song: str) -> Optional[dict]:
         try:
-            with youtube_dl.YoutubeDL(self.opts) as ydl:
+            with yt_dlp.YoutubeDL(self.opts) as ydl:
                 try:
                     # First try to extract the info on its own.
                     song_info = ydl.extract_info(song, download=False)
@@ -295,10 +295,10 @@ class Music(commands.Cog):
                     # Try to do a search.
                     song_info = ydl.extract_info(f"ytsearch:{song}", download=False)["entries"][0]
                 return song_info
-        except youtube_dl.utils.ExtractorError:
+        except yt_dlp.utils.ExtractorError:
             log.error(f"Youtube-dl Extractor Error on {song}")
             return None
-        except youtube_dl.utils.DownloadError:
+        except yt_dlp.utils.DownloadError:
             log.error(f"Youtube-dl Download Error on {song}")
             return None
 

@@ -12,6 +12,7 @@ class KoyomiDB:
         self._client = motor.motor_asyncio.AsyncIOMotorClient(
             "mongodb://mongo", username=key_config.MongoUsername, password=key_config.MongoPassword
         )
+        self.redis = aioredis.from_url("redis://redis", encoding="utf-8")
         self._db = self._client.key_config
         self._guild_collection = self._db.guild_collection
         self._user_collection = self._db.user_collection
@@ -21,9 +22,6 @@ class KoyomiDB:
         self.redis.close()
         self._client.close()
         await self.redis.wait_closed()
-
-    async def initialize_redis(self) -> None:
-        self.redis = await aioredis.create_redis_pool("redis://redis", encoding="utf-8")
 
     async def set_dataframe(self, key: str, value: pd.DataFrame) -> None:
         await self.redis.set(key, self._pyarrow_context.serialize(value).to_buffer().to_pybytes(), expire=3600)

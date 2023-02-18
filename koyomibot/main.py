@@ -6,7 +6,8 @@ from typing import Optional
 
 import aiohttp
 import discord
-import rapidjson as json
+import discord.errors
+import orjson as json
 from discord.ext import commands
 from urlextract import URLExtract
 
@@ -84,7 +85,6 @@ class MyClient(commands.AutoShardedBot):
 
     def run(self) -> None:
         log.info("Starting Bot".center(30, "-"))
-        self.loop.run_until_complete(self.db.initialize_redis())
         self.load_all_modules()
         try:
             self.loop.run_until_complete(self.start(self.key_config.DiscordToken))
@@ -105,7 +105,7 @@ class MyClient(commands.AutoShardedBot):
             try:
                 self.load_extension(f"koyomibot.modules.{mod}")
                 log.info(f"Load Successful: {mod}")
-            except discord.ext.commands.errors.ExtensionFailed:
+            except discord.errors.ExtensionFailed:
                 log.exception(f"[WARNING]: Module {mod} did not load")
 
     async def check_blacklist(self, ctx: discord.ext.commands.Context) -> bool:
@@ -149,22 +149,21 @@ class MyClient(commands.AutoShardedBot):
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
-        tasks = []
-        tasks.append(asyncio.ensure_future(self.push_to_linkace(message)))
-        tasks.append(asyncio.ensure_future(self.push_to_influxdb(message)))
+
+        await self.push_to_linkace(message)
+
+        if message.clean_content.lower().startswith("fuck you") and message.author.id == 136046460331491328:
+            await message.reply("fuck you too")
 
         await super().on_message(message)
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        for result in results:
-            if isinstance(result, Exception):
-                log.error(result)
 
     async def process_commands(self, msg: discord.Message) -> None:
         ctx = await self.get_context(msg)
 
         if ctx.command is None:
             return
+
+        await self.push_to_influxdb(msg)
 
         log.info(f"User: {ctx.author} attempted to use command {msg.content}")
 

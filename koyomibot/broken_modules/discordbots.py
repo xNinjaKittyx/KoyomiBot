@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import rapidjson as json
+import orjson as json
 from discord.ext import commands
 
 from koyomibot.main import MyClient

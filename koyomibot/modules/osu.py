@@ -4,10 +4,12 @@ from typing import List, Optional
 from urllib import parse
 
 import discord
+from discord.commands import slash_command
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
 from koyomibot.main import MyClient
+from koyomibot.utility.allowed_guilds import ALLOWED_GUILDS
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class Osu(commands.Cog):
                 log.error(j)
                 return None
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def osu(self, ctx: commands.Context, *, name: str) -> None:
         name = parse.quote(name)
         result = await self.getlink(0, name)
@@ -88,7 +90,7 @@ class Osu(commands.Cog):
 
         await ctx.send(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def taiko(self, ctx: commands.Context, *, name: str) -> None:
         result = await self.getlink(1, name)
         if result is None:
@@ -99,7 +101,7 @@ class Osu(commands.Cog):
 
         await ctx.send(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def ctb(self, ctx: commands.Context, *, name: str) -> None:
         result = await self.getlink(2, name)
         if result is None:
@@ -110,7 +112,7 @@ class Osu(commands.Cog):
 
         await ctx.send(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def mania(self, ctx: commands.Context, *, name: str) -> None:
         result = await self.getlink(3, name)
         if result is None:

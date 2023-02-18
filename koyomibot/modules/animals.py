@@ -1,9 +1,11 @@
 import logging
 
+from discord.commands import slash_command
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
 from koyomibot.main import MyClient
+from koyomibot.utility.allowed_guilds import ALLOWED_GUILDS
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +14,7 @@ class Animals(commands.Cog):
     def __init__(self, bot: MyClient):
         self.bot = bot
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def shibe(self, ctx: commands.Context) -> bool:
         result = await self.bot.request_get("https://shibe.online/api/shibes")
         if result is None:
@@ -22,7 +24,7 @@ class Animals(commands.Cog):
         await ctx.send(embed=em)
         return True
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def catfact(self, ctx: commands.Context) -> bool:
         result = await self.bot.request_get("https://cat-fact.herokuapp.com/facts/random")
         if result is None:
@@ -31,7 +33,7 @@ class Animals(commands.Cog):
         await ctx.send(embed=em)
         return True
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def meow(self, ctx: commands.Context) -> bool:
         result = await self.bot.request_get("https://aws.random.cat/meow")
         if result is None:
@@ -41,7 +43,7 @@ class Animals(commands.Cog):
         await ctx.send(embed=em)
         return True
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def meow2(self, ctx: commands.Context, text: str = "") -> None:
         em = dmbd.newembed(ctx.author, "Random Cat", footer="cataas")
         if text:
@@ -50,7 +52,7 @@ class Animals(commands.Cog):
             em.set_image(url="https://cataas.com/cat")
         await ctx.send(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def meowgif(self, ctx: commands.Context, text: str = "") -> None:
         em = dmbd.newembed(ctx.author, "Random Cat", footer="cataas")
         if text:
@@ -59,7 +61,7 @@ class Animals(commands.Cog):
             em.set_image(url="https://cataas.com/cat/gif")
         await ctx.send(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def woof(self, ctx: commands.Context) -> bool:
         result = await self.bot.request_get("https://random.dog/woof.json")
         if result is None:
@@ -72,7 +74,7 @@ class Animals(commands.Cog):
         await ctx.send(embed=em)
         return True
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def floof(self, ctx: commands.Context) -> bool:
         result = await self.bot.request_get("https://randomfox.ca/floof/")
         if result is None:

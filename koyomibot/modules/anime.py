@@ -2,10 +2,12 @@
 import logging
 from typing import Optional
 
+from discord.commands import slash_command
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
 from koyomibot.main import MyClient
+from koyomibot.utility.allowed_guilds import ALLOWED_GUILDS
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ class Anime(commands.Cog):
         cache_string = f"anime:{mal_id}"
         return await self.bot.request_get(self.get_jikan.format("anime", mal_id), cache_str=cache_string)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def animetrailer(self, ctx: commands.Context, *, anime_search: str) -> None:
         if len(anime_search) < 3:
             return
@@ -62,7 +64,7 @@ class Anime(commands.Cog):
         trailer_url = f"https://youtu.be/{trailer_url.split('/')[-1].split('?')[0]}"
         await ctx.send(trailer_url)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def anime(self, ctx: commands.Context, *, anime_search: str) -> None:
         if len(anime_search) < 3:
             return
@@ -108,7 +110,7 @@ class Anime(commands.Cog):
         cache_string = f"manga:{mal_id}"
         return await self.bot.request_get(self.get_jikan.format("manga", mal_id), cache_str=cache_string)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def manga(self, ctx: commands.Context, *, manga_search: str) -> None:
         if len(manga_search) < 3:
             return

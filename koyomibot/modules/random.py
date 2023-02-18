@@ -4,11 +4,12 @@ import asyncio
 import logging
 import random
 
-from bs4 import BeautifulSoup
+from discord.commands import slash_command
 from discord.ext import commands
 
 import koyomibot.utility.discordembed as dmbd
 from koyomibot.main import MyClient
+from koyomibot.utility.allowed_guilds import ALLOWED_GUILDS
 
 log = logging.getLogger(__name__)
 
@@ -35,17 +36,7 @@ class Random(commands.Cog):
             log.info("Refreshed Pokemon Count")
             await asyncio.sleep(3600 * 24)
 
-    @commands.command()
-    async def prime(self, ctx: commands.Context) -> None:
-        await ctx.send(
-            "Hey there! Do you want to know about Twitch Prime? Oh! You may be asking, "
-            '"What\'s Twitch Prime?" Let me tell ya! When you connect your Amazon account '
-            "to your Twitch account, you can get 1 free sub to ANY streamer on Twitch, every "
-            "month! Yup, and along with that, get yourself some Twitch loot! With Twitch loot, "
-            "you can go ahead and get yourself some exclusive Twitch gear and your favorite games! "
-        )
-
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def pokemon(self, ctx: commands.Context, numid: int = None) -> None:
         """Get a random pokemon!"""
         if numid is None:
@@ -74,15 +65,15 @@ class Random(commands.Cog):
             sprite_link = pokeman["sprites"][sprite]
 
         em.set_image(url=sprite_link)
-        await ctx.send(embed=em)
+        await ctx.respond(embed=em)
 
-    @commands.command()
+    @slash_command(guild_ids=ALLOWED_GUILDS)
     async def roll(self, ctx: commands.Context, dice: str = "1d6") -> None:
         """Rolls a dice in NdN format."""
         try:
             rolls, limit = map(int, dice.split("d"))
         except ValueError:
-            await ctx.send("Format has to be in NdN!")
+            await ctx.respond("Format has to be in NdN!")
             return
 
         title = "Here are your dice results!"
@@ -90,21 +81,20 @@ class Random(commands.Cog):
         for r in range(rolls):
             em.add_field(name="Dice #" + str(r + 1), value=str(random.randint(1, limit)))
         # result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
-        await ctx.send(embed=em)
+        await ctx.respond(embed=em)
 
-    @commands.command()
-    async def flip(self, ctx: commands.Context, coins: int = 1) -> None:
+    @slash_command(guild_ids=ALLOWED_GUILDS)
+    async def flip(self, ctx: commands.Context) -> None:
         """Flips a coin."""
         em = dmbd.newembed(ctx.author)
-        for x in range(coins):
-            if random.randint(0, 1):
-                em.add_field(name="Coin #" + str(x + 1), value="Heads")
-            else:
-                em.add_field(name="Coin #" + str(x + 1), value="Tails")
+        if random.randint(0, 1) == 0:
+            em.description = "Heads"
+        else:
+            em.description = "Tails"
 
-        await ctx.send(embed=em)
+        await ctx.respond(embed=em)
 
-    @commands.command(name="8ball")
+    @slash_command(name="8ball", guild_ids=ALLOWED_GUILDS)
     async def ball(self, ctx: commands.Context) -> None:
         """Ask the 8Ball"""
         answers = [
@@ -131,98 +121,21 @@ class Random(commands.Cog):
         ]
 
         em = dmbd.newembed(ctx.author, random.choice(answers))
-        await ctx.send(embed=em)
+        await ctx.respond(embed=em)
 
-    @commands.command()
-    async def trump(self, ctx: commands.Context) -> None:
-        """Returns a Trump Quote."""
-        url = "https://api.tronalddump.io/random/quote"
+    @slash_command(guild_ids=ALLOWED_GUILDS)
+    async def quote(self, ctx: commands.Context) -> None:
+        url = "https://animechan.vercel.app/api/random"
         async with self.bot.session.get(url) as r:
             if r.status != 200:
                 log.warning("{url} returned {r.text}")
                 return
-            result = await r.json()
-        await ctx.send(result["value"])
-
-    @commands.command()
-    async def forismatic(self, ctx: commands.Context) -> None:
-        """Get random quote from Forismatic"""
-        url = "https://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en"
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                log.warning("{url} returned {r.text}")
-                return
-            result = await r.json()
-        em = dmbd.newembed(
-            a=result["quoteAuthor"],
-            d=result["quoteText"],
-            u=result["quoteLink"],
-            footer="forismatic",
-        )
-        await ctx.send(embed=em)
-
-    @commands.command()
-    async def dadjoke(self, ctx: commands.Context) -> None:
-        """Random Dad Joke"""
-        url = "https://icanhazdadjoke.com/"
-        async with self.bot.session.get(url, headers={"Accept": "application/json"}) as r:
-            if r.status != 200:
-                log.warning("{url} returned {r.text}")
-                return
-            result = await r.json()
-        em = dmbd.newembed(a="Dad Joke... Why?", d=result["joke"], footer="ICanHazDadJoke")
-        await ctx.send(embed=em)
-
-    @commands.command()
-    async def quotesondesign(self, ctx: commands.Context) -> None:
-        """Get Random Quote from Quotes on Design"""
-        # https://quotesondesign.com/wp-json/wp/v2/posts/?orderby=id&per_page=1
-        # This API actually gives deterministic results... so it has to be changed to work correctly.
-
-        url = "https://quotesondesign.com/wp-json/wp/v2/posts/?orderby=rand"
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                log.warning("{url} returned {r.text}")
-                return
-            result = (await r.json())[0]
+            result = await r.json(content_type="application/json")
 
         em = dmbd.newembed(
-            a=result["title"]["rendered"],
-            d=BeautifulSoup(result["content"], "html.parser").get_text().strip() + "\n",
-            u=result["link"],
-            footer="QuotesOnDesign",
+            a=f'{result["character"]} ({result["anime"]})', d=result["quote"], footer="https://animechan.vercel.app/"
         )
-        await ctx.send(embed=em)
-
-    @commands.command()
-    async def givemeadvice(self, ctx: commands.Context) -> None:
-        url = "https://api.adviceslip.com/advice"
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                log.warning("{url} returned {r.text}")
-                return
-            result = await r.json(content_type="text/html")
-
-        em = dmbd.newembed(a="Here's some advice", d=result["slip"]["advice"], footer="AdviceSlip")
-        await ctx.send(embed=em)
-
-    @commands.command(aliases=["norris"])
-    async def chuck(self, ctx: commands.Context) -> None:
-        url = "https://api.chucknorris.io/jokes/random"
-        async with self.bot.session.get(url) as r:
-            if r.status != 200:
-                log.warning("{url} returned {r.text}")
-                return
-            result = await r.json()
-
-        em = dmbd.newembed(
-            a="Chuck Norris",
-            d=result["value"],
-            u=result["url"],
-            footer="ChuckNorris.io",
-        )
-        em.set_thumbnail(url=result["icon_url"])
-        await ctx.send(embed=em)
+        await ctx.respond(embed=em)
 
 
 def setup(bot: MyClient) -> None:
